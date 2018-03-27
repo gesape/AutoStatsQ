@@ -81,17 +81,6 @@ class PhasePie():
         return ps
 
 
-class StaticWindow():
-    def __init__(self, tmin, static_length):
-        '''Rigid, static window starting at *tmin*
-           with a duration of *static_length*.'''
-        self.tmin = tmin
-        self.static_length = static_length
-
-    def get_tmin_tmax(self):
-        return self.tmin, self.tmin+self.static_length
-
-
 class StaticLengthWindow():
     def __init__(self, static_length, phase_position):
         '''
@@ -190,9 +179,12 @@ class AutoGain():
                                   station of those that recorded
                                   most events based on median gain of first
                                   event
-           :param st_all_ev_list: optional, list of stations that recorded all
-                                  events
            :param events: List of pyrocko events
+           :param stations: List of pyrocko stations
+           :param phase_selection: Phases for arrival time calculation, pyrocko
+                                   cake naming. Needs to be adjusted for 
+                                   teleseismic events.
+           :param data_pile: Pyrocko data pile 
 
             '''
 
