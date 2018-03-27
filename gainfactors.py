@@ -11,6 +11,7 @@ from pyrocko.guts import Object, Dict, String, Float
 
 import gainplots as gp
 
+# based on https://github.com/HerrMuellerluedenscheid/autogain
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
