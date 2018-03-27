@@ -136,7 +136,6 @@ class Section():
             self.reference_scale = 1.
             self.set_relative_scalings()
             self.finished = True
-            self.traces_iter = None
 
     def set_relative_scalings(self):
         for nslc_id, maxs in self.max_tr.items():
