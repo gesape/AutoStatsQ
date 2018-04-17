@@ -141,9 +141,6 @@ class Section():
         for nslc_id, maxs in self.max_tr.items():
             self.relative_scalings[nslc_id] = self.reference_scale/maxs
 
-    def extend(self, tr):
-        self.traces.extend(tr)
-
     def get_gained_traces(self):
         gained = []
         for tr in self.traces:
@@ -165,28 +162,27 @@ class AutoGain():
     def __init__(self, data_pile, stations, events,
                  component='Z', gain_rel_to='scale_one',
                  phase_selection='first(p|P)'):
-            '''
-           :param phase_selection: follows the logic of
-                                   fomosto's Store phase definitions
-           :param gain_rel_to: gain relative to options:
-                               * 'scale_one' for reference amplitude = 1.
-                               *  tuple ('reference_nsl', refernce_id) - gain
-                                  relative to one specific station,
-                                  reference_id e.g. 'BFO'
-                               * 'median_all_avail': first assesses all abs.
-                                  amplitudes, in the end chooses a reference
-                                  station of those that recorded
-                                  most events based on median gain of first
-                                  event
-           :param events: List of pyrocko events
-           :param stations: List of pyrocko stations
-           :param phase_selection: Phases for arrival time calculation, pyrocko
-                                   cake naming. Needs to be adjusted for 
-                                   teleseismic events.
-           :param data_pile: Pyrocko data pile 
+        '''
+       :param phase_selection: follows the logic of
+                               fomosto's Store phase definitions
+       :param gain_rel_to: gain relative to options:
+                           * 'scale_one' for reference amplitude = 1.
+                           *  tuple ('reference_nsl', refernce_id) - gain
+                              relative to one specific station,
+                              reference_id e.g. 'BFO'
+                           * 'median_all_avail': first assesses all abs.
+                              amplitudes, in the end chooses a reference
+                              station of those that recorded
+                              most events based on median gain of first
+                              event
+       :param events: List of pyrocko events
+       :param stations: List of pyrocko stations
+       :param phase_selection: Phases for arrival time calculation, pyrocko
+                               cake naming. Needs to be adjusted for 
+                               teleseismic events.
+       :param data_pile: Pyrocko data pile 
 
-            '''
-
+        '''
         self.method = gain_rel_to
         self.component = component
         self.data_pile = data_pile

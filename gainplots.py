@@ -54,7 +54,8 @@ def plot_mean_gain_map_from_file(ns,
                                  st_lons,
                                  pl_options,
                                  gains_file,
-                                 directory):
+                                 directory,
+                                 comp):
     '''
     Plot map with mean relative gain factors
 
@@ -62,6 +63,7 @@ def plot_mean_gain_map_from_file(ns,
     gains_fromfile = load(filename=directory+gains_file)
     try:
         ns_rel = gains_fromfile.ref_stats
+        print(ns_rel)
     except:
         ns_rel = None
 
@@ -72,7 +74,7 @@ def plot_mean_gain_map_from_file(ns,
 
     for i_ns, ns_now in enumerate(ns):
         try:
-            nslc = '%s.%s..HHZ' % (ns_now[0], ns_now[1])
+            nslc = '%s.%s..%s' % (ns_now[0], ns_now[1], comp)
             gains_no_nan.append(gains_fromfile.trace_gains[nslc])
             # stats_no_nan.append(ns_now[1])
             lat_no_nan.append(st_lats[i_ns])
