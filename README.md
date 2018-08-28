@@ -1,8 +1,6 @@
 # AutoStatsQ
 Toolbox for automated station quality control for MT inversion (-work in progress-)
-(raw code, executable files missing)
-
---> see https://gitext.gfz-potsdam.de/gesap/alparray
+Please contact me for further description and help: gesap@gfz-potsdam.de
 
 - Catalog search for teleseismic events with uniform azimuthal coverage around array
 - Download of data & metadata for these events + computation of synthetic data

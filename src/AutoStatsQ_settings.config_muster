@@ -1,0 +1,87 @@
+--- !config.AutoStatsQConfig
+Settings:
+- !config.GeneralSettings
+  data_dir: /media/gesap/TOSHIBA EXT/data/teleseismics8/
+  list_station_lists: [/home/gesap/Documents/AlpArray/station_net/AlpArray_permanent_stations_01_Sept2016.csv, /home/gesap/Documents/AlpArray/station_net/SwathD.xml]
+- !config.CatalogConfig
+  catalog_fn: global_2015-2018_Mgr6,5.txt
+  dist: 165.0
+  min_mag: 6.5
+  max_mag: 8.5
+  tmin_str: '2015-01-01 00:00:00'
+  tmax_str: '2018-03-02 00:00:00'
+  wedges_width: 15
+  mid_point: [46.98, 10.74]
+  pl_opt: [46, 12, 700000]
+  search_events: false
+  use_local_catalog: true
+  subset_of_local_catalog: true
+  min_dist_km: 1000.0
+  max_dist_km: 9999999.9
+  plot_catalog_all: false
+  plot_hist_wedges: false
+  plot_wedges_vs_dist: false
+  plot_wedges_vs_magn: false
+  plot_dist_vs_magn: false
+  plot_catalog_subset: false
+  median_ev_in_bin: true
+  weighted_magn_baz_ev: false
+- !config.ArrTConfig
+  calc_first_arr_t: false
+  phase_select: P|p|P(cmb)P(icb)P(icb)p(cmb)p|P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p
+- !config.MetaDataDownloadConfig
+  download_data: false
+  download_metadata: false
+  components_download: HH*
+  components: [HHZ, HHN, HHE]
+  token: /home/gesap/Documents/AlpArray/download-waveforms/swathD/token.asc
+  sites: [geofon, orfeus, iris, bgr, ingv, lmu]
+  dt_start: 0.1
+  dt_end: 1.5
+- !config.RestDownRotConfig
+  rest_data: false
+  freqlim: [0.005, 0.01, 0.2, 0.25]
+  rotate_data: false
+  deltat_down: 2
+- !config.SynthDataConfig
+  make_syn_data: false
+  engine_path: /media/gesap/TOSHIBA EXT/gf_stores
+  store_id: global_2s
+- !config.GainfactorsConfig
+  calc_gainfactors: false
+  gain_factor_method:
+  - reference_nsl
+  - [GE, MATE]
+  fband:
+    corner_hp: 0.01
+    corner_lp: 0.2
+    order: 4
+  taper_xfrac: 0.25
+  wdw_static_length: 60.0
+  wdw_phase_position: 0.5
+  phase_select: first(P|p|P(cmb)P(icb)P(icb)p(cmb)p|P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p)
+  components: [Z, R, T]
+  plot_mean_gain_on_map: false
+  map_gain_size: [30.0, 30.0]
+  gain_rel_syn: false
+- !config.PSDConfig
+  calc_psd: true
+  tinc: 400
+  tpad: 200
+  dt_start: 60
+  dt_end: 1800
+  n_poly: 25
+  norm_factor: 50
+  f_ign: 0.02
+  plot_psds: true
+  plot_ratio_extra: true
+  plot_m_rat: true
+  plot_flat_ranges: true
+  plt_neigh_ranges: false
+- !config.OrientConfig
+  orient_rayl: false
+  bandpass: [3, 0.01, 0.05]
+  start_before_ev: 30
+  stop_after_ev: 480
+  plot_heatmap: false
+  plot_distr: false
