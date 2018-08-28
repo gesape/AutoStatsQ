@@ -4,7 +4,7 @@ Please contact me for further description and help: gesap@gfz-potsdam.de
 
 - Catalog search for teleseismic events with uniform azimuthal coverage around array
 - Download of data & metadata for these events + computation of synthetic data
-- Relative gain factors in time domain (relative to reference station and/or synthetic data)
-- Comparison of obs. and synth. PSD; determining frequency ranges suitable for MT inversion
-- rayleigh wave polarization analysis for sensor orientations
+- Relative gain factors in time domain (relative to reference station)
+- Rayleigh wave polarization analysis for detection of sensor misorientations
+- Comparison of obs. and synth. PSDs; determining frequency ranges suitable for MT inversion
 
