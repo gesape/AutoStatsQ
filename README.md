@@ -42,8 +42,8 @@ run
 	autostatsq --config name_of_config_file --run RUN
 
 
-Settings in the config file
----------------------------
+Config file settings
+--------------------
 
 The default config file should look like this (without the comments):
 
@@ -238,4 +238,31 @@ Settings:
 Station list:
 -------------
 
-Lists of stations as input can be in station-xml format or as comma-spread-file with columns: network code, station code, latitude (float), longitude(float), station elevation, station depth.
+Lists of stations as input can be in station-xml format or as comma-spread-file with columns: network code, station code, latitude (float), longitude(float), station elevation [km], station depth [km].
+
+Step-by-step instructions:
+--------------------------
+
+- make a working directory
+- prepare station list for input
+- generate a template config file (`autostatsq --generate_config GENERATE_CONFIG`) and adjust the settings
+- it might be helpful to not run the toolbox in one run, but go though it step-by-step, setting the current step to `true` and the others to `false`... (`autostatsq --config my_config_file --run RUN`)
+
+Output:
+-------
+
+Gain test:
+- yaml files with median, mean and standard deviation of Ai,j/Ai,ref; i: event, j: station
+- csv files with Ai,j/Ai,ref for all events and all stations
+- optional: maps showing median log. Ai,j/Ai,ref for all stations and components
+- optional: ...
+
+Orientation test:
+- yaml file with median, mean and standard deviation of obtained correction angle
+- yaml file with polarity errors
+- optional: map showing the median correction angle
+
+PSD test:
+- flat freq ranges in yaml file for each station and component
+- optional: synth. and real PSDs
+- optional: plots showing fit through PSD ratios 
