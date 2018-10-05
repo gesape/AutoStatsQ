@@ -92,12 +92,13 @@ def main():
 
     # Generate a (template) config file:
     if args.generate_config:
-        fn_config = 'AutoStatsQ_settings.config'
-        if os.path.exists('AutoStatsQ_settings.config'):
+        fn_config = 'Test.config'
+        if os.path.exists(fn_config):
             print('file exists: %s' % fn_config)
 
         config = generate_default_config()
-
+        config.regularize()
+        config.validate()
         config.dump(filename=fn_config)
         print('created a fresh config file "%s"' % fn_config)
 

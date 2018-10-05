@@ -164,7 +164,8 @@ class OrientConfig(Object):
 
 class maps(Object):
     map_size = List.T()
-    pl_opt = List.T()	
+    pl_opt = List.T()
+    pl_topo = Bool.T()
 
 
 class AutoStatsQConfig(Object):

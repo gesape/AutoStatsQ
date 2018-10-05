@@ -1,41 +1,39 @@
 from .config import GeneralSettings, CatalogConfig, ArrTConfig,\
 CakeTTTGenerator,\
 MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
-GainfactorsConfig, PSDConfig, OrientConfig, AutoStatsQConfig
+GainfactorsConfig, PSDConfig, OrientConfig, AutoStatsQConfig, maps
 from pyrocko.gf import TPDef
 
 
 def generate_default_config():
     gensettings = GeneralSettings(
-        data_dir='/media/gesap/TOSHIBA EXT/data/teleseismics9/',
-        list_station_lists=['/home/gesap/Documents/AlpArray/station_net/\
-AlpArray_permanent_stations_01_Sept2016.csv',
-'/home/gesap/Documents/AlpArray/station_net/SwathD.xml'])
-        # '/home/gesap/Documents/AlpArray/station_net/\
-# AlpArray_temporary_stations_01_Sept2016.csv'
+        data_dir='/some/data/directory/',
+        list_station_lists=['/path/to/station-file/file.csv',
+'/path/to/station-file/file.xml'])
 
     catalogconf = CatalogConfig(
+                                search_events = True,
+                                use_local_catalog = False,
+                                subset_of_local_catalog = True,
+                                use_local_subsets = False,
+                                subset_fns = {},      
                                 # Filename of catalog (local or name for saving catalog)
-                                catalog_fn='catalog_Mgr6.5.txt',
+                                catalog_fn='catalog.txt',
                                 # catalog plot (backazimuthal view) max. distance to show
                                 dist=165.,
                                 min_mag=6.5,
                                 max_mag=8.5,
-                                tmin_str='2015-01-01 00:00:00',
-                                tmax_str='2018-03-02 00:00:00',
+                                tmin_str='2000-01-01 00:00:00',
+                                tmax_str='2018-10-01 00:00:00',
                                 # backazimuthal distribution
                                 wedges_width=15,  # deg
                                 # enter a midpoint of array for global event maps
                                 mid_point=[46.98, 10.74],
                                 # enter lat, lon, radius for output maps showing gains,
                                 # polarisation, etc.
-                                pl_opt = [46, 12, 700000],
-                                search_events=False,
-                                use_local_catalog=True,
-                                subset_of_local_catalog=True,
                                 min_dist_km=1000.,
                                 max_dist_km=9999999.9,
-                                depth_options=[['deep', 60, 1000], ['shallow', 1, 60]],  
+                                depth_options= {'deep': [25000, 1000000], 'shallow':[100, 40000]},  
                                 plot_catalog_all=False,
                                 plot_hist_wedges=False,
                                 plot_wedges_vs_dist=False,
@@ -51,11 +49,13 @@ AlpArray_permanent_stations_01_Sept2016.csv',
                           # Type 'cake list-phase-map' into terminal to find more
                           # phase names for cake.
                           phase_select = 'P|p|P(cmb)P(icb)P(icb)p(cmb)p|' +\
-                                        'P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p')
+                                        'P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p',
+                          calc_est_R = True)
 
-    cake_ttt_gen = CakeTTTGenerator(calc_ttt=False,
+
+    cake_ttt_gen = CakeTTTGenerator(calc_ttt=True,
                           earthmodel_id='prem-no-ocean.f',
-                          dir_ttt='/media/gesap/TOSHIBA EXT/data/teleseismics9/ttt/',
+                          dir_ttt='/directory/to/save/traveltimes/',
                           tabulated_phases = [TPDef(id='p', definition='P,p')],
                           dist_min = 1000.,
                           dist_max = 9999.,
@@ -73,9 +73,10 @@ AlpArray_permanent_stations_01_Sept2016.csv',
         download_data=False,
         download_metadata=False,
         components_download='HH*',
-        components=['HHZ', 'HHN', 'HHE'],
+        local_metadata=[],
+        use_downmeta=False,
         token={'geofon': '/home/gesap/Documents/AlpArray/download-waveforms/swathD/token.asc'},
-        sites=['geofon', 'orfeus', 'iris', 'bgr', 'ingv', 'lmu'],
+        sites=['geofon', 'orfeus', 'iris'],
         dt_start=0.1,
         dt_end=1.5)
 
@@ -85,7 +86,7 @@ AlpArray_permanent_stations_01_Sept2016.csv',
                                      deltat_down=2)
 
     synthsconf = SynthDataConfig(make_syn_data=False,
-                                 engine_path='/media/gesap/TOSHIBA EXT/gf_stores',
+                                 engine_path='/path/to/GF_stores',
                                  store_id='global_2s')
 
     gainfconf = GainfactorsConfig(calc_gainfactors=False,
@@ -97,18 +98,17 @@ AlpArray_permanent_stations_01_Sept2016.csv',
                                   phase_select = 'first(P|p|P(cmb)P(icb)P(icb)p(cmb)p|' +\
                                                  'P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p)',
                                   components=['Z','R','T'],
-                                  plot_mean_gain_on_map=False,
-                                  map_gain_size=(30.,30.),
+                                  plot_median_gain_on_map=False,
                                   plot_allgains=False)
 
     psdsconf = PSDConfig(calc_psd=False,
-    					 tinc=600,
-    					 tpad=200,
-    					 dt_start=60,
-    					 dt_end=1800,
-    					 n_poly = 25,
-	                     norm_factor = 50,
-	                     f_ign = 0.02,
+    					           tinc=600,
+    					           tpad=200,
+    					           dt_start=60,
+    					           dt_end=1800,
+    					           n_poly = 25,
+	                       norm_factor = 50,
+	                       f_ign = 0.02,
                          plot_psds=False,
                          plot_ratio_extra=False,
                          plot_m_rat=False,
@@ -116,15 +116,21 @@ AlpArray_permanent_stations_01_Sept2016.csv',
                          plt_neigh_ranges=False)
 
     orientconf = OrientConfig(orient_rayl=False,
-    	                      bandpass=(3, 0.01, 0.05),
-    	                      start_before_ev=30,
-    	                      stop_after_ev=480,
+    	                        bandpass=(3, 0.01, 0.05),
+    	                        start_before_ev=30,
+    	                        stop_after_ev=480,
                               plot_heatmap=False,
-                              plot_distr=False)
+                              plot_distr=False,
+                              plot_orient_map_fromfile=False)
+
+    _maps = maps(
+                map_size = [30.0, 30.0],
+                pl_opt=[46, 11.75, 800000],
+                pl_topo= False)
 
     config = AutoStatsQConfig(
       Settings=[gensettings, catalogconf, arrTconf, cake_ttt_gen, metaDataconf,
                 RestDownconf,
-                synthsconf, gainfconf, psdsconf, orientconf])
+                synthsconf, gainfconf, psdsconf, orientconf, _maps])
 
     return config
