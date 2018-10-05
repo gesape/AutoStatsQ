@@ -1,0 +1,3 @@
+[console_scripts]
+autostatsq = autostatsq.network_control:main
+
