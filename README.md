@@ -59,7 +59,8 @@ Settings:
   # search gCMT catalog for events?
 
   use_local_catalog: false
-  # or use a local (already downloaded) catalog? This option is needed if the toolbox is run in single steps, not all at once. 
+  # or use a local (already downloaded) catalog? This option is needed if the toolbox is run 
+  # in single steps, not all at once. 
 
   subset_of_local_catalog: true
   # Find a subset of the full catalog?
@@ -68,7 +69,8 @@ Settings:
   # Use local (already saved) subset instead?
   
   subset_fns: {}
-  # if so, give here paths to subset-catalog-files: e.g. {'deep': 'catalog_deep_subset.txt', 'shallow': 'catalog_shallow_subset.txt'}
+  # if so, give here paths to subset-catalog-files: e.g. {'deep': 'catalog_deep_subset.txt',
+  # 'shallow': 'catalog_shallow_subset.txt'}
 
   catalog_fn: catalog.txt
   # filename of catalog that is downloaded or already exists
@@ -96,21 +98,34 @@ Settings:
   # ???
 
 
-  ### plotting options ###
+  ### catalog plotting options ###
   plot_catalog_all: false
+  # plots entire catalog on a map
+
   plot_hist_wedges: false
   plot_wedges_vs_dist: false
   plot_wedges_vs_magn: false
   plot_dist_vs_magn: false
+  # catalog statistics plot
+  
   plot_catalog_subset: false
+  # plots the subset(s) on a map
 
 - !autostatsq.config.ArrTConfig
-  calc_first_arr_t: false
+  calc_first_arr_t: true
+  # Should first arrivals be computed?
+
   phase_select: P|p|P(cmb)P(icb)P(icb)p(cmb)p|P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p
+  # which phases?
+
   calc_est_R: true
+  # compute arrival time of Rayleigh waves for each station-event pair? 
+  # (needed for orientation test)
+
 
 - !autostatsq.config.CakeTTTGenerator
-  calc_ttt: true
+  # uses travel time tables instead of cake (faster, but settings more difficult)
+  calc_ttt: false
   dir_ttt: /directory/to/save/traveltimes/
   earthmodel_id: prem-no-ocean.f
   tabulated_phases:
@@ -129,6 +144,8 @@ Settings:
   t_acc: 3.0
 
 - !autostatsq.config.MetaDataDownloadConfig
+  # download of metadata and data
+
   download_data: false
   download_metadata: false
   use_downmeta: false
@@ -136,38 +153,51 @@ Settings:
   token:
     geofon: /home/gesap/Documents/AlpArray/download-waveforms/swathD/token.asc
   sites: [geofon, orfeus, iris]
+
   dt_start: 0.1
+  # start time before origin time [h]
   dt_end: 1.5
+  # end time after origin time [h]
 
 - !autostatsq.config.RestDownRotConfig
+  # restitution, downsampling and rotation of data
   rest_data: false
   freqlim: [0.005, 0.01, 0.2, 0.25]
   rotate_data: false
   deltat_down: 2
 
 - !autostatsq.config.SynthDataConfig
+  # computation of synthetic data
   make_syn_data: false
   engine_path: /path/to/GF_stores
   store_id: global_2s
 
 - !autostatsq.config.GainfactorsConfig
+  # settings for first test
   calc_gainfactors: false
   gain_factor_method:
   - reference_nsl
   - [GE, MATE]
+  ### describe different methods
   fband:
     corner_hp: 0.01
     corner_lp: 0.2
     order: 4
   taper_xfrac: 0.25
+
   wdw_st_arr: 5
   wdw_sp_arr: 60
+  # time window around P phase onset, start [s] before and end [s] after theo. arrival time
+
   phase_select: first(P|p|P(cmb)P(icb)P(icb)p(cmb)p|P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p)
   components: [Z, R, T]
+
+  # plotting options
   plot_median_gain_on_map: false
   plot_allgains: false
 
 - !autostatsq.config.PSDConfig
+  # settings for PSD test
   calc_psd: false
   tinc: 600
   tpad: 200
@@ -184,6 +214,7 @@ Settings:
   plt_neigh_ranges: false
 
 - !autostatsq.config.OrientConfig
+  # settings for orientation test
   orient_rayl: false
   bandpass: [3.0, 0.01, 0.05]
   start_before_ev: 30.0
@@ -191,8 +222,9 @@ Settings:
   plot_heatmap: false
   plot_distr: false
   plot_orient_map_fromfile: false
-  
+
 - !autostatsq.config.maps
+  # settings for all output maps
   map_size: [30.0, 30.0]
   pl_opt: [46, 11.75, 800000]
   pl_topo: false
