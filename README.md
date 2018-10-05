@@ -45,7 +45,7 @@ Settings in the config file
 
 The default config file should look like this (without the comments):
 
-```python
+```yaml
 --- !autostatsq.config.AutoStatsQConfig
 Settings:
 - !autostatsq.config.GeneralSettings
