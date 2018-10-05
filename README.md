@@ -18,15 +18,25 @@ Requirements
 Download and Installation
 -------------------------
 
-cd into the folder where you want to do the installation
-git clone https://github.com/gesape/AutoStatsQ 
-cd AutoStatsQ
-(sudo) python3 setup.py install
+cd into the folder where you want to do the installation\n
+git clone https://github.com/gesape/AutoStatsQ \n
+cd AutoStatsQ\n
+(sudo) python3 setup.py install\n
 
 Basic commands
 --------------
 
 show basic commands:
-'''
-autostatsq -h
-'''
+
+
+	autostatsq -h
+
+
+generate an example config file:
+
+	autostatsq --generate_config GENERATE_CONFIG
+
+run 
+
+	autostatsq --config name_of_config_file --run RUN
+
