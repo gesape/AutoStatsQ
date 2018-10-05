@@ -8,3 +8,25 @@ Please contact me for further description and help: gesap@gfz-potsdam.de
 - Rayleigh wave polarization analysis for detection of sensor misorientations
 - Comparison of obs. and synth. PSDs; determining frequency ranges suitable for MT inversion
 
+
+Requirements
+------------
+
+- python3
+- seismology toolbox pyrocko: https://pyrocko.org/ (Heimann et al. 2017)
+
+Download and Installation
+-------------------------
+
+cd into the folder where you want to do the installation
+git clone https://github.com/gesape/AutoStatsQ 
+cd AutoStatsQ
+(sudo) python3 setup.py install
+
+Basic commands
+--------------
+
+show basic commands:
+'''
+autostatsq -h
+'''
