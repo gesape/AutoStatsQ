@@ -13,7 +13,9 @@ Requirements
 ------------
 
 - python3
-- seismology toolbox pyrocko: https://pyrocko.org/ (Heimann et al. 2017)
+- Seismology toolbox pyrocko: https://pyrocko.org/ (Heimann et al. 2017)
+- To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto download` from the pyrocko environment. http://kinherd.org:8080/gfws/static/stores/
+
 
 Download and Installation
 -------------------------
