@@ -59,8 +59,8 @@ Settings:
   # search gCMT catalog for events?
 
   use_local_catalog: false
-  # or use a local (already downloaded) catalog? This option is needed if the toolbox is run 
-  # in single steps, not all at once. 
+  # Or use a local (already downloaded) catalog? 
+  # Needed re-runs using same catalog.
 
   subset_of_local_catalog: true
   # Find a subset of the full catalog?
@@ -69,7 +69,8 @@ Settings:
   # Use local (already saved) subset instead?
   
   subset_fns: {}
-  # if so, give here paths to subset-catalog-files: e.g. {'deep': 'catalog_deep_subset.txt',
+  # if so, give here paths to subset-catalog-files: e.g. 
+  # {'deep': 'catalog_deep_subset.txt',
   # 'shallow': 'catalog_shallow_subset.txt'}
 
   catalog_fn: catalog.txt
@@ -227,5 +228,14 @@ Settings:
   # settings for all output maps
   map_size: [30.0, 30.0]
   pl_opt: [46, 11.75, 800000]
+  # mid point of map (lat, lon) and radius [m]
   pl_topo: false
+  # plotting topography can be very slow,
+  # topographic data will be downloaded first
 ```
+
+
+Station list:
+-------------
+
+Lists of stations as input can be in station-xml format or as comma-spread-file with columns: network code, station code, latitude (float), longitude(float), station elevation, station depth.
