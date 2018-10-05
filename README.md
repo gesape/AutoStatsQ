@@ -1,5 +1,5 @@
-# AutoStatsQ
-Toolbox for automated station quality control for MT inversion (-work in progress-)
+# AutoStatsQ (-work in progress-)
+Toolbox for automated station quality control for MT inversion 
 Please contact me for further description and help: gesap@gfz-potsdam.de
 
 - Catalog search for teleseismic events with uniform azimuthal coverage around array
@@ -53,36 +53,62 @@ Settings:
 - !autostatsq.config.GeneralSettings
   data_dir: /some/data/directory/
   list_station_lists: [/path/to/station-file/file.csv, /path/to/station-file/file.xml]
+
 - !autostatsq.config.CatalogConfig
-  search_events: true
+  search_events: true 
+  # search gCMT catalog for events?
+
   use_local_catalog: false
+  # or use a local (already downloaded) catalog? This option is needed if the toolbox is run in single steps, not all at once. 
+
   subset_of_local_catalog: true
+  # Find a subset of the full catalog?
+
   use_local_subsets: false
+  # Use local (already saved) subset instead?
+  
   subset_fns: {}
+  # if so, give here paths to subset-catalog-files: e.g. {'deep': 'catalog_deep_subset.txt', 'shallow': 'catalog_shallow_subset.txt'}
+
   catalog_fn: catalog.txt
+  # filename of catalog that is downloaded or already exists
+
   dist: 165.0
+  # max. distance (degrees) for catalog search
+
   min_mag: 6.5
   max_mag: 8.5
   tmin_str: '2000-01-01 00:00:00'
   tmax_str: '2018-10-01 00:00:00'
-  wedges_width: 15
-  mid_point: [46.98, 10.74]
-  median_ev_in_bin: false
   min_dist_km: 1000.0
-  max_dist_km: 9999999.9
+  max_dist_km: 9999999.9  
   depth_options:
-    deep: [25000, 1000000]
-    shallow: [100, 40000]
+    deep: [25000, 1000000] # [m]
+    shallow: [100, 40000] # [m]
+
+  wedges_width: 15
+  # backazimuthal step for subset generation
+
+  mid_point: [46.98, 10.74]
+  # estimate of midpoint of array
+
+  median_ev_in_bin: false
+  # ???
+
+
+  ### plotting options ###
   plot_catalog_all: false
   plot_hist_wedges: false
   plot_wedges_vs_dist: false
   plot_wedges_vs_magn: false
   plot_dist_vs_magn: false
   plot_catalog_subset: false
+
 - !autostatsq.config.ArrTConfig
   calc_first_arr_t: false
   phase_select: P|p|P(cmb)P(icb)P(icb)p(cmb)p|P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p
   calc_est_R: true
+
 - !autostatsq.config.CakeTTTGenerator
   calc_ttt: true
   dir_ttt: /directory/to/save/traveltimes/
@@ -101,6 +127,7 @@ Settings:
   r_depth_max: 0.0
   r_acc: 2.0
   t_acc: 3.0
+
 - !autostatsq.config.MetaDataDownloadConfig
   download_data: false
   download_metadata: false
@@ -111,15 +138,18 @@ Settings:
   sites: [geofon, orfeus, iris]
   dt_start: 0.1
   dt_end: 1.5
+
 - !autostatsq.config.RestDownRotConfig
   rest_data: false
   freqlim: [0.005, 0.01, 0.2, 0.25]
   rotate_data: false
   deltat_down: 2
+
 - !autostatsq.config.SynthDataConfig
   make_syn_data: false
   engine_path: /path/to/GF_stores
   store_id: global_2s
+
 - !autostatsq.config.GainfactorsConfig
   calc_gainfactors: false
   gain_factor_method:
@@ -136,6 +166,7 @@ Settings:
   components: [Z, R, T]
   plot_median_gain_on_map: false
   plot_allgains: false
+
 - !autostatsq.config.PSDConfig
   calc_psd: false
   tinc: 600
@@ -151,6 +182,7 @@ Settings:
   plot_m_rat: false
   plot_flat_ranges: false
   plt_neigh_ranges: false
+
 - !autostatsq.config.OrientConfig
   orient_rayl: false
   bandpass: [3.0, 0.01, 0.05]
@@ -159,6 +191,7 @@ Settings:
   plot_heatmap: false
   plot_distr: false
   plot_orient_map_fromfile: false
+  
 - !autostatsq.config.maps
   map_size: [30.0, 30.0]
   pl_opt: [46, 11.75, 800000]
