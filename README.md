@@ -95,10 +95,6 @@ Settings:
   mid_point: [46.98, 10.74]
   # estimate of midpoint of array
 
-  median_ev_in_bin: false
-  # ???
-
-
   ### catalog plotting options ###
   plot_catalog_all: false
   # plots entire catalog on a map
