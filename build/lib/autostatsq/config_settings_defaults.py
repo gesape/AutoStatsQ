@@ -39,8 +39,7 @@ def generate_default_config():
                                 plot_wedges_vs_dist=False,
                                 plot_wedges_vs_magn=False,
                                 plot_dist_vs_magn=False,
-                                plot_catalog_subset=False,
-                                median_ev_in_bin=False)#,
+                                plot_catalog_subset=False)#,
                                 #weighted_magn_baz_ev=True)
 
     arrTconf = ArrTConfig(calc_first_arr_t=False,

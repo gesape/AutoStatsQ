@@ -29,7 +29,7 @@ class CatalogConfig(Object):
 	mid_point = List.T(
 		help='Enter some estimation on centre point of array, needed for\
              subset based on distances and plotting only.')
-	median_ev_in_bin = Bool.T()
+	median_ev_in_bin = Bool.T(default=True)
 	#weighted_magn_baz_ev = Bool.T()
 
 	min_dist_km = Float.T()

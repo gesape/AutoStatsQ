@@ -39,8 +39,7 @@ def generate_default_config():
                                 plot_wedges_vs_dist=False,
                                 plot_wedges_vs_magn=False,
                                 plot_dist_vs_magn=False,
-                                plot_catalog_subset=False,
-                                median_ev_in_bin=False)#,
+                                plot_catalog_subset=False)#,
                                 #weighted_magn_baz_ev=True)
 
     arrTconf = ArrTConfig(calc_first_arr_t=False,
@@ -50,10 +49,10 @@ def generate_default_config():
                           # phase names for cake.
                           phase_select = 'P|p|P(cmb)P(icb)P(icb)p(cmb)p|' +\
                                         'P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p',
-                          calc_est_R = True)
+                          calc_est_R = False)
 
 
-    cake_ttt_gen = CakeTTTGenerator(calc_ttt=True,
+    cake_ttt_gen = CakeTTTGenerator(calc_ttt=False,
                           earthmodel_id='prem-no-ocean.f',
                           dir_ttt='/directory/to/save/traveltimes/',
                           tabulated_phases = [TPDef(id='p', definition='P,p')],
