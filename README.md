@@ -76,9 +76,6 @@ Settings:
   catalog_fn: catalog.txt
   # filename of catalog that is downloaded or already exists
 
-  dist: 165.0
-  # max. distance (degrees) for catalog search
-
   min_mag: 6.5
   max_mag: 8.5
   tmin_str: '2000-01-01 00:00:00'
@@ -91,11 +88,14 @@ Settings:
 
   wedges_width: 15
   # backazimuthal step for subset generation
+  # adjust to get more events, especially if time range is small
 
   mid_point: [46.98, 10.74]
-  # estimate of midpoint of array
+  # give a rough estimate of midpoint of array/ network
 
   ### catalog plotting options ###
+  dist: 165.0
+  # max. distance (degrees) for catalog plot  
   plot_catalog_all: false
   # plots entire catalog on a map
 
@@ -122,6 +122,8 @@ Settings:
 
 - !autostatsq.config.CakeTTTGenerator
   # uses travel time tables instead of cake (faster, but settings more difficult)
+  # if you are not familiar with fomosto' travel time tables use ArrTConfig section 
+  # instead!
   calc_ttt: false
   dir_ttt: /directory/to/save/traveltimes/
   earthmodel_id: prem-no-ocean.f
@@ -147,6 +149,8 @@ Settings:
   download_metadata: false
   use_downmeta: false
   components_download: HH*
+  # '*' would download all and analyse the most broadband channel for each
+  # station
   token:
     geofon: /home/gesap/Documents/AlpArray/download-waveforms/swathD/token.asc
   sites: [geofon, orfeus, iris]
@@ -158,13 +162,15 @@ Settings:
 
 - !autostatsq.config.RestDownRotConfig
   # restitution, downsampling and rotation of data
+  # required for all tests
   rest_data: false
-  freqlim: [0.005, 0.01, 0.2, 0.25]
+  freqlim: [0.005, 0.01, 0.2, 0.25] # [Hz]
   rotate_data: false
   deltat_down: 2
 
 - !autostatsq.config.SynthDataConfig
   # computation of synthetic data
+  # needed for PSD-test only, can otherwise be left out
   make_syn_data: false
   engine_path: /path/to/GF_stores
   store_id: global_2s
@@ -177,10 +183,10 @@ Settings:
   - [GE, MATE]
   ### describe different methods
   fband:
-    corner_hp: 0.01
-    corner_lp: 0.2
+    corner_hp: 0.01 # [Hz]
+    corner_lp: 0.2 # [Hz]
     order: 4
-  taper_xfrac: 0.25
+  taper_xfrac: 0.25 # [s]
 
   wdw_st_arr: 5
   wdw_sp_arr: 60
@@ -196,13 +202,13 @@ Settings:
 - !autostatsq.config.PSDConfig
   # settings for PSD test
   calc_psd: false
-  tinc: 600
-  tpad: 200
-  dt_start: 60
-  dt_end: 1800
+  tinc: 600  # [s]
+  tpad: 200  # [s]
+  dt_start: 60  # [s]
+  dt_end: 1800  # [s]
   n_poly: 25
   norm_factor: 50
-  f_ign: 0.02
+  f_ign: 0.02  # [Hz]
   only_first: true
   plot_psds: false
   plot_ratio_extra: false
@@ -213,9 +219,9 @@ Settings:
 - !autostatsq.config.OrientConfig
   # settings for orientation test
   orient_rayl: false
-  bandpass: [3.0, 0.01, 0.05]
-  start_before_ev: 30.0
-  stop_after_ev: 480.0
+  bandpass: [3.0, 0.01, 0.05]  # [Hz]
+  start_before_ev: 30.0  # start befor theo. Rayleigh wave arrival, [s]
+  stop_after_ev: 480.0  # end after theo. Rayleigh wave arrival, [s]
   plot_heatmap: false
   plot_distr: false
   plot_orient_map_fromfile: false
