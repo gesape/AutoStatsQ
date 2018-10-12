@@ -146,8 +146,12 @@ Settings:
   # download of metadata and data
 
   download_data: false
-  download_metadata: false
+  download_metadata: false 
   use_downmeta: false
+  # Set to true if downloaded metadata should be used.
+  # If metadata with responses is stored locally, you can use  
+  # local_metadata: [list_of_metadata_files] instead of or in 
+  # addition to downloading
   components_download: HH*
   # '*' would download all and analyse the most broadband channel for each
   # station
