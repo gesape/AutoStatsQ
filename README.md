@@ -156,7 +156,8 @@ Settings:
   # '*' would download all and analyse the most broadband channel for each
   # station
   token:
-    geofon: /home/gesap/Documents/AlpArray/download-waveforms/swathD/token.asc
+    geofon: /path/to/token/token.asc
+  # delete token-dictionary, if no token needed for fdsn query
   sites: [geofon, orfeus, iris]
 
   dt_start: 0.1
