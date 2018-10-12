@@ -40,12 +40,12 @@ class Polarity_switch(Object):
 
 
 def write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
-                 n_ev, used_stats, dir_ro):
+                 n_ev, used_stats, dir_ro, ccmin):
     if list_switched:
         # write to yaml
         l_sw = [Event_sw(station=(s[0], s[1]), name=s[2],
                          time=s[3], max_cc_angle=s[4], max_cc_coef=s[5])
-                for l in list_switched for s in l if s and s[5] > 0.80]
+                for l in list_switched for s in l if s and s[5] > ccmin]
 
         sw = Polarity_switch(switched_by_stat=l_sw)
         sw.regularize()
@@ -85,7 +85,7 @@ def write_all_output_csv(list_all_angles, used_stats, dir_ro):
                              % (dir_ro))
 
 
-def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st):
+def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
     '''
     1) did polarity swith occur? for single events, say if
     max c-c is closer to 180 deg than to 0 deg! (only trusted if
@@ -110,10 +110,10 @@ def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st):
                                  util.time_to_str(ev.time),
                                  maxcc_angle, maxcc_value))
 
-    median_a = num.median([a for (a, v) in zip(angles, values) if v > 0.80])
-    mean_a = num.mean([a for (a, v) in zip(angles, values) if v > 0.80])
-    std_a = num.std([a for (a, v) in zip(angles, values) if v > 0.80])
-    n_ev = len([a for (a, v) in zip(angles, values) if v > 0.80])
+    median_a = num.median([a for (a, v) in zip(angles, values) if v > ccmin])
+    mean_a = num.mean([a for (a, v) in zip(angles, values) if v > ccmin])
+    std_a = num.std([a for (a, v) in zip(angles, values) if v > ccmin])
+    n_ev = len([a for (a, v) in zip(angles, values) if v > ccmin])
 
     return median_a, mean_a, std_a, switched, n_ev
 
@@ -128,7 +128,7 @@ def get_m_angle_all(cc_i_ev_vs_rota, catalog, st):
         if not num.isnan(maxcc_value):
             maxcc_angle = -180 + num.argmax(cc_i_ev_vs_rota[i_ev, :])
 
-            if maxcc_value > 0.80:
+            if maxcc_value > ccmin:
                 dict_ev_angle[ev.time] = int(maxcc_angle)
 
     return dict_ev_angle
@@ -202,7 +202,7 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, dir_ro):
 
 
 def prep_orient(datapath, st, catalog, dir_ro,
-                bp, dt_start, dt_stop,
+                bp, dt_start, dt_stop, ccmin=0.80,
                 plot_heatmap=False,  plot_distr=False):
     '''
     Perform orientation analysis using Rayleigh waves, main function.
@@ -338,7 +338,7 @@ def prep_orient(datapath, st, catalog, dir_ro,
                                     rot_angles, st, dir_ro)
 
         median_a, mean_a, std_a, switched, n_ev =\
-            get_m_angle_switched(cc_i_ev_vs_rota, catalog, st)
+            get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin)
 
         dict_ev_angle = get_m_angle_all(cc_i_ev_vs_rota, catalog, st)
 
@@ -415,7 +415,7 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
                *m.jxyr)
 
     # add handmade label
-    if label_settings:
+    if ls:
         m.gmt.psxy(in_columns=([ls[0]], [ls[1]], [ls[1]], [0.9]),
                    S='V0.5c', W='0.07c,red', *m.jxyr)
         labels = ['Correction angle']

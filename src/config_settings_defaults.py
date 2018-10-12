@@ -118,6 +118,7 @@ def generate_default_config():
     	                        bandpass=(3, 0.01, 0.05),
     	                        start_before_ev=30,
     	                        stop_after_ev=480,
+                              ccmin = 0.80,
                               plot_heatmap=False,
                               plot_distr=False,
                               plot_orient_map_fromfile=False)
