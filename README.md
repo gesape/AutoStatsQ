@@ -226,6 +226,9 @@ Settings:
   bandpass: [3.0, 0.01, 0.05]  # [Hz]
   start_before_ev: 30.0  # start befor theo. Rayleigh wave arrival, [s]
   stop_after_ev: 480.0  # end after theo. Rayleigh wave arrival, [s]
+  ccmin: 0.80
+  # min. cross-correlation value. results below this value will not be
+  # considered
   plot_heatmap: false
   plot_distr: false
   plot_orient_map_fromfile: false
