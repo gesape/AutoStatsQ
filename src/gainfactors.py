@@ -51,7 +51,6 @@ class Section():
     def finish(self, method, fband, taper, ev_counter):
         if len(method) == 2:
             reference_nsl = method[1][1]
-            # print(reference_nsl)
             reference_nslc = list(filter(
                 lambda x: util.match_nslc(guess_nsl_template(reference_nsl), x),
                                           self.max_tr.keys()))
@@ -133,7 +132,6 @@ class AutoGain():
 
     def process(self, fband, taper, twd):
         no_events = len(self.events)
-        # print(self.arrT.shape)
 
         for i_ev, event in enumerate(self.events):
             tr_nslc_ids = []
@@ -301,16 +299,7 @@ class AutoGain():
     def n_ev(self):
         if self.results is None:
             self.congregate()
-        if self._n_ev is None and self.method != 'syn':
-            print('here')
-            print((self.results).shape)
-            print((num.isnan(self.results)).shape)
-            print((~num.isnan(self.results)).shape)
-
-            #print(num.count_nonzero(~num.isnan(self.results), axis=0))
-            #print(num.count_nonzero(~num.isnan(self.results), axis=1))
-            #print(num.count_nonzero(~num.isnan(self.results), axis=None))
-            
+        if self._n_ev is None and self.method != 'syn':            
             nev_used = []
             for n_st in range(self.results.shape[1]):
                 cnt = 0
@@ -318,7 +307,6 @@ class AutoGain():
                     if not num.isnan(self.results[n_ev, n_st]): 
                         cnt+=1
                 nev_used.append(cnt)
-            print(nev_used)
 
             self._n_ev = dict(zip(map(lambda x: '.'.join(x),
                                       self.all_nslc_ids),
@@ -354,7 +342,6 @@ class AutoGain():
             g.ref_stats = '%s %s' % (self.method[1][0], self.method[1][1])
         g.regularize()
         g.validate()
-        print(g)
         g.dump(filename=directory+fn)        
 
     def save_single_events(self, fn, directory, plot=False):
