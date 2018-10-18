@@ -82,7 +82,7 @@ def generate_default_config():
     RestDownconf = RestDownRotConfig(rest_data=False,
                                      freqlim=(0.005, 0.01, 0.2, 0.25),
                                      rotate_data=False,
-                                     deltat_down=2)
+                                     deltat_down=2.)
 
     synthsconf = SynthDataConfig(make_syn_data=False,
                                  engine_path='/path/to/GF_stores',
