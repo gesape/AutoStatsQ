@@ -92,13 +92,12 @@ def main():
 
     # Generate a (template) config file:
     if args.generate_config:
-        fn_config = 'Test.config'
-        if os.path.exists(fn_config):
+        fn_config = 'AutoStatsQ_settings.config'
+        if os.path.exists('AutoStatsQ_settings.config'):
             print('file exists: %s' % fn_config)
 
         config = generate_default_config()
-        config.regularize()
-        config.validate()
+
         config.dump(filename=fn_config)
         print('created a fresh config file "%s"' % fn_config)
 
@@ -1015,7 +1014,7 @@ def main():
         if gainfconf.plot_median_gain_on_map is True:
             dir_gains = data_dir + 'results/gains/'
             for c in gainfconf.components:
-                plot_median_gain_map_from_file(ns, st_lats, st_lons, maps.pl_opt,
+                plot_median_gain_map_from_file(ns, st_lats, st_lons, maps.pl_opt, maps.pl_topo,
                                              'gains_median_and_mean%s.txt' % c, dir_gains, c,
                                              maps.map_size)
 
@@ -1119,6 +1118,7 @@ def main():
             list_switched = []
             used_stats = []
             list_all_angles = []
+            n_ev = []
 
             st_numbers = [i_st for i_st in range(len(all_stations))]
             for i_st, st in zip(st_numbers, all_stations):
@@ -1131,6 +1131,7 @@ def main():
                                         orientconf.bandpass,
                                         orientconf.start_before_ev,
                                         orientconf.stop_after_ev,
+                                        orientconf.ccmin,
                                         orientconf.plot_heatmap,
                                         orientconf.plot_distr)
 
@@ -1140,17 +1141,19 @@ def main():
                     list_stdd_a.append(out[2])
                     list_switched.append(out[3])
                     list_all_angles.append(out[4])
+                    n_ev.append(out[5])
 
                     used_stats.append(st)
 
-            orient.write_output(list_median_a, list_mean_a, list_stdd_a, list_switched, used_stats, dir_ro)
+            orient.write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
+                                n_ev, used_stats, dir_ro, orientconf.ccmin)
             #orient.write_all_output_csv(list_all_angles, used_stats, dir_ro)
 
         if orientconf.plot_orient_map_fromfile == True:
             dir_ro = data_dir + 'results/orient/'          
             orient.plot_corr_angles(ns, st_lats, st_lons,
                                     'CorrectionAngles.yaml', dir_ro,
-                                    maps.pl_opt,
+                                    maps.pl_opt, maps.pl_topo,
                                     maps.map_size,
                                     orientconf.orient_map_label)
 

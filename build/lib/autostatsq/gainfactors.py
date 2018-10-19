@@ -7,7 +7,7 @@ import numpy as num
 from collections import defaultdict
 from pyrocko import cake, util
 from pyrocko.orthodrome import distance_accurate50m
-from pyrocko.guts import Object, Dict, String, Float
+from pyrocko.guts import Object, Dict, String, Float, Int
 
 from .gainplots import plot_allgains
 
@@ -22,6 +22,7 @@ class Gains(Object):
     trace_gains_mean = Dict.T(String.T(), Float.T())
     trace_gains_median = Dict.T(String.T(), Float.T())
     trace_gains_stdev = Dict.T(String.T(), Float.T())
+    n_ev_used = Dict.T(String.T(), Int.T())
     ref_stats = String.T(optional=True)
 
 
@@ -50,7 +51,6 @@ class Section():
     def finish(self, method, fband, taper, ev_counter):
         if len(method) == 2:
             reference_nsl = method[1][1]
-            # print(reference_nsl)
             reference_nslc = list(filter(
                 lambda x: util.match_nslc(guess_nsl_template(reference_nsl), x),
                                           self.max_tr.keys()))
@@ -125,13 +125,13 @@ class AutoGain():
         self.results = None
         self._mean = None
         self._median = None  
-        self._stdev = None      
+        self._stdev = None  
+        self._n_ev = None    
         self.arrT = arrT
 
 
     def process(self, fband, taper, twd):
         no_events = len(self.events)
-        # print(self.arrT.shape)
 
         for i_ev, event in enumerate(self.events):
             tr_nslc_ids = []
@@ -293,7 +293,26 @@ class AutoGain():
             # might rise a warning if for one station only nan are in results,
             # but works fine.
 
-        return self._stdev        
+        return self._stdev
+
+    @property
+    def n_ev(self):
+        if self.results is None:
+            self.congregate()
+        if self._n_ev is None and self.method != 'syn':            
+            nev_used = []
+            for n_st in range(self.results.shape[1]):
+                cnt = 0
+                for n_ev in range(self.results.shape[0]):
+                    if not num.isnan(self.results[n_ev, n_st]): 
+                        cnt+=1
+                nev_used.append(cnt)
+
+            self._n_ev = dict(zip(map(lambda x: '.'.join(x),
+                                      self.all_nslc_ids),
+                                      nev_used))    
+        return self._n_ev
+           
 
     def save_mean(self, fn, directory):
         g = Gains()
@@ -317,7 +336,8 @@ class AutoGain():
         g = Gains()
         g.trace_gains_median = self.median
         g.trace_gains_mean = self.mean
-        g.trace_gains_stdev = self.stdev       
+        g.trace_gains_stdev = self.stdev
+        g.n_ev_used = self.n_ev 
         if len(self.method) == 2:
             g.ref_stats = '%s %s' % (self.method[1][0], self.method[1][1])
         g.regularize()

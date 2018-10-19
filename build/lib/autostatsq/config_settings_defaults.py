@@ -49,10 +49,10 @@ def generate_default_config():
                           # phase names for cake.
                           phase_select = 'P|p|P(cmb)P(icb)P(icb)p(cmb)p|' +\
                                         'P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p',
-                          calc_est_R = True)
+                          calc_est_R = False)
 
 
-    cake_ttt_gen = CakeTTTGenerator(calc_ttt=True,
+    cake_ttt_gen = CakeTTTGenerator(calc_ttt=False,
                           earthmodel_id='prem-no-ocean.f',
                           dir_ttt='/directory/to/save/traveltimes/',
                           tabulated_phases = [TPDef(id='p', definition='P,p')],
@@ -82,7 +82,7 @@ def generate_default_config():
     RestDownconf = RestDownRotConfig(rest_data=False,
                                      freqlim=(0.005, 0.01, 0.2, 0.25),
                                      rotate_data=False,
-                                     deltat_down=2)
+                                     deltat_down=2.)
 
     synthsconf = SynthDataConfig(make_syn_data=False,
                                  engine_path='/path/to/GF_stores',
@@ -118,6 +118,7 @@ def generate_default_config():
     	                        bandpass=(3, 0.01, 0.05),
     	                        start_before_ev=30,
     	                        stop_after_ev=480,
+                              ccmin = 0.80,
                               plot_heatmap=False,
                               plot_distr=False,
                               plot_orient_map_fromfile=False)

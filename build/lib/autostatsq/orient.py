@@ -15,6 +15,7 @@ class dict_stats_rota(Object):
     CorrectAngl_perStat_median = Dict.T(String.T(), Float.T())
     CorrectAngl_perStat_mean = Dict.T(String.T(), Float.T())
     CorrectAngl_perStat_stdd = Dict.T(String.T(), Float.T())
+    n_events = Dict.T(String.T(), Int.T())
 
 
 class rota_ev_by_stat(Object):
@@ -39,12 +40,12 @@ class Polarity_switch(Object):
 
 
 def write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
-                 used_stats, dir_ro):
+                 n_ev, used_stats, dir_ro, ccmin):
     if list_switched:
         # write to yaml
         l_sw = [Event_sw(station=(s[0], s[1]), name=s[2],
                          time=s[3], max_cc_angle=s[4], max_cc_coef=s[5])
-                for l in list_switched for s in l if s and s[5] > 0.85]
+                for l in list_switched for s in l if s and s[5] > ccmin]
 
         sw = Polarity_switch(switched_by_stat=l_sw)
         sw.regularize()
@@ -52,15 +53,17 @@ def write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
         sw.dump(filename='%s/Switched_Polarities.yaml'
                 % (dir_ro))
 
-    if list_median_a and list_mean_a and list_stdd_a:
+    if list_median_a and list_mean_a and list_stdd_a and n_ev:
         ns_list = ['%s %s' % (st.network, st.station) for st in used_stats]
         perStat_median = dict(zip(map(lambda x: x, ns_list), list_median_a))
         perStat_mean = dict(zip(map(lambda x: x, ns_list), list_mean_a))
         perStat_std = dict(zip(map(lambda x: x, ns_list), list_stdd_a))
+        perStat_nev = dict(zip(map(lambda x: x, ns_list), n_ev))
 
         dicts_rota = dict_stats_rota(CorrectAngl_perStat_median=perStat_median,
                                      CorrectAngl_perStat_mean=perStat_mean,
-                                     CorrectAngl_perStat_stdd=perStat_std)
+                                     CorrectAngl_perStat_stdd=perStat_std,
+                                     n_events=perStat_nev)
 
         dicts_rota.regularize()
         dicts_rota.validate()
@@ -82,11 +85,11 @@ def write_all_output_csv(list_all_angles, used_stats, dir_ro):
                              % (dir_ro))
 
 
-def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st):
+def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
     '''
     1) did polarity swith occur? for single events, say if
     max c-c is closer to 180 deg than to 0 deg! (only trusted if
-    coef > 0.85, otherwise might just be noise)
+    coef > 0.80)
     2) provide median of correction angle associated to max-cc,
     only use those with max cc-coef > 0.85 or sth like that
     '''
@@ -107,11 +110,12 @@ def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st):
                                  util.time_to_str(ev.time),
                                  maxcc_angle, maxcc_value))
 
-    median_a = num.median([a for (a, v) in zip(angles, values) if v > 0.85])
-    mean_a = num.mean([a for (a, v) in zip(angles, values) if v > 0.85])
-    std_a = num.std([a for (a, v) in zip(angles, values) if v > 0.85])
+    median_a = num.median([a for (a, v) in zip(angles, values) if v > ccmin])
+    mean_a = num.mean([a for (a, v) in zip(angles, values) if v > ccmin])
+    std_a = num.std([a for (a, v) in zip(angles, values) if v > ccmin])
+    n_ev = len([a for (a, v) in zip(angles, values) if v > ccmin])
 
-    return median_a, mean_a, std_a, switched
+    return median_a, mean_a, std_a, switched, n_ev
 
 
 def get_m_angle_all(cc_i_ev_vs_rota, catalog, st):
@@ -124,7 +128,7 @@ def get_m_angle_all(cc_i_ev_vs_rota, catalog, st):
         if not num.isnan(maxcc_value):
             maxcc_angle = -180 + num.argmax(cc_i_ev_vs_rota[i_ev, :])
 
-            if maxcc_angle > 0.85:
+            if maxcc_value > ccmin:
                 dict_ev_angle[ev.time] = int(maxcc_angle)
 
     return dict_ev_angle
@@ -198,7 +202,7 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, dir_ro):
 
 
 def prep_orient(datapath, st, catalog, dir_ro,
-                bp, dt_start, dt_stop,
+                bp, dt_start, dt_stop, ccmin=0.80,
                 plot_heatmap=False,  plot_distr=False):
     '''
     Perform orientation analysis using Rayleigh waves, main function.
@@ -333,16 +337,16 @@ def prep_orient(datapath, st, catalog, dir_ro,
             plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog,
                                     rot_angles, st, dir_ro)
 
-        median_a, mean_a, std_a, switched =\
-            get_m_angle_switched(cc_i_ev_vs_rota, catalog, st)
+        median_a, mean_a, std_a, switched, n_ev =\
+            get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin)
 
         dict_ev_angle = get_m_angle_all(cc_i_ev_vs_rota, catalog, st)
 
-        return median_a, mean_a, std_a, switched, dict_ev_angle
+        return median_a, mean_a, std_a, switched, dict_ev_angle, n_ev
 
 
 def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
-                     pl_options, mapsize, ls=False):
+                     pl_options, pl_topo, mapsize, ls=False):
     '''
     Plot correction angles of all stations on a map. nans are igored.
     Values for plotting are read from file which was automatically prepared in
@@ -392,7 +396,7 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
         width=mapsize[0],
         height=mapsize[1],
         show_grid=False,
-        show_topo=False,
+        show_topo=pl_topo,
         illuminate=True,
         illuminate_factor_ocean=0.15,
         show_rivers=True,

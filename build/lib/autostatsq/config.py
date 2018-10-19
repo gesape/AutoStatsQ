@@ -29,7 +29,7 @@ class CatalogConfig(Object):
 	mid_point = List.T(
 		help='Enter some estimation on centre point of array, needed for\
              subset based on distances and plotting only.')
-	median_ev_in_bin = Bool.T(default=True)
+	median_ev_in_bin = Bool.T()
 	#weighted_magn_baz_ev = Bool.T()
 
 	min_dist_km = Float.T()
@@ -97,7 +97,7 @@ class RestDownRotConfig(Object):
 
 	# Downsampling & Rotate NE --> RT
 	rotate_data = Bool.T()
-	deltat_down = Int.T()
+	deltat_down = Float.T()
 
 
 class SynthDataConfig(Object):
@@ -157,6 +157,7 @@ class OrientConfig(Object):
 	start_before_ev = Float.T()
 	stop_after_ev = Float.T()
 	plot_heatmap = Bool.T()
+	ccmin = Float.T(optional=True)
 	plot_distr = Bool.T()
 	plot_orient_map_fromfile = Bool.T()
 	orient_map_label = List.T(optional=True)
@@ -165,7 +166,7 @@ class OrientConfig(Object):
 class maps(Object):
     map_size = List.T()
     pl_opt = List.T()
-    pl_topo = Bool.T()
+    pl_topo = Bool.T(default=False)
 
 
 class AutoStatsQConfig(Object):
