@@ -171,7 +171,10 @@ Settings:
   rest_data: false
   freqlim: [0.005, 0.01, 0.2, 0.25] # [Hz]
   rotate_data: false
-  deltat_down: 2
+  deltat_down: 2 [s]
+  # set deltat_down to 0.0 if no downsampling is wanted. (This will slow down everything,
+  # and the PSD-test does only work if the sampling freuqency of synthtic and real data is 
+  # the same.)
 
 - !autostatsq.config.SynthDataConfig
   # computation of synthetic data

@@ -97,7 +97,7 @@ class RestDownRotConfig(Object):
 
 	# Downsampling & Rotate NE --> RT
 	rotate_data = Bool.T()
-	deltat_down = Float.T()
+	deltat_down = Float.T(default=2.0)
 
 
 class SynthDataConfig(Object):

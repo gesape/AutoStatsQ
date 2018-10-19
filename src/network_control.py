@@ -773,7 +773,8 @@ def main():
 
                                             try:
                                                 tr1.chop(trmin, trmax)
-                                                tr1.downsample_to(deltat=deltat_down)
+                                                if deltat_down > 0.0:
+                                                    tr1.downsample_to(deltat=deltat_down)
                                                 save_rot_down_tr(tr1, dir_rot, ev_t_str)
 
                                             except trace.NoData:
@@ -793,7 +794,8 @@ def main():
 
                                             try:
                                                 tr2.chop(trmin, trmax)
-                                                tr2.downsample_to(deltat=deltat_down)
+                                                if deltat_down > 0.0:                                                
+                                                    tr2.downsample_to(deltat=deltat_down)
                                                 save_rot_down_tr(tr2, dir_rot, ev_t_str)
 
                                             except trace.NoData:
@@ -808,7 +810,8 @@ def main():
 
                                     try:
                                         trZ.chop(trmin, trmax)
-                                        trZ.downsample_to(deltat=deltat_down)
+                                        if deltat_down > 0.0:
+                                            trZ.downsample_to(deltat=deltat_down)
                                         trZ.set_channel('Z')
                                         save_rot_down_tr(trZ, dir_rot, ev_t_str)
 
@@ -867,7 +870,6 @@ def main():
                     os.makedirs(data_dir+'rrd/', exist_ok=True)
                     dir_rot = data_dir + 'rrd/' + ev_t_str
                     dir_rest = data_dir + 'rest/' + ev_t_str
-
                     downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, RestDownconf.deltat_down)
                     print('saved ev ', util.time_to_str(ev.time))
 
