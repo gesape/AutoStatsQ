@@ -2,21 +2,20 @@ from .config import GeneralSettings, CatalogConfig, ArrTConfig,\
 CakeTTTGenerator,\
 MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
 GainfactorsConfig, PSDConfig, OrientConfig, AutoStatsQConfig, maps
-from pyrocko.gf import TPDef
 
 
 def generate_default_config():
     gensettings = GeneralSettings(
         data_dir='/some/data/directory/',
         list_station_lists=['/path/to/station-file/file.csv',
-'/path/to/station-file/file.xml'])
+                            '/path/to/station-file/file.xml'])
 
     catalogconf = CatalogConfig(
-                                search_events = True,
-                                use_local_catalog = False,
-                                subset_of_local_catalog = True,
-                                use_local_subsets = False,
-                                subset_fns = {},      
+                                search_events=True,
+                                use_local_catalog=False,
+                                subset_of_local_catalog=True,
+                                use_local_subsets=False,
+                                subset_fns={},
                                 # Filename of catalog (local or name for saving catalog)
                                 catalog_fn='catalog.txt',
                                 # catalog plot (backazimuthal view) max. distance to show
@@ -33,13 +32,14 @@ def generate_default_config():
                                 # polarisation, etc.
                                 min_dist_km=1000.,
                                 max_dist_km=9999999.9,
-                                depth_options= {'deep': [25000, 1000000], 'shallow':[100, 40000]},  
+                                depth_options={'deep': [25000, 1000000],
+                                               'shallow': [100, 40000]},
                                 plot_catalog_all=False,
                                 plot_hist_wedges=False,
                                 plot_wedges_vs_dist=False,
                                 plot_wedges_vs_magn=False,
                                 plot_dist_vs_magn=False,
-                                plot_catalog_subset=False)#,
+                                plot_catalog_subset=False)
                                 #weighted_magn_baz_ev=True)
 
     arrTconf = ArrTConfig(calc_first_arr_t=False,
@@ -47,26 +47,11 @@ def generate_default_config():
                           # be used for the time window.
                           # Type 'cake list-phase-map' into terminal to find more
                           # phase names for cake.
-                          phase_select = 'P|p|P(cmb)P(icb)P(icb)p(cmb)p|' +\
-                                        'P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p',
-                          calc_est_R = False)
+                          phase_select='P|p|P(cmb)P(icb)P(icb)p(cmb)p|' +\
+                                       'P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p',
+                          calc_est_R=False)
 
-
-    cake_ttt_gen = CakeTTTGenerator(calc_ttt=False,
-                          earthmodel_id='prem-no-ocean.f',
-                          dir_ttt='/directory/to/save/traveltimes/',
-                          tabulated_phases = [TPDef(id='p', definition='P,p')],
-                          dist_min = 1000.,
-                          dist_max = 9999.,
-                          dist_acc = 2.,
-                          s_depth_min = 10.,
-                          s_depth_max = 50.,
-                          s_acc = 2.,
-                          r_depth_min = 0.,
-                          r_depth_max = 0.,
-                          r_acc = 2.,
-                          t_acc = 3.,
-                          )
+    cake_ttt_gen = CakeTTTGenerator(calc_ttt=False)
 
     metaDataconf = MetaDataDownloadConfig(
         download_data=False,
@@ -91,23 +76,23 @@ def generate_default_config():
     gainfconf = GainfactorsConfig(calc_gainfactors=False,
                                   gain_factor_method=['reference_nsl', ('GE', 'MATE')],#['median_all_avail'],
                                   fband={'order': 4, 'corner_hp': 0.01, 'corner_lp': 0.2},
-                                  taper_xfrac=0.25,  # richtig?
+                                  taper_xfrac=0.25,
                                   wdw_st_arr=5,
                                   wdw_sp_arr=60,
-                                  phase_select = 'first(P|p|P(cmb)P(icb)P(icb)p(cmb)p|' +\
-                                                 'P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p)',
-                                  components=['Z','R','T'],
+                                  phase_select='first(P|p|P(cmb)P(icb)P(icb)p(cmb)p|' +\
+                                               'P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p)',
+                                  components=['Z', 'R', 'T'],
                                   plot_median_gain_on_map=False,
                                   plot_allgains=False)
 
     psdsconf = PSDConfig(calc_psd=False,
-    					           tinc=600,
-    					           tpad=200,
-    					           dt_start=60,
-    					           dt_end=1800,
-    					           n_poly = 25,
-	                       norm_factor = 50,
-	                       f_ign = 0.02,
+                         tinc=600,
+                         tpad=200,
+                         dt_start=60,
+                         dt_end=1800,
+                         n_poly=25,
+                         norm_factor=50,
+                         f_ign=0.02,
                          plot_psds=False,
                          plot_ratio_extra=False,
                          plot_m_rat=False,
@@ -115,18 +100,17 @@ def generate_default_config():
                          plt_neigh_ranges=False)
 
     orientconf = OrientConfig(orient_rayl=False,
-    	                        bandpass=(3, 0.01, 0.05),
-    	                        start_before_ev=30,
-    	                        stop_after_ev=480,
-                              ccmin = 0.80,
+                              bandpass=(3, 0.01, 0.05),
+                              start_before_ev=30,
+                              stop_after_ev=480,
+                              ccmin=0.80,
                               plot_heatmap=False,
                               plot_distr=False,
                               plot_orient_map_fromfile=False)
 
-    _maps = maps(
-                map_size = [30.0, 30.0],
-                pl_opt=[46, 11.75, 800000],
-                pl_topo= False)
+    _maps = maps(map_size=[30.0, 30.0],
+                 pl_opt=[46, 11.75, 800000],
+                 pl_topo=False)
 
     config = AutoStatsQConfig(
       Settings=[gensettings, catalogconf, arrTconf, cake_ttt_gen, metaDataconf,

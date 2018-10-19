@@ -123,24 +123,9 @@ Settings:
 - !autostatsq.config.CakeTTTGenerator
   # uses travel time tables instead of cake (faster, but settings more difficult)
   # if you are not familiar with fomosto' travel time tables use ArrTConfig section 
-  # instead!
+  # instead! (for settings see src/config.py)
   calc_ttt: false
-  dir_ttt: /directory/to/save/traveltimes/
-  earthmodel_id: prem-no-ocean.f
-  tabulated_phases:
-  - !pf.TPDef
-    id: p
-    definition: P,p
-  dist_min: 1000.0
-  dist_max: 9999.0
-  dist_acc: 2.0
-  s_depth_min: 10.0
-  s_depth_max: 50.0
-  s_acc: 2.0
-  r_depth_min: 0.0
-  r_depth_max: 0.0
-  r_acc: 2.0
-  t_acc: 3.0
+
 
 - !autostatsq.config.MetaDataDownloadConfig
   # download of metadata and data

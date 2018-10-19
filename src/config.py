@@ -55,23 +55,21 @@ class ArrTConfig(Object):
 
 
 class CakeTTTGenerator(Object):
-	calc_ttt=Bool.T(
-		help='calculate first arrival times using ttt interpolation?')
-	dir_ttt=String.T()
-	earthmodel_id = String.T()
+	calc_ttt=Bool.T(default=False)
+	dir_ttt=String.T(optional=True)
+	earthmodel_id = String.T(optional=True)
 	tabulated_phases = List.T(
-		TPDef.T(),
-		help='list of tabulated phase definitions usable shifters')
-	dist_min = Float.T()
-	dist_max = Float.T()
-	dist_acc = Float.T()
-	s_depth_min = Float.T()
-	s_depth_max = Float.T()
-	s_acc = Float.T()
-	r_depth_min = Float.T(default=0.)
-	r_depth_max = Float.T(default=0.)
-	r_acc = Float.T()
-	t_acc = Float.T()
+		TPDef.T(), optional=True)
+	dist_min = Float.T(optional=True)
+	dist_max = Float.T(optional=True)
+	dist_acc = Float.T(optional=True)
+	s_depth_min = Float.T(optional=True)
+	s_depth_max = Float.T(optional=True)
+	s_acc = Float.T(optional=True)
+	r_depth_min = Float.T(optional=True)
+	r_depth_max = Float.T(optional=True)
+	r_acc = Float.T(optional=True)
+	t_acc = Float.T(optional=True)
 
 
 class MetaDataDownloadConfig(Object):
