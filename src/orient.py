@@ -118,7 +118,7 @@ def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
     return median_a, mean_a, std_a, switched, n_ev
 
 
-def get_m_angle_all(cc_i_ev_vs_rota, catalog, st):
+def get_m_angle_all(cc_i_ev_vs_rota, catalog, st, ccmin):
 
     dict_ev_angle = {}
 
@@ -139,7 +139,7 @@ def get_tr_by_cha(pile, start_twd, end_twd, cha):
         tmin=start_twd,
         tmax=end_twd,
         trace_selector=lambda tr: tr.nslc_id[3] == cha,
-        want_incomplete=False)
+        want_incomplete=True)
 
     return tr
 
@@ -236,12 +236,12 @@ def prep_orient(datapath, st, catalog, dir_ro,
         r_arr_by_ev = (dists/1000.) / v_rayleigh
         cc_i_ev_vs_rota = num.empty((n_ev, 360))
         rot_angles = range(-180, 180, 1)
-        print(st.network, st.station)
         for i_ev, ev in enumerate(catalog):
             arrT = ev.time + r_arr_by_ev[i_ev]
 
             start_twd1 = ev.time
             end_twd1 = arrT + 1800
+
             # if st.station == 'MATE':
             #     print('origin time:', util.time_to_str(ev.time))
             #     print('start:', util.time_to_str(start_twd),'end:',
@@ -270,9 +270,8 @@ def prep_orient(datapath, st, catalog, dir_ro,
                 continue
             trZ.bandpass(bp[0], bp[1], bp[2])
             trZ.chop(tmin=start_twd2, tmax=end_twd2)
-
             for i_r, r in enumerate(rot_angles):
-                # print('rotation angle %s deg' % r)
+                print('rotation angle [deg]: %5d' % r, end='\r')
                 rot_2, rot_3 = trace.rotate(traces=[trR, trT], azimuth=r,
                                             in_channels=['R', 'T'],
                                             out_channels=['2', '3'])
@@ -340,7 +339,7 @@ def prep_orient(datapath, st, catalog, dir_ro,
         median_a, mean_a, std_a, switched, n_ev =\
             get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin)
 
-        dict_ev_angle = get_m_angle_all(cc_i_ev_vs_rota, catalog, st)
+        dict_ev_angle = get_m_angle_all(cc_i_ev_vs_rota, catalog, st, ccmin)
 
         return median_a, mean_a, std_a, switched, dict_ev_angle, n_ev
 

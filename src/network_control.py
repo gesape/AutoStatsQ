@@ -37,6 +37,8 @@ from .calc_ttt import *
 #                  'LBM','LEMB','OGS2','OGS3','PLDF','PLYF','PRIMA','SALF','SZBH',
 #                  'WALT','IMI','MAGO','NDIM','VIE']
 
+#st_liste_check = ['NICK', 'LAGB']
+
 '''
 Quality control of array stations
 
@@ -613,6 +615,7 @@ def main():
                     transf_taper = 1/min(RestDownconf.freqlim)
 
                     for st in all_stations:
+                        #print(st.station)
                         #if st.station not in st_liste_check:
                         #    continue
                         #if st.network not in net_check:
@@ -620,6 +623,15 @@ def main():
                         nsl = st.nsl()
                         trs = p.all(
                             trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2])
+
+                        if not trs and metaDataconf.local_data:
+                          p = pile.make_pile(paths=metaDataconf.local_data, show_progress=False,
+                            regex=st.station)                       
+                          tmin=ev.time+metaDataconf.dt_start*3600
+                          tmax=ev.time+metaDataconf.dt_end*3600
+                          trs = p.all(
+                            tmin=tmin,
+                            tmax=tmax)
 
                         if trs:
                             comps = [tr.channel for tr in trs]
@@ -663,7 +675,7 @@ def main():
                                         polezero_resp = resp_now.get_pyrocko_response(
                                             nslc=tr.nslc_id,
                                             timespan=(tr.tmin, tr.tmax),
-                                            fake_input_units='M'        ### ???
+                                            fake_input_units='M'
                                             )
 
                                         restituted = tr.transfer(
@@ -758,6 +770,7 @@ def main():
                             
                             if '1' in test and '2' in test:
                                 naming = '1,2'
+                                print('found 1,2')
                             elif  '2' in test and '3' in test:
                                 naming = '2,3'
 
@@ -829,16 +842,24 @@ def main():
                             baz = stat.backazimuth
                             az_r = baz + 180 - az1
                            
-                            if str(tr1.channel).endswith('N') is True or str(tr1.channel).endswith('2') is True:
+                            if str(tr1.channel).endswith('N') is True\
+                               or str(tr1.channel).endswith('2') is True and naming == '2,3'\
+                               or str(tr1.channel).endswith('1') is True and naming == '1,2':
                                 tr1_ch = tr1.channel
 
-                            if str(tr1.channel).endswith('E') is True or str(tr1.channel).endswith('3') is True:
+                            if str(tr1.channel).endswith('E') is True\
+                              or str(tr1.channel).endswith('3') is True and naming == '2,3'\
+                              or str(tr1.channel).endswith('2') is True and naming == '1,2':
                                 tr2_ch = tr1.channel
 
-                            if str(tr2.channel).endswith('N') is True or str(tr2.channel).endswith('2') is True:
+                            if str(tr2.channel).endswith('N') is True\
+                             or str(tr2.channel).endswith('2') is True and naming == '2,3'\
+                             or str(tr2.channel).endswith('1') is True and naming == '1,2':
                                 tr1_ch = tr2.channel
 
-                            if str(tr2.channel).endswith('E') is True or str(tr2.channel).endswith('3') is True:
+                            if str(tr2.channel).endswith('E') is True\
+                             or str(tr2.channel).endswith('3') is True and naming == '2,3'\
+                             or str(tr2.channel).endswith('2') is True and naming == '1,2':
                                 tr2_ch = tr2.channel
 
 

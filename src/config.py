@@ -76,6 +76,7 @@ class MetaDataDownloadConfig(Object):
     download_data = Bool.T()
     download_metadata = Bool.T()
     local_metadata = List.T(default=[])
+    local_data = List.T(default=[])
     use_downmeta = Bool.T(default=True)
     components_download = String.T()
     # components = List.T()
