@@ -134,7 +134,7 @@ Settings:
   download_metadata: false 
   use_downmeta: false
   # Set to true if downloaded metadata should be used.
-  
+
   # local_metadata: [stations.xml]
   # list of local metadata files (uncomment if needed)
   # local_data: [./data]
@@ -271,7 +271,8 @@ Gain test:
 Orientation test:
 - yaml file with median, mean and standard deviation of obtained correction angle
 - yaml file with polarity errors
-- optional: map showing the median correction angle
+- yaml file containing all results for all stations and single events
+- optional: map showing the median correction angle; figures showing cc value vs correction angle for each event and station; figure showing correction angle over time for each station
 
 PSD test:
 - flat freq ranges in yaml file for each station and component
