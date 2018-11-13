@@ -6,6 +6,7 @@ from pyrocko.orthodrome import distance_accurate50m_numpy
 from matplotlib import pyplot as plt
 from pyrocko.guts import Object, Dict, String, Float, List, Int, Tuple, load
 from pyrocko.plot.automap import Map
+import matplotlib.dates as mdates
 
 
 v_rayleigh = 4.0  # km/s
@@ -20,7 +21,7 @@ class dict_stats_rota(Object):
 
 class rota_ev_by_stat(Object):
     station = Tuple.T(2, String.T())
-    ev_rota = Dict.T(Float.T(), Int.T())
+    ev_rota = Dict.T(String.T(), Int.T())
 
 
 class dict_stats_all_rota(Object):
@@ -37,6 +38,50 @@ class Event_sw(Object):
 
 class Polarity_switch(Object):
     switched_by_stat = List.T(Event_sw.T())
+
+
+def plot_corr_time(ns, filename, dir_ro):
+    '''
+    Plot angle of max. cr-corr vs event time for each station.
+    Results below cr-corr threshold are ignored.
+
+    '''
+    angles_fromfile = load(filename=dir_ro+filename)
+    # y_lim = (-180., 180.)
+
+    for item in angles_fromfile.dict_stats_all:
+        st = item.station        
+        ev_list = []
+        angle_list = []
+        for i_ev, (ev, angle) in enumerate(item.ev_rota.items()): 
+            ev_list.append(float(util.str_to_time(ev)))
+            angle_list.append(float(angle))
+        
+        if ev_list and angle_list:
+            absmax = max(angle_list, key=abs)
+            _median = num.median(angle_list)
+            _mean = num.mean(angle_list)
+            min_ev = num.min(ev_list)
+            max_ev = num.max(ev_list)
+            xvals = num.linspace(min_ev-1000, max_ev+1000, 100)        
+            fig, ax = plt.subplots(nrows=1, figsize=(8, 3))
+            ax.plot(ev_list, angle_list, 'bo')
+            ax.plot(xvals, [_median for i in range(len(xvals))], 'g--', label='median')
+            ax.plot(xvals, [_mean for i in range(len(xvals))], 'r--', label='mean')
+            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+            ax.set_ylim((-abs(absmax),abs(absmax)))
+            ax.set_title('%s.%s' % (st[0],st[1]))
+            ax.set_xlabel('Event date')
+            ax.set_ylabel('Correction angle [°]')
+            xticks = ax.get_xticks()
+            ax.set_xticklabels([util.time_to_str(x)[0:10] for x in xticks], rotation=30)
+            plt.tight_layout(rect=[0,0,0.8,1])
+            # plt.show()
+            fig.savefig('%s/%s_%s_overtime.png'
+                % (dir_ro, st[0], st[1]))
+            plt.close(fig)
+
+
 
 
 def write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
@@ -129,7 +174,7 @@ def get_m_angle_all(cc_i_ev_vs_rota, catalog, st, ccmin):
             maxcc_angle = -180 + num.argmax(cc_i_ev_vs_rota[i_ev, :])
 
             if maxcc_value > ccmin:
-                dict_ev_angle[ev.time] = int(maxcc_angle)
+                dict_ev_angle[util.time_to_str(ev.time)] = int(maxcc_angle)
 
     return dict_ev_angle
 

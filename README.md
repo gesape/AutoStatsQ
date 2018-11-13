@@ -134,9 +134,14 @@ Settings:
   download_metadata: false 
   use_downmeta: false
   # Set to true if downloaded metadata should be used.
-  # If metadata with responses is stored locally, you can use  
-  # local_metadata: [list_of_metadata_files] instead of or in 
-  # addition to downloading
+  
+  # local_metadata: [stations.xml]
+  # list of local metadata files (uncomment if needed)
+  # local_data: [./data]
+  # list with paths to local data (uncomment if needed)
+  # this option works but might be very slow in case of large amounts of data. 
+  # working on it...
+
   components_download: HH*
   # '*' would download all and analyse the most broadband channel for each
   # station
@@ -218,9 +223,17 @@ Settings:
   ccmin: 0.80
   # min. cross-correlation value. results below this value will not be
   # considered
+
   plot_heatmap: false
+  # plot correction angle vs. cross-correlation value as imshow heatmap
+  # usually distibution plot is better.
   plot_distr: false
+  # plot correction angle vs. cross-correlation value
+  # usually distibution plot is better.
   plot_orient_map_fromfile: false
+  # plot a map with correction angles as lines
+  plot_angles_vs_events: false
+  # plot angle vs single events, one plot for each station
 
 - !autostatsq.config.maps
   # settings for all output maps

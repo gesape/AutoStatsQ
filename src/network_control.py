@@ -384,7 +384,7 @@ def main():
                 os.makedirs(data_dir+'results/catalog/', exist_ok=True)
                 _tmin = util.time_to_str(min([ev.time for ev in subset_catalog]))
                 _tmax = util.time_to_str(max([ev.time for ev in subset_catalog]))                
-                fn = '%sresults/catalog/catalog_global_Mgr%s_%s-%s_%s_subset.png' % (data_dir, 
+                fn = '%sresults/catalog/catalog_global_Mgr%s_%s-%s_%s_subset.pdf' % (data_dir, 
                      str(catalogconf.min_mag),
                      _tmin[0:10], _tmax[0:10], d)
 
@@ -1170,7 +1170,7 @@ def main():
 
             orient.write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
                                 n_ev, used_stats, dir_ro, orientconf.ccmin)
-            #orient.write_all_output_csv(list_all_angles, used_stats, dir_ro)
+            orient.write_all_output_csv(list_all_angles, used_stats, dir_ro)
 
         if orientconf.plot_orient_map_fromfile == True:
             dir_ro = data_dir + 'results/orient/'          
@@ -1179,6 +1179,9 @@ def main():
                                     maps.pl_opt, maps.pl_topo,
                                     maps.map_size,
                                     orientconf.orient_map_label)
+        if orientconf.plot_angles_vs_events == True:
+            dir_ro = data_dir + 'results/orient/'
+            orient.plot_corr_time(ns, 'AllCorrectionAngles.yaml', dir_ro)
 
 if __name__ == '__main__':
     main()
