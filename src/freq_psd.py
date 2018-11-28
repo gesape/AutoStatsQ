@@ -543,8 +543,8 @@ def get_a_f(traces, cha):
         f, a = tr.spectrum(pad_to_pow2=True)
         a = num.abs(a)**2   # square ampls
         a *= tr.deltat * 2. / num.sum(win**2)  # normalizing
-        a[0] /= 2.  # erster wert durch zwei geteilt. warum?
-        a[a.size//2] /= 2.  # mittlerer wert durch zwei geteilt. warum?
+        a[0] /= 2.  # erster wert durch zwei geteilt.
+        a[a.size//2] /= 2.  # mittlerer wert durch zwei geteilt.
         a_list.append(a)
 
     # print(len(a_list))
