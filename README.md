@@ -13,9 +13,11 @@ Requirements
 ------------
 
 - python3
-- Seismology toolbox pyrocko: https://pyrocko.org/ (Heimann et al. 2017)
+- Seismology toolbox pyrocko: https://pyrocko.org/ (Heimann et al. 2017) (and all requirements needed for pyrocko)
 - To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto download` from the pyrocko environment. http://kinherd.org:8080/gfws/static/stores/
 
+
+Tested on Ubuntu 16.04 and openSUSE, using matplotlib version 1.5.1 and gmt version 5.4.2 (Wessel et al., 2013).
 
 Download and Installation
 -------------------------
@@ -286,3 +288,16 @@ PSD test:
 - flat freq ranges in yaml file for each station and component
 - optional: synth. and real PSDs
 - optional: plots showing fit through PSD ratios 
+
+
+References:
+-----------
+
+Wessel, P., Smith, W. H.~F., Scharroo, R., Luis, J.~F., and Wobbe, F. (2013).
+Generic Mapping Tools: Improved version released. EOS Trans. AGU, 94:409--410.
+
+Heimann, S., Kriegerowski, M., Isken, M., Cesca, S., Daout, S., Grigoli, F.,
+Juretzek, C., Megies, T., Nooshiri, N., Steinberg, A., Sudhaus, H.,
+Vasyura-Bathke, H., Willey, T., and Dahm, T. (2017).
+Pyrocko - an open-source seismology toolbox and library. v. 0.3. GFZ Data Services.
+http://doi.org/10.5880/GFZ.2.1.2017.001.
