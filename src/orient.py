@@ -455,13 +455,15 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
 
     # plot obtained rotation vectors:
     m.gmt.psxy(in_columns=(lon_no_nan, lat_no_nan, angle_no_nan, length),
-               S='V0.5c+jc', W='0.07c,red',
+               S='V0.5c+jc+eA', W='0.07c,red',
                *m.jxyr)
-
+    #m.gmt.psxy(in_columns=([10.82556], [46.74145], [171], [0.9]),
+    #           S='V0.5c+jc+eA', W='0.07c,black',
+    #           *m.jxyr)
     # add handmade label
     if ls:
-        m.gmt.psxy(in_columns=([ls[0]], [ls[1]], [ls[1]], [0.9]),
-                   S='V0.5c', W='0.07c,red', *m.jxyr)
+        m.gmt.psxy(in_columns=([ls[0]], [ls[1]], [ls[3]], [0.9]),
+                   S='V0.5c+eA', W='0.07c,red', *m.jxyr)
         labels = ['Correction angle']
         lat_lab = [ls[1]]
         lon_lab = [ls[2]]
