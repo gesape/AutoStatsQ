@@ -106,7 +106,8 @@ def generate_default_config():
                               ccmin=0.80,
                               plot_heatmap=False,
                               plot_distr=False,
-                              plot_orient_map_fromfile=False)
+                              plot_orient_map_fromfile=False,
+                              plot_angles_vs_events=False)
 
     _maps = maps(map_size=[30.0, 30.0],
                  pl_opt=[46, 11.75, 800000],

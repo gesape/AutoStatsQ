@@ -157,6 +157,7 @@ class OrientConfig(Object):
     ccmin = Float.T(optional=True)
     plot_distr = Bool.T()
     plot_orient_map_fromfile = Bool.T()
+    plot_angles_vs_events = Bool.T(default=False)
     orient_map_label = List.T(optional=True)
 
 
