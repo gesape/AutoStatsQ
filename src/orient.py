@@ -418,17 +418,26 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     angle_no_nan = []
     lat_no_nan = []
     lon_no_nan = []
+    angle_no_nan_u = []
+    lat_no_nan_u = []
+    lon_no_nan_u = []
 
     for i_ns, ns_now in enumerate(ns):
         for l in ['00', '', '01']:
             try:
                 ns_now = '%s %s' % (ns_now[0], ns_now[1])
                 a = angles_fromfile.CorrectAngl_perStat_median[ns_now]
+                nev = angles_fromfile.n_events[ns_now]
                 if a > -181.0 and a < 180.0:  # not nan
-                    angle_no_nan.append(a)
-                    # stats_no_nan.append(ns_now[1])
-                    lat_no_nan.append(st_lats[i_ns])
-                    lon_no_nan.append(st_lons[i_ns])
+                    if nev >= 5:
+                        angle_no_nan.append(0.0-a)
+                        # stats_no_nan.append(ns_now[1])
+                        lat_no_nan.append(st_lats[i_ns])
+                        lon_no_nan.append(st_lons[i_ns])
+                    else:
+                        angle_no_nan_u.append(0.0-a)
+                        lat_no_nan_u.append(st_lats[i_ns])
+                        lon_no_nan_u.append(st_lons[i_ns])
             except KeyError:
                 continue
 
@@ -452,11 +461,25 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
 
     # same length for every vector:
     length = [0.9 for a in range(len(lat_no_nan))]
+    length_u = [0.9 for a in range(len(lat_no_nan_u))]
+
+    angle_zero = [0.0 for a in range(len(lat_no_nan))]
+    angle_zero_u = [0.0 for a in range(len(lat_no_nan_u))]
 
     # plot obtained rotation vectors:
+    m.gmt.psxy(in_columns=(lon_no_nan, lat_no_nan, angle_zero, length),
+               S='V0.5c+jc', W='0.07c,black',
+               *m.jxyr)
+    m.gmt.psxy(in_columns=(lon_no_nan_u, lat_no_nan_u, angle_zero_u, length_u),
+           S='V0.5c+jc', W='0.07c,black',
+           *m.jxyr)
+
     m.gmt.psxy(in_columns=(lon_no_nan, lat_no_nan, angle_no_nan, length),
                S='V0.5c+jc+eA', W='0.07c,red',
                *m.jxyr)
+    m.gmt.psxy(in_columns=(lon_no_nan_u, lat_no_nan_u, angle_no_nan_u, length_u),
+           S='V0.5c+jc+eA', W='0.07c,lightred',
+           *m.jxyr)
     #m.gmt.psxy(in_columns=([10.82556], [46.74145], [171], [0.9]),
     #           S='V0.5c+jc+eA', W='0.07c,black',
     #           *m.jxyr)
@@ -464,7 +487,7 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     if ls:
         m.gmt.psxy(in_columns=([ls[0]], [ls[1]], [ls[3]], [0.9]),
                    S='V0.5c+eA', W='0.07c,red', *m.jxyr)
-        labels = ['Correction angle']
+        labels = ['Sensor orientation']
         lat_lab = [ls[1]]
         lon_lab = [ls[2]]
         for i in range(len(labels)):
