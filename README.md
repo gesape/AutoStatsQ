@@ -1,6 +1,6 @@
-# AutoStatsQ (-work in progress-)
+# AutoStatsQ
 Toolbox for automated station quality control for MT inversion 
-Please contact me for further description and help: gesap@gfz-potsdam.de
+Please contact me for further description, help or when something does not behave as expected ;-) : gesap@gfz-potsdam.de
 
 - Catalog search for teleseismic events with uniform azimuthal coverage around array
 - Download of data & metadata for these events + computation of synthetic data
@@ -23,6 +23,14 @@ Download and Installation
 - cd into the folder where you want to do the installation
 - git clone https://github.com/gesape/AutoStatsQ
 - cd AutoStatsQ
+- (sudo) python3 setup.py install
+
+Update
+------
+... AutoStatsQ is updated whenever new ideas are implemented or bugs found...
+
+- cd into your AutoStatsQ installation directory
+- git pull origin master
 - (sudo) python3 setup.py install
 
 Basic commands
