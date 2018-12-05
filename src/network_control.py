@@ -128,13 +128,20 @@ def main():
             if stat_list.endswith('.csv'):
                with open(stat_list, 'r') as f:
                     for line in f.readlines():
-                        n, s, lat, lon, elev, d = line.strip().split(',')
+                        if len(line.strip().split(',')) == 6:
+                            n, s, lat, lon, elev, d = line.strip().split(',')
+                            all_stations.append(model.Station(network=n, station=s,
+                                                              lat=float(lat), lon=float(lon),
+                                                              elevation=float(elev), depth=d))
+                        elif len(line.strip().split(',')) == 5:
+                            n, s, lat, lon, elev = line.strip().split(',')
+                            all_stations.append(model.Station(network=n, station=s,
+                                                              lat=float(lat), lon=float(lon),
+                                                              elevation=float(elev)))                            
                         st_lats.append(float(lat))
                         st_lons.append(float(lon))
                         ns.append((n, s))
-                        all_stations.append(model.Station(network=n, station=s,
-                                                          lat=float(lat), lon=float(lon),
-                                                          elevation=float(elev), depth=d))
+
             elif stat_list.endswith('.xml'):
                 zs = stationxml.load_xml(filename=stat_list)
                 for net in zs.network_list:

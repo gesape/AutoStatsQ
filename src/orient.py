@@ -450,6 +450,9 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
         height=mapsize[1],
         show_grid=False,
         show_topo=pl_topo,
+        #color_dry=(143, 188, 143), #(238, 236, 230),
+        topo_cpt_wet='white_sea_land',#'light_sea_uniform',
+        topo_cpt_dry='light_land_uniform',
         illuminate=True,
         illuminate_factor_ocean=0.15,
         show_rivers=True,
@@ -459,30 +462,39 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     # Draw some larger cities covered by the map area
     # m.draw_cities()
 
-    # same length for every vector:
-    length = [0.9 for a in range(len(lat_no_nan))]
-    length_u = [0.9 for a in range(len(lat_no_nan_u))]
+    # Draw max. amplitudes at station locations as colored circles
+    cptfile = 'tempfile2.cpt'
+    abs_angs = list(num.abs(angle_no_nan))
+    m.gmt.makecpt(
+                C='/home/gesap/Documents/CETperceptual_GMT/CET-D8.cpt',
+                T='%g/%g' % (0., 180.),
+                out_filename=cptfile, suppress_defaults=True)
 
-    angle_zero = [0.0 for a in range(len(lat_no_nan))]
-    angle_zero_u = [0.0 for a in range(len(lat_no_nan_u))]
+
+    # same length for every vector:
+    length = [1.5 for a in range(len(lat_no_nan))]
+    length_u = [0.7 for a in range(len(lat_no_nan_u))]
+
+    # angle_zero = [1.5 for a in range(len(lat_no_nan))]
+    # angle_zero_u = [1.5 for a in range(len(lat_no_nan_u))]
 
     # plot obtained rotation vectors:
-    m.gmt.psxy(in_columns=(lon_no_nan, lat_no_nan, angle_zero, length),
-               S='V0.5c+jc', W='0.07c,black',
-               *m.jxyr)
-    m.gmt.psxy(in_columns=(lon_no_nan_u, lat_no_nan_u, angle_zero_u, length_u),
-           S='V0.5c+jc', W='0.07c,black',
-           *m.jxyr)
-
-    m.gmt.psxy(in_columns=(lon_no_nan, lat_no_nan, angle_no_nan, length),
-               S='V0.5c+jc+eA', W='0.07c,red',
-               *m.jxyr)
-    m.gmt.psxy(in_columns=(lon_no_nan_u, lat_no_nan_u, angle_no_nan_u, length_u),
-           S='V0.5c+jc+eA', W='0.07c,lightred',
-           *m.jxyr)
-    #m.gmt.psxy(in_columns=([10.82556], [46.74145], [171], [0.9]),
-    #           S='V0.5c+jc+eA', W='0.07c,black',
+    #m.gmt.psxy(in_columns=(lon_no_nan, lat_no_nan, angle_zero, length),
+    #           S='V0.5c+jc', W='0.07c,black',
     #           *m.jxyr)
+    #m.gmt.psxy(in_columns=(lon_no_nan_u, lat_no_nan_u, angle_zero_u, length_u),
+    #       S='V0.5c+jc', W='0.07c,black',
+    #       *m.jxyr)
+
+    m.gmt.psxy(in_columns=(lon_no_nan_u, lat_no_nan_u, angle_no_nan_u, length_u),
+           S='V0.4c+jc+eA', W='0.05c,black',
+           *m.jxyr)
+    
+    m.gmt.psxy(in_columns=(lon_no_nan, lat_no_nan, abs_angs, angle_no_nan, length),
+               C=cptfile, S='V0.7c+jc+eA', W='0.1c+cl',
+               *m.jxyr)
+
+
     # add handmade label
     if ls:
         m.gmt.psxy(in_columns=([ls[0]], [ls[1]], [ls[3]], [0.9]),
@@ -492,6 +504,13 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
         lon_lab = [ls[2]]
         for i in range(len(labels)):
             m.add_label(lat_lab[i], lon_lab[i], labels[i])
+    
+    # add a colorbar
+    B_opt_psscale = 'xaf'
+    m.gmt.psscale(
+                 B=B_opt_psscale+'+l abs. misorientation [deg]',
+                 D='x9c/6c+w12c/0.5c+jTC+h', # 4
+                 C=cptfile)
 
     m.save(dir_orient+'map_orient.png')
     print('Saved map with corr. angles for sensor orientations')
