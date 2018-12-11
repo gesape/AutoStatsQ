@@ -155,10 +155,93 @@ def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
                                  util.time_to_str(ev.time),
                                  maxcc_angle, maxcc_value))
 
-    median_a = num.median([a for (a, v) in zip(angles, values) if v > ccmin])
-    mean_a = num.mean([a for (a, v) in zip(angles, values) if v > ccmin])
-    std_a = num.std([a for (a, v) in zip(angles, values) if v > ccmin])
-    n_ev = len([a for (a, v) in zip(angles, values) if v > ccmin])
+    list_v_above_ccmin = [a for (a, v) in zip(angles, values) if v > ccmin]
+    median_a = num.median(list_v_above_ccmin)
+    # use a vector mean instead!
+    # mean_a = num.mean(list_v_above_ccmin)
+    if len(list_v_above_ccmin) > 0:
+
+        sum_v = num.asarray((0, 0))
+
+        for a in list_v_above_ccmin:
+            x = num.cos(num.deg2rad(a))
+            y = num.sin(num.deg2rad(a))
+
+            sum_v = sum_v + (num.asarray((x,y)) / num.linalg.norm((x,y))) 
+        
+        # normalize
+        sum_v = sum_v / len(list_v_above_ccmin)
+
+        if sum_v[0] > 0:
+            mean_a = num.rad2deg(num.arctan(sum_v[1]/sum_v[0]))
+        elif sum_v[0] < 0 and sum_v[1] >= 0:
+            mean_a = num.rad2deg(num.arctan(sum_v[1]/sum_v[0])) + 180.
+        elif sum_v[0] < 0 and sum_v[1] < 0:
+            mean_a = num.rad2deg(num.arctan(sum_v[1]/sum_v[0])) - 180.
+        elif sum_v[0] == 0 and sum_v[1] > 0:
+            mean_a = 90.
+        elif sum_v[0] == 0 and sum_v[1] < 0:
+            mean_a = 270.
+
+        # print('mean_a', mean_a)       
+
+        # vector standard deviation
+        # std_a = num.std([a for (a, v) in zip(angles, values) if v > ccmin])
+        n_ev = len(list_v_above_ccmin)
+        # std_a = num.sqrt((sum([(x_i - mean_a) * (x_i - mean_a) for x_i in list_v_above_ccmin])) / n_ev)
+        # print(list_v_above_ccmin)
+        if len(list_v_above_ccmin) > 1:
+            sum_d_xi_xm = 0
+            for x_i in list_v_above_ccmin:
+                # print(x_i)
+
+                x_i_x = num.cos(num.deg2rad(x_i))
+                x_i_y = num.sin(num.deg2rad(x_i))
+                mean_x = num.cos(num.deg2rad(mean_a))
+                mean_y = num.sin(num.deg2rad(mean_a))
+                len_x_i = num.sqrt(x_i_x*x_i_x + x_i_y*x_i_y)
+                len_mean = num.sqrt(mean_x*mean_x + mean_y*mean_y)
+
+                # print(num.asarray((num.cos(num.deg2rad(x_i)),
+                #                       num.sin(num.deg2rad(x_i)))))
+                # print(num.asarray((num.cos(num.deg2rad(mean_a)),
+                #                       num.sin(num.deg2rad(mean_a)))))
+                # d_xi_m = num.abs(num.asarray((num.cos(num.deg2rad(x_i)),
+                #                       num.sin(num.deg2rad(x_i)))) -\
+                #          num.asarray((num.cos(num.deg2rad(mean_a)),
+                #                       num.sin(num.deg2rad(mean_a)))))
+                # print(d_xi_m)
+                # if d_xi_m[0] > 0:
+                #     phi_d = num.rad2deg(num.arctan(d_xi_m[1]/d_xi_m[0]))
+                # elif d_xi_m[0] < 0 and d_xi_m[1] >= 0:
+                #     phi_d = num.rad2deg(num.arctan(d_xi_m[1]/d_xi_m[0])) + 180.
+                # elif d_xi_m[0] < 0 and d_xi_m[1] < 0:
+                #     phi_d = num.rad2deg(num.arctan(d_xi_m[1]/d_xi_m[0])) - 180.
+                # elif d_xi_m[0] == 0 and d_xi_m[1] > 0:
+                #     phi_d = 90.
+                # elif d_xi_m[0] == 0 and d_xi_m[1] < 0:
+                #     phi_d = 270.
+                # elif d_xi_m[0] == 0 and d_xi_m[1] == 0:
+                #     phi_d = 0.
+                
+                phi_d = num.rad2deg(num.arccos(x_i_x/len_x_i * mean_x/len_mean
+                                               + x_i_y/len_x_i * mean_y/len_mean))
+                # Fallunterscheidungen?
+
+                # print(phi_d)
+                sum_d_xi_xm += phi_d*phi_d
+                # print(sum_d_xi_xm)
+            std_a = num.sqrt(sum_d_xi_xm / n_ev)
+            #print('new std', std_a)
+            #print('old std',num.std([a for (a, v) in zip(angles, values) if v > ccmin]))
+        else:
+            std_a = num.nan    
+
+    else:
+        median_a = num.nan
+        mean_a = num.nan
+        std_a = num.nan
+        n_ev = 0
 
     return median_a, mean_a, std_a, switched, n_ev
 
@@ -184,7 +267,7 @@ def get_tr_by_cha(pile, start_twd, end_twd, cha):
         tmin=start_twd,
         tmax=end_twd,
         trace_selector=lambda tr: tr.nslc_id[3] == cha,
-        want_incomplete=True)
+        want_incomplete=False)
 
     return tr
 
@@ -313,8 +396,16 @@ def prep_orient(datapath, st, catalog, dir_ro,
             else:
                 cc_i_ev_vs_rota[i_ev, :] = num.nan
                 continue
-            trZ.bandpass(bp[0], bp[1], bp[2])
-            trZ.chop(tmin=start_twd2, tmax=end_twd2)
+
+            try:
+                trZ.bandpass(bp[0], bp[1], bp[2])
+                trZ.chop(tmin=start_twd2, tmax=end_twd2)
+            except trace.NoData:
+                print('no data')
+                print(trZ, trR, trT)
+                continue
+
+
             for i_r, r in enumerate(rot_angles):
                 print('rotation angle [deg]: %5d' % r, end='\r')
                 rot_2, rot_3 = trace.rotate(traces=[trR, trT], azimuth=r,
@@ -509,7 +600,7 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     B_opt_psscale = 'xaf'
     m.gmt.psscale(
                  B=B_opt_psscale+'+l abs. misorientation [deg]',
-                 D='x9c/6c+w12c/0.5c+jTC+h', # 4
+                 D='x9c/6c+w12c/0.5c+jTC+h', # 'x9c/17c+w12c/0.5c+jTC+h'
                  C=cptfile)
 
     m.save(dir_orient+'map_orient.png')
