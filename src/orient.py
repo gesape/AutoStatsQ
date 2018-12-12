@@ -167,7 +167,7 @@ def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
             x = num.cos(num.deg2rad(a))
             y = num.sin(num.deg2rad(a))
 
-            sum_v = sum_v + (num.asarray((x,y)) / num.linalg.norm((x,y))) 
+            sum_v = sum_v + num.asarray((x,y)) #/ num.linalg.norm((x,y))) 
         
         # normalize
         sum_v = sum_v / len(list_v_above_ccmin)
