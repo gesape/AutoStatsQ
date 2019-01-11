@@ -287,7 +287,7 @@ def dump_flat_ranges(flat_f_ranges_stlist, freq_rat_list_y,
               % (dir_f, fname_ext))
 
 
-def const_psd_rat(mean_rat, cha, st, f_syn_keep,
+def const_psd_rat(mean_rat, cha, st, l, f_syn_keep,
                   n, fac_norm, f_ign,
                   dir_f=False, plot_flat_range=False):
     '''
@@ -332,8 +332,8 @@ def const_psd_rat(mean_rat, cha, st, f_syn_keep,
             ax4[1].yaxis.set_ticks([])
             ax4[1].set_xlabel('Frequency [Hz]')
 
-        fig4.savefig('%s/%s_%s_%s_flatrange%s_%s.png'
-                     % (dir_f, net, stat, cha, str(n), str(fac_norm)))
+        fig4.savefig('%s/%s_%s_%s_%s_flatrange%s_%s.png'
+                     % (dir_f, net, stat, l, cha, str(n), str(fac_norm)))
 
         fig4.tight_layout()
         plt.close(fig4)
@@ -341,7 +341,7 @@ def const_psd_rat(mean_rat, cha, st, f_syn_keep,
     return flat_f_ranges, y_flat_f_ranges
 
 
-def plot_m_ratio(median_rat, f_syn_Z_nonan, nsl, dir_f, cha):
+def plot_m_ratio(median_rat, f_syn_Z_nonan, nsl, l, dir_f, cha):
     '''
     Plotting of mean ratio of syn and obs PSD over all events
     (for current channel).
@@ -361,8 +361,8 @@ def plot_m_ratio(median_rat, f_syn_Z_nonan, nsl, dir_f, cha):
 
         # ax3.set_yscale('log')
         fig3.tight_layout()
-        fig3.savefig('%s/%s_%s_%s_mratio.png'
-                     % (dir_f, str(nsl[0]), str(nsl[1]), cha))
+        fig3.savefig('%s/%s_%s_%s_%s_mratio.png'
+                     % (dir_f, str(nsl[0]), str(nsl[1]), l, cha))
         plt.close(fig3)
 
 
@@ -382,7 +382,7 @@ def calc_median_ratio(ratio_npar):   # hier dran arbeiten!
     return(median_rat)
 
 
-def plot_psdratio_from_dict(ratpsd_by_event, st, cha, catalog, dir_f):
+def plot_psdratio_from_dict(ratpsd_by_event, st, l, cha, catalog, dir_f):
     n_ev = len(catalog)
     nrows = math.ceil(n_ev / 5)
     ncols = 5
@@ -439,9 +439,9 @@ def plot_psdratio_from_dict(ratpsd_by_event, st, cha, catalog, dir_f):
     except:
         pass
     try:
-        print('here')
-        fig.savefig('%s/%s_%s_%s_ratio.png'
-                    % (dir_f, st.network, st.station, cha))
+        #print('here')
+        fig.savefig('%s/%s_%s_%s_%s_ratio.png'
+                    % (dir_f, st.network, st.station, l, cha))
     except:
         pass
     # plt.show()
@@ -449,7 +449,7 @@ def plot_psdratio_from_dict(ratpsd_by_event, st, cha, catalog, dir_f):
 
 
 def plot_psd_from_dict(obspsd_by_event, synpsd_by_event,
-                       st, cha, catalog, dir_f):
+                       st, l, cha, catalog, dir_f):
 
     n_ev = len(catalog)
     nrows = math.ceil(n_ev / 5)
@@ -514,8 +514,8 @@ def plot_psd_from_dict(obspsd_by_event, synpsd_by_event,
             ax[i_x, i_y+i+1].set_xlabel('Frequency [Hz]')
 
     plt.tight_layout()
-    fig.savefig('%s/%s_%s_%s.png'
-                % (dir_f, st.network, st.station, cha))
+    fig.savefig('%s/%s_%s_%s_%s.png'
+                % (dir_f, st.network, st.station, l, cha))
     plt.close(fig)
 
 
@@ -564,7 +564,7 @@ def get_a_f(traces, cha):
 
 
 def calc_plot_psds(catalog, data_pile, syn_data_pile,
-                   cha, dir_f, arrT_array, arrT_R_array, 
+                   cha, l, dir_f, arrT_array, arrT_R_array, 
                    nsl, i_st,
                    tinc, tpad, dt_s, dt_e,
                    n, fac_norm, f_ign,
@@ -604,13 +604,18 @@ def calc_plot_psds(catalog, data_pile, syn_data_pile,
         start_twd = arrT_array[i_ev, i_st] - dt_s
         end_twd = arrT_R_array[i_ev, i_st] - dt_e
 
+        #print(util.time_to_str(start_twd))
+        #print(util.time_to_str(end_twd))
+
+
         trs_obs = data_pile.all(
             tmin=start_twd,
             tmax=end_twd,
             tinc=tinc,
             tpad=tpad,
             trace_selector=lambda tr: tr.nslc_id[:1] == nsl[:1] and
-                                      tr.nslc_id[3] == cha,
+                                      tr.nslc_id[3] == cha
+                                      and tr.nslc_id[2] == l,
             want_incomplete=True)
 
         trs_syn = syn_data_pile.all(
@@ -622,7 +627,10 @@ def calc_plot_psds(catalog, data_pile, syn_data_pile,
                                       tr.nslc_id[3] == cha,
             want_incomplete=True)
 
+
         if trs_syn and trs_obs:
+            #print(len(trs_obs[0].ydata), len(trs_syn[0].ydata))
+            #trace.snuffle([trs_syn[0], trs_obs[0]])
             #trace.snuffle(trs_obs + trs_syn)
             f_obs_Z, a_obs_Z = get_a_f(trs_obs, cha)
             f_syn_Z, a_syn_Z = get_a_f(trs_syn, cha)
@@ -645,11 +653,12 @@ def calc_plot_psds(catalog, data_pile, syn_data_pile,
                 if cnt == 0:
                     ratio_npar = num.empty([n_ev, len(f_syn_Z)])
                     ratio_npar[:] = num.nan
-
-                ratio_npar[i_ev, :] = ratio_a
-                cnt += 1
-                f_syn_keep = f_syn_Z
-
+                try:
+                    ratio_npar[i_ev, :] = ratio_a
+                    cnt += 1
+                    f_syn_keep = f_syn_Z
+                except ValueError:
+                    print('not same length')
     #if plot_psds is True and plot_ratio_extra is True and f_syn_keep != 0:
     return obspsd_by_event, synpsd_by_event, ratpsd_by_event,\
                f_syn_keep, ratio_npar
@@ -664,7 +673,7 @@ def calc_plot_psds(catalog, data_pile, syn_data_pile,
     #     return f_syn_keep, ratio_npar
 
 
-def prep_psd_fct(i_st, st, subset_catalog, dir_f, arrT_array, arrT_R_array,
+def prep_psd_fct(i_st, st, l, subset_catalog, dir_f, arrT_array, arrT_R_array,
                  datapath,
                  syndatapath, tinc, tpad, dt_s, dt_e,
                  n, fac_norm, f_ign,
@@ -694,9 +703,9 @@ def prep_psd_fct(i_st, st, subset_catalog, dir_f, arrT_array, arrT_R_array,
     '''
 
     st_name = st.station
-    st_data_pile = pile.make_pile(datapath, regex='_%s_' % st_name,
+    st_data_pile = pile.make_pile(datapath, regex='%s_%s_' % (st.network, st_name),
                                   show_progress=False)
-    st_syn_data_pile = pile.make_pile(syndatapath, regex='_%s_' % st_name,
+    st_syn_data_pile = pile.make_pile(syndatapath, regex='%s_%s_' % (st.network, st_name),
                                       show_progress=False)
     freq_rat_list = []
     freq_rat_list_y = []
@@ -716,7 +725,7 @@ def prep_psd_fct(i_st, st, subset_catalog, dir_f, arrT_array, arrT_R_array,
                 subset_catalog,
                 st_data_pile,
                 st_syn_data_pile,
-                cha, dir_f,
+                cha, l, dir_f,
                 arrT_array, arrT_R_array,
                 nsl, i_st,
                 tinc, tpad,
@@ -732,31 +741,31 @@ def prep_psd_fct(i_st, st, subset_catalog, dir_f, arrT_array, arrT_R_array,
             f_syn_keep = outs[-2]
 
             if plot_psds is True and outs[0] and outs[1]:
-                plot_psd_from_dict(outs[0], outs[1], st, cha,
+                plot_psd_from_dict(outs[0], outs[1], st, l, cha,
                                    subset_catalog, dir_f)
 
                 if plot_ratio_extra is True and outs[2]:
-                    plot_psdratio_from_dict(outs[2], st, cha,
+                    plot_psdratio_from_dict(outs[2], st, l, cha,
                                             subset_catalog, dir_f)
 
             elif plot_psds is not True and plot_ratio_extra is True and outs[2]:
-                plot_psdratio_from_dict(outs[2], st, cha,
+                plot_psdratio_from_dict(outs[2], st, l, cha,
                                         subset_catalog, dir_f)
 
             if ratio_npar.shape != (1,):
                 m_rat = calc_median_ratio(ratio_npar)
 
                 if plot_m_rat is True:
-                    plot_m_ratio(m_rat, f_syn_keep, nsl, dir_f, cha)
+                    plot_m_ratio(m_rat, f_syn_keep, nsl, l, dir_f, cha)
 
-                f, y = const_psd_rat(m_rat, cha, st, f_syn_keep,
+                f, y = const_psd_rat(m_rat, cha, st, l, f_syn_keep,
                                      n, fac_norm, f_ign,
                                      plot_flat_range=plot_flat_ranges,
                                      dir_f=dir_f)
 
                 freq_rat_list.append(f)
                 freq_rat_list_y.append(y)
-                nslc_list.append('%s.%s.%s.%s' % (nsl[0], nsl[1], nsl[2], cha))
+                nslc_list.append('%s.%s.%s.%s' % (nsl[0], nsl[1], l, cha))
             '''
             f2, y2 = flat_by_neighbor_comp(
                 m_rat, cha, st, f_syn_keep, dir_f,

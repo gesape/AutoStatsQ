@@ -147,7 +147,7 @@ def plot_median_gain_map_from_file(ns,
     # print(gains_fromfile.trace_gains_median)
 
     for i_ns, ns_now in enumerate(ns):
-        for l in ['00', '', '01']:
+        for l in ['00', '', '01', '10', '60']:
             try:
                 nslc = '%s.%s.%s.%s' % (ns_now[0], ns_now[1], l, comp)
                 g = gains_fromfile.trace_gains_median[nslc]
@@ -196,8 +196,8 @@ def plot_median_gain_map_from_file(ns,
     miny = miny  # -0.1*miny
     maxy = maxy  # +0.1*maxy
     m.gmt.makecpt(
-                C='polar',  # '/home/gesap/Documents/CETperceptual_GMT/CET-D4.cpt',#'split',#'polar',
-                T='%g/%g' % (-1., 1.),  # (miny, maxy), # (-1,1),#(-0.7, 0.7), (-20, 20)
+                C='split',#'polar',  # '/home/gesap/Documents/CETperceptual_GMT/CET-D4.cpt',#'split',#'polar',
+                T='%g/%g' % (miny, maxy),  # (miny, maxy), # (-1,1),#(-0.7, 0.7), (-20, 20)
                 Q=True,
                 out_filename=cptfile, suppress_defaults=True)
 

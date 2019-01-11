@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, glob
 import numpy as num
 import datetime
 import logging
@@ -524,14 +524,25 @@ def main():
                     os.makedirs(dir_make, exist_ok=True)
 
                     for ns_now in ns:
+                        mseed_fn_st = data_dir + ev_dir + ns_now[0] + '_' +\
+                                   ns_now[1] + '_' +\
+                                   ev_t_str
+
+                        if glob.glob(mseed_fn_st+'*'):
+                            continue
+                        #else:
+                        #    print(glob.glob(mseed_fn_st+'*'))
+
                         #if ns_now[1] not in st_liste_check:
                         #    continue
+                        
                         selection = [(ns_now[0], ns_now[1], '*',
-                                      metaDataconf.components_download,
+                                      metaDataconf.channels_download,
                                       t_start, t_end)]
                         print(selection)
 
                         for site in sites:
+                            mseed_fn = mseed_fn_st + site + 'tr.mseed'
 
                             if site in metaDataconf.token:
                                 token = open(metaDataconf.token[site], 'rb').read()
@@ -546,9 +557,7 @@ def main():
                                     request_waveform = fdsn.dataselect(site=site,
                                                                        selection=selection)
 
-                                mseed_fn = data_dir + ev_dir + ns_now[0] + '_' +\
-                                           ns_now[1] + '_' +\
-                                           ev_t_str + site + 'tr.mseed'
+
 
                                 with open(mseed_fn, 'wb') as wffile:
                                     wffile.write(request_waveform.read())
@@ -574,7 +583,7 @@ def main():
             selection = []
             for ns_now in ns:
                 selection.append((ns_now[0], ns_now[1], '*',
-                                  metaDataconf.components_download,
+                                  metaDataconf.channels_download,
                                   cat_tmin, cat_tmax))
 
             meta_fn = data_dir + 'Resp_all'
@@ -642,75 +651,132 @@ def main():
 
                         if trs:
                             comps = [tr.channel for tr in trs]
-                            if 'HHZ' in comps and 'HHN' in comps and 'HHE' in comps:
-                                trs = [tr for tr in trs if tr.channel in ['HHZ', 'HHN', 'HHE']]
-                            elif 'HHZ' in comps and 'HH2' in comps and 'HH3' in comps:
-                                trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH2', 'HH3']]
-                            elif 'HHZ' in comps and 'HH1' in comps and 'HH1' in comps:
-                                trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH1', 'HH2']]
 
-                            elif 'EHZ' in comps and 'EHN' in comps and 'EHE' in comps:
-                                trs = [tr for tr in trs if tr.channel in ['EHZ', 'EHN', 'EHE']]
-                            elif 'EHZ' in comps and 'EH2' in comps and 'EH3' in comps:
-                                trs = [tr for tr in trs if tr.channel in ['EHZ', 'EH2', 'EH3']]                            
-                            elif 'EHZ' in comps and 'EH1' in comps and 'EH2' in comps:
-                                trs = [tr for tr in trs if tr.channel in ['EHZ', 'EH1', 'EH2']] 
+                            if metaDataconf.all_channels == False:
+                                
+                                #if 'HHZ' in comps and 'HHN' in comps and 'HHE' in comps:
+                                #    trs = [tr for tr in trs if tr.channel in ['HHZ', 'HHN', 'HHE']]
+                                #elif 'HHZ' in comps and 'HH2' in comps and 'HH3' in comps:
+                                #    trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH2', 'HH3']]
+                                #elif 'HHZ' in comps and 'HH1' in comps and 'HH1' in comps:
+                                #    trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH1', 'HH2']]
 
-                            elif 'BHZ' in comps and 'BHN' in comps and 'BHE' in comps:
-                                trs = [tr for tr in trs  if tr.channel in ['BHZ', 'BHN', 'BHE']] 
-                            elif 'BHZ' in comps and 'BH2' in comps and 'BH3' in comps:
-                                trs = [tr for tr in trs if tr.channel in ['BHZ', 'BH2', 'BH3']]
-                            elif 'BHZ' in comps and 'BH1' in comps and 'BH2' in comps:
-                                trs = [tr for tr in trs if tr.channel in ['BHZ', 'BH1', 'BH2']] 
+                                #elif 'EHZ' in comps and 'EHN' in comps and 'EHE' in comps:
+                                #    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EHN', 'EHE']]
+                                #elif 'EHZ' in comps and 'EH2' in comps and 'EH3' in comps:
+                                #    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EH2', 'EH3']]                            
+                                #elif 'EHZ' in comps and 'EH1' in comps and 'EH2' in comps:
+                                #    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EH1', 'EH2']] 
 
-                            elif 'LHZ' in comps and 'LHN' in comps and 'LHE' in comps:
-                                trs = [tr for tr in trs if tr.channel in ['LHZ', 'LHN', 'LHE']]
-                            elif 'LHZ' in comps and 'LH2' in comps and 'LH3' in comps:
-                                trs = [tr for tr in trs if tr.channel in ['LHZ', 'LH2', 'LH3']]                            
-                            elif 'LHZ' in comps and 'LH1' in comps and 'LH2' in comps:
-                                trs = [tr for tr in trs if tr.channel in ['LHZ', 'LH1', 'LH2']] 
+                                #elif 'BHZ' in comps and 'BHN' in comps and 'BHE' in comps:
+                                #    trs = [tr for tr in trs  if tr.channel in ['BHZ', 'BHN', 'BHE']] 
+                                #elif 'BHZ' in comps and 'BH2' in comps and 'BH3' in comps:
+                                #    trs = [tr for tr in trs if tr.channel in ['BHZ', 'BH2', 'BH3']]
+                                #elif 'BHZ' in comps and 'BH1' in comps and 'BH2' in comps:
+                                #    trs = [tr for tr in trs if tr.channel in ['BHZ', 'BH1', 'BH2']] 
 
-                            else:
-                                # print('no BH* or HH* data for station %s found' % (str(nsl)))
-                                # print('found these:', [tr.channel for tr in trs])
-                                continue
+                                if 'LHZ' in comps and 'LHN' in comps and 'LHE' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['LHZ', 'LHN', 'LHE']]
+                                elif 'LHZ' in comps and 'LH2' in comps and 'LH3' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['LHZ', 'LH2', 'LH3']]                            
+                                elif 'LHZ' in comps and 'LH1' in comps and 'LH2' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['LHZ', 'LH1', 'LH2']]
+                                elif 'HHZ' in comps and 'HHN' in comps and 'HHE' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['HHZ', 'HHN', 'HHE']]
+                                elif 'HHZ' in comps and 'HH2' in comps and 'HH3' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH2', 'HH3']]
+                                elif 'HHZ' in comps and 'HH1' in comps and 'HH1' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH1', 'HH2']]
 
-                            for tr in trs:
-                                cnt_resp = 0
-                                for resp_now in responses:
-                                    try:
-                                        polezero_resp = resp_now.get_pyrocko_response(
-                                            nslc=tr.nslc_id,
-                                            timespan=(tr.tmin, tr.tmax),
-                                            fake_input_units='M'
-                                            )
 
-                                        restituted = tr.transfer(
-                                            tfade=transf_taper,
-                                            freqlimits=RestDownconf.freqlim,
-                                            transfer_function=polezero_resp,
-                                            invert=True)
 
-                                        rest_fn = dir_make + '/' + str(tr.nslc_id[0]) + '_' +\
-                                                  str(tr.nslc_id[1])\
-                                                  + '_' + str(tr.nslc_id[3]) + '_' +\
-                                                  ev_t_str + 'rest2.mseed'
-                                        io.save(restituted, rest_fn)
 
-                                    except stationxml.NoResponseInformation:
-                                        cnt_resp += 1
-                                        if cnt_resp == i_resp:
-                                            print('no resp found:', tr.nslc_id)
+                                else:
+                                    # print('no BH* or HH* data for station %s found' % (str(nsl)))
+                                    # print('found these:', [tr.channel for tr in trs])
+                                    continue
 
-                                    except trace.TraceTooShort:
-                                        print('trace too short', tr.nslc_id)
+                                for tr in trs:
+                                    cnt_resp = 0
+                                    for resp_now in responses:
+                                        try:
+                                            polezero_resp = resp_now.get_pyrocko_response(
+                                                nslc=tr.nslc_id,
+                                                timespan=(tr.tmin, tr.tmax),
+                                                fake_input_units='M'
+                                                )
 
-                                    except ValueError:
-                                        print('downsampling does not work', tr.nslc_id)
+                                            restituted = tr.transfer(
+                                                tfade=transf_taper,
+                                                freqlimits=RestDownconf.freqlim,
+                                                transfer_function=polezero_resp,
+                                                invert=True)
 
+                                            rest_fn = dir_make + '/' + str(tr.nslc_id[0]) + '_' +\
+                                                      str(tr.nslc_id[1])\
+                                                      + '_' + str(tr.nslc_id[2]) + '_' +\
+                                                      '_' + str(tr.nslc_id[3]) + '_' +\
+                                                      ev_t_str + 'rest2.mseed'
+                                            io.save(restituted, rest_fn)
+
+                                        except stationxml.NoResponseInformation:
+                                            cnt_resp += 1
+                                            if cnt_resp == i_resp:
+                                                print('no resp found:', tr.nslc_id)
+
+                                        except trace.TraceTooShort:
+                                            print('trace too short', tr.nslc_id)
+
+                                        except ValueError:
+                                            print('downsampling does not work', tr.nslc_id)
+
+                                        else:
+                                            break
+
+                            if metaDataconf.all_channels == True:
+                                ch_list = set([ch[0:2] for ch in comps])
+                                for ch_ in ch_list:
+                                    if ch_+'N' in comps and ch_+'E' in comps and ch_+'Z' in comps:
+                                        trs = [tr for tr in trs if tr.channel in [ch_+'N', ch_+'E', ch_+'Z']]
                                     else:
-                                        break
+                                      continue
 
+                                    for tr in trs:
+                                        cnt_resp = 0
+                                        for resp_now in responses:
+                                            try:
+                                                polezero_resp = resp_now.get_pyrocko_response(
+                                                    nslc=tr.nslc_id,
+                                                    timespan=(tr.tmin, tr.tmax),
+                                                    fake_input_units='M'
+                                                    )
+
+                                                restituted = tr.transfer(
+                                                    tfade=transf_taper,
+                                                    freqlimits=RestDownconf.freqlim,
+                                                    transfer_function=polezero_resp,
+                                                    invert=True)
+
+                                                rest_fn = dir_make + '/' + str(tr.nslc_id[0]) + '_' +\
+                                                          str(tr.nslc_id[1])\
+                                                          + '_' + str(tr.nslc_id[2]) + '_' +\
+                                                          '_' + str(tr.nslc_id[3]) + '_' +\
+                                                          ev_t_str + 'rest2.mseed'
+                                                io.save(restituted, rest_fn)
+
+                                            except stationxml.NoResponseInformation:
+                                                cnt_resp += 1
+                                                if cnt_resp == i_resp:
+                                                    print('no resp found:', tr.nslc_id)
+
+                                            except trace.TraceTooShort:
+                                                print('trace too short', tr.nslc_id)
+
+                                            except ValueError:
+                                                print('downsampling does not work', tr.nslc_id)
+
+                                            else:
+                                                break
 
         ''' 5. Rotation NE --> RT '''
         if RestDownconf.rotate_data is True:
@@ -719,7 +785,8 @@ def main():
             def save_rot_down_tr(tr, dir_rot, ev_t_str):
                 rot_fn = dir_rot + '/' + str(tr.nslc_id[0]) + '_' +\
                          str(tr.nslc_id[1])\
-                         + '_' + str(tr.nslc_id[3]) + '_' +\
+                         + '_' + str(tr.nslc_id[2]) + '_' +\
+                         '_' + str(tr.nslc_id[3]) + '_' +\
                          ev_t_str + 'rrd2.mseed'
                 io.save(tr, rot_fn)
 
@@ -736,146 +803,154 @@ def main():
                     trs = ev_data_pile.all(
                             trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2],
                             want_incomplete=True)
-
-                    chan_avail = [tr.channel for tr in trs]
-                    lens_trs = [len(tr.ydata) for tr in trs]
-
-                    if not lens_trs or 0 in lens_trs or len(chan_avail) != 3:
+                    if not trs:
                         continue
+                    chan_avail = [tr.channel for tr in trs]
+                    loc_avail = [tr.location for tr in trs]
+                    # lens_trs = [len(tr.ydata) for tr in trs]
 
-                    else:
-                        az1 = None
-                        tr1 = None
-                        tr2 = None
+                    ch_list = set([ch[0:2] for ch in chan_avail])
+                    
+                    for l in loc_avail:
+                        for ch_ in ch_list:
+                            lens_trs = [len(tr.ydata) for tr in trs if tr.channel[0:2] == ch_ and tr.location == l]
+                            trs_ch = [tr for tr in trs if tr.channel[0:2] == ch_ and tr.location == l]
 
-                        nslcs = [tr.nslc_id for tr in trs]
-                        tmin = max([tr.tmin for tr in trs])
-                        tmax = min([tr.tmax for tr in trs])
-                        trmin = math.ceil(tmin)
-                        trmax = int(tmax)
+                            if not lens_trs or 0 in lens_trs or len(lens_trs) != 3:
+                                continue
 
-                        for st_now in st_xml:
-                            stat = st_now.get_pyrocko_stations(nslcs=nslcs,
-                                   timespan=(trmin, trmax))
-                            if len(stat) == 1:
-                                break
+                            else:
+                                az1 = None
+                                tr1 = None
+                                tr2 = None
 
-                        if len(stat) != 0:
-                            stat = stat[0]
-                            tr1_ch = '0'
-                            tr2_ch = '0'
+                                nslcs = [tr.nslc_id for tr in trs_ch]
+                                tmin = max([tr.tmin for tr in trs_ch])
+                                tmax = min([tr.tmax for tr in trs_ch])
+                                trmin = math.ceil(tmin)
+                                trmax = int(tmax)
 
-                            test = []
-                            naming = ''
-                            for tr in trs:
-                                if tr.channel.endswith('2'):
-                                    test.append('2')
-                                elif tr.channel.endswith('3'):
-                                    test.append('3')
-                                elif tr.channel.endswith('1'):
-                                    test.append('1')
-                            
-                            if '1' in test and '2' in test:
-                                naming = '1,2'
-                                print('found 1,2')
-                            elif  '2' in test and '3' in test:
-                                naming = '2,3'
+                                for st_now in st_xml:
+                                    stat = st_now.get_pyrocko_stations(nslcs=nslcs,
+                                           timespan=(trmin, trmax))
+                                    if len(stat) == 1:
+                                        break
 
-                            for tr in trs:
-                                if tr.channel.endswith('N') or\
-                                 (tr.channel.endswith('2') and naming == '2,3')\
-                                  or (tr.channel.endswith('1') and naming == '1,2'):
+                                if len(stat) != 0:
+                                    stat = stat[0]
+                                    tr1_ch = '0'
+                                    tr2_ch = '0'
 
-                                    for ch in stat.channels:
-                                        if tr.channel == ch.name:
-                                            az1 = ch.azimuth
-                                            tr1 = tr.copy()
+                                    test = []
+                                    naming = ''
+                                    for tr in trs_ch:
+                                        if tr.channel.endswith('2'):
+                                            test.append('2')
+                                        elif tr.channel.endswith('3'):
+                                            test.append('3')
+                                        elif tr.channel.endswith('1'):
+                                            test.append('1')
+                                    
+                                    if '1' in test and '2' in test:
+                                        naming = '1,2'
+                                    elif  '2' in test and '3' in test:
+                                        naming = '2,3'
+
+                                    for tr in trs_ch:
+                                        if tr.channel.endswith('N') or\
+                                         (tr.channel.endswith('2') and naming == '2,3')\
+                                          or (tr.channel.endswith('1') and naming == '1,2'):
+
+                                            for ch in stat.channels:
+                                                if tr.channel == ch.name:
+                                                    az1 = ch.azimuth
+                                                    tr1 = tr.copy()
+
+                                                    try:
+                                                        tr1.chop(trmin, trmax)
+                                                        if deltat_down > 0.0:
+                                                            tr1.downsample_to(deltat=deltat_down)
+                                                        save_rot_down_tr(tr1, dir_rot, ev_t_str)
+
+                                                    except trace.NoData:
+                                                        print('N/2 comp no data in twd', nsl)
+                                                        tr1 = None
+                                                    except ValueError:
+                                                        tr1 = None
+                                                        print('N/2 downsampling not successfull')
+
+                                        if tr.channel.endswith('E') or\
+                                         (tr.channel.endswith('3') and naming == '2,3')\
+                                          or (tr.channel.endswith('2') and naming == '1,2'):
+
+                                            for ch in stat.channels:
+                                                if tr.channel == ch.name:
+                                                    tr2 = tr.copy()
+
+                                                    try:
+                                                        tr2.chop(trmin, trmax)
+                                                        if deltat_down > 0.0:                                                
+                                                            tr2.downsample_to(deltat=deltat_down)
+                                                        save_rot_down_tr(tr2, dir_rot, ev_t_str)
+
+                                                    except trace.NoData:
+                                                        print('E/3 comp no data in twd', nsl)
+                                                        tr2 = None
+                                                    except ValueError:
+                                                        tr2 = None
+                                                        print('E/3 downsampling not successfull')
+
+                                        if tr.channel.endswith('Z'):
+                                            trZ = tr.copy()
 
                                             try:
-                                                tr1.chop(trmin, trmax)
+                                                trZ.chop(trmin, trmax)
                                                 if deltat_down > 0.0:
-                                                    tr1.downsample_to(deltat=deltat_down)
-                                                save_rot_down_tr(tr1, dir_rot, ev_t_str)
-
-                                            except trace.NoData:
-                                                print('N/2 comp no data in twd', nsl)
-                                                tr1 = None
-                                            except ValueError:
-                                                tr1 = None
-                                                print('N/2 downsampling not successfull')
-
-                                if tr.channel.endswith('E') or\
-                                 (tr.channel.endswith('3') and naming == '2,3')\
-                                  or (tr.channel.endswith('2') and naming == '1,2'):
-
-                                    for ch in stat.channels:
-                                        if tr.channel == ch.name:
-                                            tr2 = tr.copy()
-
-                                            try:
-                                                tr2.chop(trmin, trmax)
-                                                if deltat_down > 0.0:                                                
-                                                    tr2.downsample_to(deltat=deltat_down)
-                                                save_rot_down_tr(tr2, dir_rot, ev_t_str)
+                                                    trZ.downsample_to(deltat=deltat_down)
+                                                trZ.set_channel('Z')
+                                                save_rot_down_tr(trZ, dir_rot, ev_t_str)
 
                                             except trace.NoData:
                                                 print('E/3 comp no data in twd', nsl)
-                                                tr2 = None
                                             except ValueError:
-                                                tr2 = None
-                                                print('E/3 downsampling not successfull')
+                                                trZ = None
+                                                print('Z downsampling not successfull')
+                                        
 
-                                if tr.channel.endswith('Z'):
-                                    trZ = tr.copy()
+                                if az1 is not None and tr1 is not None\
+                                  and tr2 is not None:
 
-                                    try:
-                                        trZ.chop(trmin, trmax)
-                                        if deltat_down > 0.0:
-                                            trZ.downsample_to(deltat=deltat_down)
-                                        trZ.set_channel('Z')
-                                        save_rot_down_tr(trZ, dir_rot, ev_t_str)
+                                    stat.set_event_relative_data(ev)
+                                    baz = stat.backazimuth
+                                    az_r = baz + 180 - az1
+                                   
+                                    if str(tr1.channel).endswith('N') is True\
+                                       or str(tr1.channel).endswith('2') is True and naming == '2,3'\
+                                       or str(tr1.channel).endswith('1') is True and naming == '1,2':
+                                        tr1_ch = tr1.channel
 
-                                    except trace.NoData:
-                                        print('E/3 comp no data in twd', nsl)
-                                    except ValueError:
-                                        trZ = None
-                                        print('Z downsampling not successfull')
-                                
+                                    if str(tr1.channel).endswith('E') is True\
+                                      or str(tr1.channel).endswith('3') is True and naming == '2,3'\
+                                      or str(tr1.channel).endswith('2') is True and naming == '1,2':
+                                        tr2_ch = tr1.channel
 
-                        if az1 is not None and tr1 is not None\
-                          and tr2 is not None:
+                                    if str(tr2.channel).endswith('N') is True\
+                                     or str(tr2.channel).endswith('2') is True and naming == '2,3'\
+                                     or str(tr2.channel).endswith('1') is True and naming == '1,2':
+                                        tr1_ch = tr2.channel
 
-                            stat.set_event_relative_data(ev)
-                            baz = stat.backazimuth
-                            az_r = baz + 180 - az1
-                           
-                            if str(tr1.channel).endswith('N') is True\
-                               or str(tr1.channel).endswith('2') is True and naming == '2,3'\
-                               or str(tr1.channel).endswith('1') is True and naming == '1,2':
-                                tr1_ch = tr1.channel
-
-                            if str(tr1.channel).endswith('E') is True\
-                              or str(tr1.channel).endswith('3') is True and naming == '2,3'\
-                              or str(tr1.channel).endswith('2') is True and naming == '1,2':
-                                tr2_ch = tr1.channel
-
-                            if str(tr2.channel).endswith('N') is True\
-                             or str(tr2.channel).endswith('2') is True and naming == '2,3'\
-                             or str(tr2.channel).endswith('1') is True and naming == '1,2':
-                                tr1_ch = tr2.channel
-
-                            if str(tr2.channel).endswith('E') is True\
-                             or str(tr2.channel).endswith('3') is True and naming == '2,3'\
-                             or str(tr2.channel).endswith('2') is True and naming == '1,2':
-                                tr2_ch = tr2.channel
+                                    if str(tr2.channel).endswith('E') is True\
+                                     or str(tr2.channel).endswith('3') is True and naming == '2,3'\
+                                     or str(tr2.channel).endswith('2') is True and naming == '1,2':
+                                        tr2_ch = tr2.channel
 
 
-                            if tr1_ch != '0' and tr2_ch != '0':
-                                rots = trace.rotate(traces=[tr1,tr2], azimuth=az_r, 
-                                                    in_channels=[tr1_ch, tr2_ch],
-                                                    out_channels=['R', 'T'])
-                                for tr in rots:
-                                    save_rot_down_tr(tr, dir_rot, ev_t_str)
+                                    if tr1_ch != '0' and tr2_ch != '0':
+                                        rots = trace.rotate(traces=[tr1,tr2], azimuth=az_r, 
+                                                            in_channels=[tr1_ch, tr2_ch],
+                                                            out_channels=['R', 'T'])
+                                        for tr in rots:
+                                            save_rot_down_tr(tr, dir_rot, ev_t_str)
 
 
             st_xml = []
@@ -990,7 +1065,6 @@ def main():
         ''' 7. Gain factors '''
         if gainfconf.calc_gainfactors is True:
             print('Starting evaluation of gainfactors.')
-            datapath = data_dir + 'rrd/'
             os.makedirs(data_dir+'results/gains/', exist_ok=True)
             dir_gains = data_dir + 'results/gains/'
             twd = (gainfconf.wdw_st_arr, gainfconf.wdw_sp_arr)
@@ -1005,24 +1079,34 @@ def main():
                     sys.exit()
 
 
-            def run_autogain(datapath, all_stations, subset_catalog,
+            def run_autogain(data_dir, all_stations, subset_catalog,
                              gain_factor_method, dir_gains, 
                              twd, arrT_array, comp):
+                
+                datapath = data_dir + 'rrd/'
+
                 if len(gain_factor_method) == 1:
                     gain_factor_method = gain_factor_method[0]
                 data_pile = pile.make_pile(datapath)
-
+                #print(data_pile)
+                
+                syn_data_pile = None
+                if gain_factor_method == 'syn_comp':
+                    syn_data_pile = pile.make_pile(data_dir+'synthetics')
+                
                 fband = gainfconf.fband
                 taper = trace.CosFader(xfrac=gainfconf.taper_xfrac)
 
                 ag = gainf.AutoGain(data_pile, stations=all_stations,
                                           events=subset_catalog,
                                           arrT=arrT_array,
+                                          snr_thresh=gainfconf.snr_thresh,
                                           component=comp,
-                                          gain_rel_to=gain_factor_method)
+                                          gain_rel_to=gain_factor_method,
+                                          syn_data_pile=syn_data_pile)
 
   
-                ag.process(fband, taper, twd)
+                ag.process(fband, taper, twd, gainfconf.debug_mode)
 
                 # Store mean results in YAML format:
                 print('saving mean gains: gains_median_and_mean%s.txt' % c, dir_gains)
@@ -1035,7 +1119,7 @@ def main():
             
             for c in gainfconf.components:
                 print(c)
-                run_autogain(datapath, all_stations, subsets_events['deep'],
+                run_autogain(data_dir, all_stations, subsets_events['deep'],
                              gainfconf.gain_factor_method,
                              dir_gains, twd, arrT_array, c)
                   
@@ -1095,30 +1179,33 @@ def main():
             nslc_list2 = []
             freq_neigh_list_y_ll = []
 
-            for i_st, st in zip(st_numbers[0:10], all_stations[0:10]):
+            for i_st, st in zip(st_numbers, all_stations):
                 print(i_st, st.station)
             #for i_st, st in enumerate(all_stations):
+                st_data_pile = pile.make_pile(datapath, regex='%s_%s_' % (st.network, st.station),
+                              show_progress=False)
+                locs = list(set(list(st_data_pile.locations.keys())))
+                for l in locs:
+                    freq_rat_list_st, freq_rat_list_y, nslc_list_st = fp.prep_psd_fct(
+                      i_st, st, l, subsets_events['deep'],
+                      dir_f,
+                      arrT_array, arrT_R_array,
+                      datapath, syndatapath,
+                      psdsconf.tinc, psdsconf.tpad,
+                      psdsconf.dt_start, psdsconf.dt_end,
+                      psdsconf.n_poly,
+                      psdsconf.norm_factor,
+                      psdsconf.f_ign,
+                      plot_psds=psdsconf.plot_psds,
+                      plot_ratio_extra=psdsconf.plot_ratio_extra,
+                      plot_m_rat=psdsconf.plot_m_rat,
+                      plot_flat_ranges=psdsconf.plot_flat_ranges,
+                      plot_neighb_ranges=psdsconf.plt_neigh_ranges)
 
-                freq_rat_list_st, freq_rat_list_y, nslc_list_st = fp.prep_psd_fct(
-                  i_st, st, subsets_events['deep'],
-                  dir_f,
-                  arrT_array, arrT_R_array,
-                  datapath, syndatapath,
-                  psdsconf.tinc, psdsconf.tpad,
-                  psdsconf.dt_start, psdsconf.dt_end,
-                  psdsconf.n_poly,
-                  psdsconf.norm_factor,
-                  psdsconf.f_ign,
-                  plot_psds=psdsconf.plot_psds,
-                  plot_ratio_extra=psdsconf.plot_ratio_extra,
-                  plot_m_rat=psdsconf.plot_m_rat,
-                  plot_flat_ranges=psdsconf.plot_flat_ranges,
-                  plot_neighb_ranges=psdsconf.plt_neigh_ranges)
-
-                if freq_rat_list_st != [] and nslc_list_st != []:
-                    flat_f_ranges_ll.extend(freq_rat_list_st)
-                    freq_rat_list_y_ll.extend(freq_rat_list_y)
-                    nslc_list.extend(nslc_list_st)
+                    if freq_rat_list_st != [] and nslc_list_st != []:
+                        flat_f_ranges_ll.extend(freq_rat_list_st)
+                        freq_rat_list_y_ll.extend(freq_rat_list_y)
+                        nslc_list.extend(nslc_list_st)
                 '''
                 if flat_by_next != [] and nslc_list_st != []:
                     flat_by_next_ll.extend(flat_by_next)
@@ -1153,27 +1240,42 @@ def main():
             st_numbers = [i_st for i_st in range(len(all_stations))]
             for i_st, st in zip(st_numbers, all_stations):
                 print(st.station)
-                out = orient.prep_orient(
-                                        datapath,
-                                        st,
-                                        subsets_events['shallow'], 
-                                        dir_ro,
-                                        orientconf.bandpass,
-                                        orientconf.start_before_ev,
-                                        orientconf.stop_after_ev,
-                                        orientconf.ccmin,
-                                        orientconf.plot_heatmap,
-                                        orientconf.plot_distr)
+                st_data_pile = pile.make_pile(datapath, regex='%s_%s_' % (st.network, st.station),
+                              show_progress=False)
+                if not st_data_pile:
+                    continue
+                locs = list(set(list(st_data_pile.locations.keys())))
+                for loc in locs:
+                    out = orient.prep_orient(
+                                            datapath,
+                                            st,
+                                            loc,
+                                            subsets_events['shallow'], 
+                                            dir_ro,
+                                            orientconf.bandpass,
+                                            orientconf.start_before_ev,
+                                            orientconf.stop_after_ev,
+                                            orientconf.ccmin,
+                                            orientconf.plot_heatmap,
+                                            orientconf.plot_distr,
+                                            orientconf.debug_mode)
 
-                if out:
-                    list_median_a.append(out[0])
-                    list_mean_a.append(out[1])
-                    list_stdd_a.append(out[2])
-                    list_switched.append(out[3])
-                    list_all_angles.append(out[4])
-                    n_ev.append(out[5])
+                    if out:
+                        list_median_a.append(out[0])
+                        list_mean_a.append(out[1])
+                        list_stdd_a.append(out[2])
+                        list_switched.append(out[3])
+                        list_all_angles.append(out[4])
+                        n_ev.append(out[5])
+                        #print('loc station', st.location)
+                        #st.location = loc
+                        #print('loc station new', st.location)
+                        used_stats.append((st.network, st.station, loc))
+                        #print([(st.network, st.station, st.location) for st in used_stats])
+                        #print('----------------------')
+                        
+                #break
 
-                    used_stats.append(st)
 
             orient.write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
                                 n_ev, used_stats, dir_ro, orientconf.ccmin)

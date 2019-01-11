@@ -56,7 +56,7 @@ def generate_default_config():
     metaDataconf = MetaDataDownloadConfig(
         download_data=False,
         download_metadata=False,
-        components_download='HH*',
+        channels_download='HH*',
         local_metadata=[],
         use_downmeta=False,
         token={'geofon': '/home/gesap/Documents/AlpArray/download-waveforms/swathD/token.asc'},
@@ -89,15 +89,14 @@ def generate_default_config():
                          tinc=600,
                          tpad=200,
                          dt_start=60,
-                         dt_end=1800,
+                         dt_end=120,
                          n_poly=25,
                          norm_factor=50,
                          f_ign=0.02,
                          plot_psds=False,
                          plot_ratio_extra=False,
                          plot_m_rat=False,
-                         plot_flat_ranges=False,
-                         plt_neigh_ranges=False)
+                         plot_flat_ranges=False)
 
     orientconf = OrientConfig(orient_rayl=False,
                               bandpass=(3, 0.01, 0.05),

@@ -5,7 +5,8 @@ import logging
 import gc
 import numpy as num
 from collections import defaultdict
-from pyrocko import cake, util
+from pyrocko import cake, util, trace
+from pyrocko.gui import marker as pm
 from pyrocko.orthodrome import distance_accurate50m
 from pyrocko.guts import Object, Dict, String, Float, Int
 
@@ -47,13 +48,17 @@ class Section():
         self.max_tr = {}
         self.relative_scalings = {}
         self.finished = False
+        self.max_tr_syn = {}
 
     def finish(self, method, fband, taper, ev_counter):
+        print('METHOD', method)
+        print(len(method))
         if len(method) == 2:
             reference_nsl = method[1][1]
             reference_nslc = list(filter(
                 lambda x: util.match_nslc(guess_nsl_template(reference_nsl), x),
                                           self.max_tr.keys()))
+
             self.____reference_nslc = reference_nslc
 
             if not len(reference_nslc) == 1:
@@ -69,6 +74,19 @@ class Section():
             self.reference_scale = 1.
             self.set_relative_scalings()
             self.finished = True
+
+        elif method == 'syn_comp':
+            #print(self.max_tr_syn)
+            #print(self.max_tr)
+            for nslc_id, maxA in self.max_tr.items():
+                try:
+                    #print(nslc_id[0:2])
+                    self.relative_scalings[nslc_id] = maxA / self.max_tr_syn[nslc_id[0:2]]
+                except:
+                    print('syn data missing:', nslc_id[0:2])
+            #print(self.relative_scalings)
+            self.finished = True
+
 
     def set_relative_scalings(self):
         for nslc_id, maxs in self.max_tr.items():
@@ -89,11 +107,15 @@ class Section():
     def iter_scalings(self):
         for nslc_id, scaling in self.relative_scalings.items():
             yield (nslc_id, scaling)
+    
+
+
 
 
 class AutoGain():
-    def __init__(self, data_pile, stations, events, arrT,
-                 component='Z', gain_rel_to='scale_one'):
+    def __init__(self, data_pile, stations, events, arrT, snr_thresh,
+                 component='Z', gain_rel_to='scale_one',
+                 syn_data_pile=None):
         '''
        :param phase_selection: follows the logic of
                                fomosto's Store phase definitions
@@ -114,6 +136,7 @@ class AutoGain():
 
         '''
         self.method = gain_rel_to
+        self.snr_thresh = snr_thresh
         self.component = component
         self.data_pile = data_pile
         self.stations = stations
@@ -128,9 +151,10 @@ class AutoGain():
         self._stdev = None  
         self._n_ev = None    
         self.arrT = arrT
+        self.syn_data_pile = syn_data_pile
 
 
-    def process(self, fband, taper, twd):
+    def process(self, fband, taper, twd, debug):
         no_events = len(self.events)
 
         for i_ev, event in enumerate(self.events):
@@ -157,6 +181,13 @@ class AutoGain():
                                                       twd[1],
                                                       trace_selector=selector,
                                                       load_data=True)
+                if self.method == 'syn_comp':
+                    tr_syn_generator = self.syn_data_pile.chopper(tmin=arrival -
+                                                      twd[0],
+                                                      tmax=arrival +
+                                                      twd[1],
+                                                      trace_selector=selector,
+                                                      load_data=True)
 
                 for tr in tr_generator:
                     if not len(tr) > 1 and tr:
@@ -164,15 +195,114 @@ class AutoGain():
                         if len(tr.ydata) > 0 and num.max(num.abs(tr.get_ydata())) != 0:
                             dtype = type(tr.ydata[0])
                             tr.ydata -= dtype(tr.get_ydata().mean())
+                            # make SNR threshold here!
+                            st_s = num.argmax(num.abs(tr.ydata))-10
+                            snr = num.mean([y*y for y in tr.ydata[st_s:st_s+60]])/\
+                                  num.mean([y*y for y in tr.ydata[0:60]])
+                            if snr < self.snr_thresh:
+                                continue
+                            # mean(A*A_signal)/mean(A*A_noise)
                             tr.highpass(fband['order'], fband['corner_hp'])
                             tr.taper(taper, chop=False)
                             tr.lowpass(fband['order'], fband['corner_lp'])
+                            
+                            if debug == True:
+                                print('SNR', snr)
+                                print('arrival time', util.time_to_str(arrival))
+                                trace.snuffle(tr, markers=[pm.Marker(nslc_ids=[tr.nslc_id], tmin=arrival, tmax=arrival+3)])
+
                             if num.max(num.abs(tr.get_ydata())) != 0:
                                 section.max_tr[tr.nslc_id] = num.max(num.abs(tr.get_ydata()))
-                                tr_nslc_ids.append(tr.nslc_id)
-                    # else:
-                    #     print('no trace', s.network, s.station, tr, util.time_to_str(event.time))
+                                tr_nslc_ids.append(tr.nslc_id)                            
 
+
+                    else:
+                        for t in tr:
+                            tt = t#[0]
+                            if len(tt.ydata) > 0 and num.max(num.abs(tt.get_ydata())) != 0:
+                                dtype = type(tt.ydata[0])
+                                #print(tr.ydata, type(tr.ydata))
+                                tt.ydata -= dtype(tt.get_ydata().mean())
+                                st_s = num.argmax(num.abs(tt.ydata))-10
+                                snr = num.mean([y*y for y in tt.ydata[st_s:st_s+60]])/\
+                                      num.mean([y*y for y in tt.ydata[0:60]])
+                                      
+                                # print('SNR', snr) 
+                                if snr < self.snr_thresh:
+                                    continue                               
+                                tt.highpass(fband['order'], fband['corner_hp'])
+                                tt.taper(taper, chop=False)
+                                tt.lowpass(fband['order'], fband['corner_lp'])
+
+                                if debug == True:
+                                    print('SNR', snr)
+                                    print('arrival time', util.time_to_str(arrival))
+                                    trace.snuffle(tt, markers=[pm.Marker(nslc_ids=[tt.nslc_id], tmin=arrival, tmax=arrival+3)])
+
+                                if num.max(num.abs(tt.get_ydata())) != 0:
+                                    section.max_tr[tt.nslc_id] = num.max(num.abs(tt.get_ydata()))
+                                    tr_nslc_ids.append(tt.nslc_id)
+
+                if self.method == 'syn_comp':
+                    for tr in tr_syn_generator:
+                        if not len(tr) > 1 and tr:
+                            tr = tr[0]
+                            if len(tr.ydata) > 0 and num.max(num.abs(tr.get_ydata())) != 0:
+                                dtype = type(tr.ydata[0])
+                                tr.ydata -= dtype(tr.get_ydata().mean())
+                                # make SNR threshold here!
+                                st_s = num.argmax(num.abs(tr.ydata))-10
+                                snr = num.mean([y*y for y in tr.ydata[st_s:st_s+60]])/\
+                                      num.mean([y*y for y in tr.ydata[0:60]])
+                                if snr < self.snr_thresh:
+                                    continue
+                                # mean(A*A_signal)/mean(A*A_noise)
+                                tr.highpass(fband['order'], fband['corner_hp'])
+                                tr.taper(taper, chop=False)
+                                tr.lowpass(fband['order'], fband['corner_lp'])
+                                
+                                if debug == True:
+                                    print('SNR', snr)
+                                    print('arrival time', util.time_to_str(arrival))
+                                    trace.snuffle(tr, markers=[pm.Marker(nslc_ids=[tr.nslc_id], tmin=arrival, tmax=arrival+3)])
+
+                                if num.max(num.abs(tr.get_ydata())) != 0:
+                                    section.max_tr_syn[tr.nslc_id[0:2]] = num.max(num.abs(tr.get_ydata()))
+                                    #tr_nslc_ids_syn.append(tr.nslc_id)                            
+
+
+                        else:
+                            for t in tr:
+                                tt = t#[0]
+                                if len(tt.ydata) > 0 and num.max(num.abs(tt.get_ydata())) != 0:
+                                    dtype = type(tt.ydata[0])
+                                    #print(tr.ydata, type(tr.ydata))
+                                    tt.ydata -= dtype(tt.get_ydata().mean())
+                                    st_s = num.argmax(num.abs(tt.ydata))-10
+                                    snr = num.mean([y*y for y in tt.ydata[st_s:st_s+60]])/\
+                                          num.mean([y*y for y in tt.ydata[0:60]])
+                                          
+                                    # print('SNR', snr) 
+                                    if snr < self.snr_thresh:
+                                        continue                               
+                                    tt.highpass(fband['order'], fband['corner_hp'])
+                                    tt.taper(taper, chop=False)
+                                    tt.lowpass(fband['order'], fband['corner_lp'])
+
+                                    if debug == True:
+                                        print('SNR', snr)
+                                        print('arrival time', util.time_to_str(arrival))
+                                        trace.snuffle(tt, markers=[pm.Marker(nslc_ids=[tt.nslc_id], tmin=arrival, tmax=arrival+3)])
+
+                                    if num.max(num.abs(tt.get_ydata())) != 0:
+                                        section.max_tr_syn[tt.nslc_id[0:2]] = num.max(num.abs(tt.get_ydata()))
+                                        #tr_nslc_ids_syn.append(tt.nslc_id)                    
+
+
+
+                    #else:
+                    #    print('no trace', s.network, s.station, tr, util.time_to_str(event.time))
+                #break
                 # print(i_s)
             logger.debug('skipped %s/%s' % (skipped, unskipped))
 

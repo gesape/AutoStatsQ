@@ -78,7 +78,8 @@ class MetaDataDownloadConfig(Object):
     local_metadata = List.T(default=[])
     local_data = List.T(default=[])
     use_downmeta = Bool.T(default=True)
-    components_download = String.T()
+    channels_download = String.T()
+    all_channels = Bool.T(default=False)
     # components = List.T()
     token = Dict.T(default={})
     sites = List.T()
@@ -122,6 +123,8 @@ class GainfactorsConfig(Object):
     taper_xfrac = Float.T()
     wdw_st_arr = Int.T()
     wdw_sp_arr = Int.T()
+    snr_thresh = Float.T(default=5.)
+    debug_mode = Bool.T(default=False)
     phase_select = String.T()
     components = List.T()
 
@@ -159,6 +162,7 @@ class OrientConfig(Object):
     plot_orient_map_fromfile = Bool.T()
     plot_angles_vs_events = Bool.T(default=False)
     orient_map_label = List.T(optional=True)
+    debug_mode = Bool.T(default=False)
 
 
 class maps(Object):

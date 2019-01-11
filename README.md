@@ -4,9 +4,17 @@ Please contact me for further description, help or when something does not behav
 
 - Catalog search for teleseismic events with uniform azimuthal coverage around array
 - Download of data & metadata for these events + computation of synthetic data
-- Relative gain factors in time domain (relative to reference station)
+- Relative gain factors in time domain (relative to reference station or to synthetic data)
 - Rayleigh wave polarization analysis for detection of sensor misorientations
 - Comparison of obs. and synth. PSDs; determining frequency ranges suitable for MT inversion
+
+
+Lates changes
+-------------
+- gain test: additional method comparing max A to synthetics
+- added SNR event filter for gain test
+- added debug mode for a nice to gain and orientation test window selection experience;) can also be used to test filter settings
+- all tests can now deal with multiple locations at one station
 
 
 Requirements
@@ -200,6 +208,9 @@ Settings:
   wdw_sp_arr: 60
   # time window around P phase onset, start [s] before and end [s] after theo. arrival time
 
+  snr_thresh: 5. # threshold for snr of used event
+  debug_mode: false # if true, time windows are opened in snuffler to check window settings.
+
   phase_select: first(P|p|P(cmb)P(icb)P(icb)p(cmb)p|P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p)
   components: [Z, R, T]
 
@@ -212,17 +223,16 @@ Settings:
   calc_psd: false
   tinc: 600  # [s]
   tpad: 200  # [s]
-  dt_start: 60  # [s]
-  dt_end: 1800  # [s]
+  dt_start: 60  # [s] start before arrival of first P phases
+  dt_end: 120  # [s] end before arrival of Rayleigh waves
   n_poly: 25
   norm_factor: 50
   f_ign: 0.02  # [Hz]
-  only_first: true
+  only_first: true # outputs only first "flat" frequency range
   plot_psds: false
   plot_ratio_extra: false
   plot_m_rat: false
   plot_flat_ranges: false
-  plt_neigh_ranges: false
 
 - !autostatsq.config.OrientConfig
   # settings for orientation test

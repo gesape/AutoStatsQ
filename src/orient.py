@@ -7,6 +7,8 @@ from matplotlib import pyplot as plt
 from pyrocko.guts import Object, Dict, String, Float, List, Int, Tuple, load
 from pyrocko.plot.automap import Map
 import matplotlib.dates as mdates
+from pyrocko.gui import marker as pm
+
 
 
 v_rayleigh = 4.0  # km/s
@@ -20,7 +22,7 @@ class dict_stats_rota(Object):
 
 
 class rota_ev_by_stat(Object):
-    station = Tuple.T(2, String.T())
+    station = Tuple.T(3, String.T())
     ev_rota = Dict.T(String.T(), Int.T())
 
 
@@ -29,7 +31,7 @@ class dict_stats_all_rota(Object):
 
 
 class Event_sw(Object):
-    station = Tuple.T(2, String.T())
+    station = Tuple.T(3, String.T())
     name = String.T()
     time = String.T()
     max_cc_angle = Int.T()
@@ -40,7 +42,7 @@ class Polarity_switch(Object):
     switched_by_stat = List.T(Event_sw.T())
 
 
-def plot_corr_time(ns, filename, dir_ro):
+def plot_corr_time(nsl, filename, dir_ro):
     '''
     Plot angle of max. cr-corr vs event time for each station.
     Results below cr-corr threshold are ignored.
@@ -88,9 +90,9 @@ def write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
                  n_ev, used_stats, dir_ro, ccmin):
     if list_switched:
         # write to yaml
-        l_sw = [Event_sw(station=(s[0], s[1]), name=s[2],
-                         time=s[3], max_cc_angle=s[4], max_cc_coef=s[5])
-                for l in list_switched for s in l if s and s[5] > ccmin]
+        l_sw = [Event_sw(station=(s[0], s[1], s[2]), name=s[3],
+                         time=s[4], max_cc_angle=s[5], max_cc_coef=s[6])
+                for l in list_switched for s in l if s and s[6] > ccmin]
 
         sw = Polarity_switch(switched_by_stat=l_sw)
         sw.regularize()
@@ -99,7 +101,7 @@ def write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
                 % (dir_ro))
 
     if list_median_a and list_mean_a and list_stdd_a and n_ev:
-        ns_list = ['%s %s' % (st.network, st.station) for st in used_stats]
+        ns_list = ['%s %s %s' % (st[0], st[1], st[2]) for st in used_stats]
         perStat_median = dict(zip(map(lambda x: x, ns_list), list_median_a))
         perStat_mean = dict(zip(map(lambda x: x, ns_list), list_mean_a))
         perStat_std = dict(zip(map(lambda x: x, ns_list), list_stdd_a))
@@ -120,7 +122,7 @@ def write_all_output_csv(list_all_angles, used_stats, dir_ro):
     list_rrr = []
 
     for st, ev_dict in zip(used_stats, list_all_angles):
-        rrr = rota_ev_by_stat(station=(st.network, st.station),
+        rrr = rota_ev_by_stat(station=(st[0], st[1], st[2]),
                               ev_rota=ev_dict)
         list_rrr.append(rrr)
 
@@ -151,7 +153,8 @@ def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
             values.append(maxcc_value)
 
             if abs(0. - maxcc_angle) > 90:
-                switched.append((st.network, st.station, ev.name,
+                switched.append((st.network, st.station, st.location,
+                                 ev.name,
                                  util.time_to_str(ev.time),
                                  maxcc_angle, maxcc_value))
 
@@ -262,11 +265,11 @@ def get_m_angle_all(cc_i_ev_vs_rota, catalog, st, ccmin):
     return dict_ev_angle
 
 
-def get_tr_by_cha(pile, start_twd, end_twd, cha):
+def get_tr_by_cha(pile, start_twd, end_twd, loc, cha):
     tr = pile.all(
         tmin=start_twd,
         tmax=end_twd,
-        trace_selector=lambda tr: tr.nslc_id[3] == cha,
+        trace_selector=lambda tr: tr.nslc_id[3] == cha and tr.nslc_id[2] == loc,
         want_incomplete=False)
 
     return tr
@@ -286,7 +289,7 @@ def max_or_min(c):
         return tma, ma
 
 
-def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, dir_ro):
+def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_ro):
     '''
     Plots max. cc-coef vs. rotation angle for each event in subplots.
     rather for debugging than for including into normal testing workflow!
@@ -324,14 +327,15 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, dir_ro):
             ax[i_x, i_y+i+1].set_xlabel('Correction angle [deg]')
     plt.tight_layout()
     # plt.show()
-    fig.savefig('%s/%s_%s_distr.pdf'
-                % (dir_ro, st.network, st.station))
+    fig.savefig('%s/%s_%s_%s_distr.pdf'
+                % (dir_ro, st.network, st.station, loc))
     plt.close(fig)
 
 
-def prep_orient(datapath, st, catalog, dir_ro,
+def prep_orient(datapath, st, loc, catalog, dir_ro,
                 bp, dt_start, dt_stop, ccmin=0.80,
-                plot_heatmap=False,  plot_distr=False):
+                plot_heatmap=False,  plot_distr=False,
+                debug=False):
     '''
     Perform orientation analysis using Rayleigh waves, main function.
 
@@ -349,9 +353,10 @@ def prep_orient(datapath, st, catalog, dir_ro,
     :param plot_distr: bool, optional
     '''
 
-    st_data_pile = pile.make_pile(datapath, regex='_%s_' % st.station,
+    st_data_pile = pile.make_pile(datapath, regex='%s_%s_' % (st.network, st.station),
                                   show_progress=False)
     n_ev = len(catalog)
+
     if st_data_pile.tmin is not None and st_data_pile.tmax is not None:
 
         # calculate dist between all events and current station
@@ -376,9 +381,9 @@ def prep_orient(datapath, st, catalog, dir_ro,
             #           util.time_to_str(end_twd) )
             #     print('arrT:', util.time_to_str(arrT))
 
-            trZ = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, 'Z')
-            trR = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, 'R')
-            trT = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, 'T')
+            trZ = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'Z')
+            trR = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'R')
+            trT = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'T')
 
             start_twd2 = ev.time + r_arr_by_ev[i_ev] - dt_start
             end_twd2 = arrT + dt_stop
@@ -392,6 +397,13 @@ def prep_orient(datapath, st, catalog, dir_ro,
                 trZ = trZ[0]
                 trR = trR[0]
                 trT = trT[0]
+                # debugging - window selection:
+                if debug == True:
+                    trace.snuffle([trZ,trR,trT], markers=
+                        [pm.Marker(nslc_ids=[trZ.nslc_id, trR.nslc_id, trT.nslc_id],
+                                   tmin=start_twd2, tmax=end_twd2),
+                         pm.Marker(nslc_ids=[trZ.nslc_id, trR.nslc_id, trT.nslc_id],
+                                   tmin=arrT, tmax=arrT+3)])
 
             else:
                 cc_i_ev_vs_rota[i_ev, :] = num.nan
@@ -464,13 +476,13 @@ def prep_orient(datapath, st, catalog, dir_ro,
             cbar.ax.set_xticklabels(['0', '0.5', '1.0'])
             plt.tight_layout()
             # plt.show(fig)
-            fig.savefig('%s/%s_%s_rot_cc_heatmap.png'
-                        % (dir_ro, st.network, st.station))
+            fig.savefig('%s/%s_%s_%s_rot_cc_heatmap.png'
+                        % (dir_ro, st.network, st.station, loc))
             plt.close()
 
         if plot_distr is True:
             plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog,
-                                    rot_angles, st, dir_ro)
+                                    rot_angles, st, loc, dir_ro)
 
         median_a, mean_a, std_a, switched, n_ev =\
             get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin)
@@ -513,10 +525,12 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     lat_no_nan_u = []
     lon_no_nan_u = []
 
+    ns = list(set(list(angles_fromfile.CorrectAngl_perStat_median.keys())))
+
     for i_ns, ns_now in enumerate(ns):
         for l in ['00', '', '01']:
             try:
-                ns_now = '%s %s' % (ns_now[0], ns_now[1])
+                #ns_now = '%s %s' % (ns_now[0], ns_now[1])
                 a = angles_fromfile.CorrectAngl_perStat_median[ns_now]
                 nev = angles_fromfile.n_events[ns_now]
                 if a > -181.0 and a < 180.0:  # not nan
@@ -557,7 +571,7 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     cptfile = 'tempfile2.cpt'
     abs_angs = list(num.abs(angle_no_nan))
     m.gmt.makecpt(
-                C='/home/gesap/Documents/CETperceptual_GMT/CET-D8.cpt',
+                C='/home/gesa/Documents/CETperceptual_GMT/CET-D8.cpt',
                 T='%g/%g' % (0., 180.),
                 out_filename=cptfile, suppress_defaults=True)
 
