@@ -524,19 +524,19 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     angle_no_nan_u = []
     lat_no_nan_u = []
     lon_no_nan_u = []
+    stats_no_nan = []
 
-    ns = list(set(list(angles_fromfile.CorrectAngl_perStat_median.keys())))
 
     for i_ns, ns_now in enumerate(ns):
-        for l in ['00', '', '01']:
+        for l in ['00', '', '01', '10', '60']:
             try:
-                #ns_now = '%s %s' % (ns_now[0], ns_now[1])
-                a = angles_fromfile.CorrectAngl_perStat_median[ns_now]
-                nev = angles_fromfile.n_events[ns_now]
+                ns_now_ = '%s %s %s' % (ns_now[0], ns_now[1], l)
+                a = angles_fromfile.CorrectAngl_perStat_median[ns_now_]
+                nev = angles_fromfile.n_events[ns_now_]
                 if a > -181.0 and a < 180.0:  # not nan
                     if nev >= 5:
                         angle_no_nan.append(0.0-a)
-                        # stats_no_nan.append(ns_now[1])
+                        stats_no_nan.append(ns_now[1])
                         lat_no_nan.append(st_lats[i_ns])
                         lon_no_nan.append(st_lons[i_ns])
                     else:
@@ -616,6 +616,15 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
                  B=B_opt_psscale+'+l abs. misorientation [deg]',
                  D='x9c/6c+w12c/0.5c+jTC+h', # 'x9c/17c+w12c/0.5c+jTC+h'
                  C=cptfile)
+    
+    # add station labels
+
+    has_label = []
+
+    for i in range(len(stats_no_nan)):
+        if stats_no_nan[i] not in has_label:
+            m.add_label(lat_no_nan[i], lon_no_nan[i], stats_no_nan[i])    
+            has_label.append(stats_no_nan[i])
 
     m.save(dir_orient+'map_orient.png')
     print('Saved map with corr. angles for sensor orientations')
