@@ -155,8 +155,20 @@ def main():
                                             lon=float(stat.longitude.value),
                                             elevation=float(stat.elevation.value)))
 
+            elif stat_list.endswith('.yaml'):
+                zs = model.station.load_stations(filename=stat_list)
+                for stat in zs:
+                    st_lats.append(float(stat.lat))
+                    st_lons.append(float(stat.lon))
+                    ns.append((stat.network, stat.station))
+                    all_stations.append(model.Station(network=stat.network,
+                                        station=stat.station,
+                                        lat=float(stat.lat),
+                                        lon=float(stat.lon),
+                                        elevation=float(stat.elevation)))
             else:
-              print('Station file extension not known: %s' % stat_list)
+              print('Station file extension not known: %s. Please use .xml, .csv or .yaml.'
+                    % stat_list)
 
         print('stations:', len(ns))
 
@@ -625,7 +637,8 @@ def main():
 
                     #stations_fn = data_dir + ev_t_str + '_resp_geofon.xml'
                     #response = stationxml.load_xml(filename=stations_fn)
-                    p = pile.make_pile(paths=data_dir+ev_t_str, show_progress=False)
+                    print(data_dir+ev_t_str)
+                    p = pile.make_pile(paths=data_dir+ev_t_str, show_progress=True)
                     dir_make = data_dir + 'rest/' + ev_t_str
                     os.makedirs(dir_make, exist_ok=True)
                     transf_taper = 1/min(RestDownconf.freqlim)
@@ -641,54 +654,63 @@ def main():
                             trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2])
 
                         if not trs and metaDataconf.local_data:
-                          p = pile.make_pile(paths=metaDataconf.local_data, show_progress=False,
-                            regex=st.station)                       
+                          print('Accessing local data.')
+                          p = pile.make_pile(paths=metaDataconf.local_data, show_progress=True)#,
+                            #regex=st.station)                       
                           tmin=ev.time+metaDataconf.dt_start*3600
                           tmax=ev.time+metaDataconf.dt_end*3600
                           trs = p.all(
                             tmin=tmin,
                             tmax=tmax)
+                          # trace.snuffle(trs)
 
                         if trs:
                             comps = [tr.channel for tr in trs]
 
                             if metaDataconf.all_channels == False:
                                 
-                                #if 'HHZ' in comps and 'HHN' in comps and 'HHE' in comps:
-                                #    trs = [tr for tr in trs if tr.channel in ['HHZ', 'HHN', 'HHE']]
-                                #elif 'HHZ' in comps and 'HH2' in comps and 'HH3' in comps:
-                                #    trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH2', 'HH3']]
-                                #elif 'HHZ' in comps and 'HH1' in comps and 'HH1' in comps:
-                                #    trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH1', 'HH2']]
-
-                                #elif 'EHZ' in comps and 'EHN' in comps and 'EHE' in comps:
-                                #    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EHN', 'EHE']]
-                                #elif 'EHZ' in comps and 'EH2' in comps and 'EH3' in comps:
-                                #    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EH2', 'EH3']]                            
-                                #elif 'EHZ' in comps and 'EH1' in comps and 'EH2' in comps:
-                                #    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EH1', 'EH2']] 
-
-                                #elif 'BHZ' in comps and 'BHN' in comps and 'BHE' in comps:
-                                #    trs = [tr for tr in trs  if tr.channel in ['BHZ', 'BHN', 'BHE']] 
-                                #elif 'BHZ' in comps and 'BH2' in comps and 'BH3' in comps:
-                                #    trs = [tr for tr in trs if tr.channel in ['BHZ', 'BH2', 'BH3']]
-                                #elif 'BHZ' in comps and 'BH1' in comps and 'BH2' in comps:
-                                #    trs = [tr for tr in trs if tr.channel in ['BHZ', 'BH1', 'BH2']] 
-
-                                if 'LHZ' in comps and 'LHN' in comps and 'LHE' in comps:
-                                    trs = [tr for tr in trs if tr.channel in ['LHZ', 'LHN', 'LHE']]
-                                elif 'LHZ' in comps and 'LH2' in comps and 'LH3' in comps:
-                                    trs = [tr for tr in trs if tr.channel in ['LHZ', 'LH2', 'LH3']]                            
-                                elif 'LHZ' in comps and 'LH1' in comps and 'LH2' in comps:
-                                    trs = [tr for tr in trs if tr.channel in ['LHZ', 'LH1', 'LH2']]
-                                elif 'HHZ' in comps and 'HHN' in comps and 'HHE' in comps:
+                                if 'HHZ' in comps and 'HHN' in comps and 'HHE' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['HHZ', 'HHN', 'HHE']]
                                 elif 'HHZ' in comps and 'HH2' in comps and 'HH3' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH2', 'HH3']]
                                 elif 'HHZ' in comps and 'HH1' in comps and 'HH1' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH1', 'HH2']]
 
+                                elif 'EHZ' in comps and 'EHN' in comps and 'EHE' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EHN', 'EHE']]
+                                elif 'EHZ' in comps and 'EH2' in comps and 'EH3' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EH2', 'EH3']]                            
+                                elif 'EHZ' in comps and 'EH1' in comps and 'EH2' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EH1', 'EH2']] 
 
+                                elif 'BHZ' in comps and 'BHN' in comps and 'BHE' in comps:
+                                    trs = [tr for tr in trs  if tr.channel in ['BHZ', 'BHN', 'BHE']] 
+                                elif 'BHZ' in comps and 'BH2' in comps and 'BH3' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['BHZ', 'BH2', 'BH3']]
+                                elif 'BHZ' in comps and 'BH1' in comps and 'BH2' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['BHZ', 'BH1', 'BH2']] 
+
+                                elif 'LHZ' in comps and 'LHN' in comps and 'LHE' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['LHZ', 'LHN', 'LHE']]
+                                elif 'LHZ' in comps and 'LH2' in comps and 'LH3' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['LHZ', 'LH2', 'LH3']]                            
+                                elif 'LHZ' in comps and 'LH1' in comps and 'LH2' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['LHZ', 'LH1', 'LH2']]
+
+                                elif 'CNZ' in comps and 'CNN' in comps and 'CNE' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['CNZ', 'CNN', 'CNE']]
+                                elif 'CNZ' in comps and 'CN2' in comps and 'HH3' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['CNZ', 'CN2', 'CN3']]
+                                elif 'CNZ' in comps and 'CN1' in comps and 'CN1' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['CNZ', 'CN1', 'CN2']]
+
+                                elif 'HNZ' in comps and 'HNN' in comps and 'HNE' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['HNZ', 'HNN', 'HNE']]
+                                    print('here')
+                                elif 'HNZ' in comps and 'HN2' in comps and 'HN3' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['HNZ', 'HN2', 'HN3']]
+                                elif 'HNZ' in comps and 'HN1' in comps and 'HN1' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['HNZ', 'HN1', 'HN2']]
 
 
                                 else:

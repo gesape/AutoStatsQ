@@ -525,6 +525,7 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     lat_no_nan_u = []
     lon_no_nan_u = []
     stats_no_nan = []
+    stats_no_nan_u = []
 
 
     for i_ns, ns_now in enumerate(ns):
@@ -541,6 +542,7 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
                         lon_no_nan.append(st_lons[i_ns])
                     else:
                         angle_no_nan_u.append(0.0-a)
+                        stats_no_nan_u.append(ns_now[1])                        
                         lat_no_nan_u.append(st_lats[i_ns])
                         lon_no_nan_u.append(st_lons[i_ns])
             except KeyError:
@@ -571,7 +573,7 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     cptfile = 'tempfile2.cpt'
     abs_angs = list(num.abs(angle_no_nan))
     m.gmt.makecpt(
-                C='/home/gesa/Documents/CETperceptual_GMT/CET-D8.cpt',
+                C='/home/gesap/Documents/CETperceptual_GMT/CET-D8.cpt',
                 T='%g/%g' % (0., 180.),
                 out_filename=cptfile, suppress_defaults=True)
 
@@ -625,6 +627,13 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
         if stats_no_nan[i] not in has_label:
             m.add_label(lat_no_nan[i], lon_no_nan[i], stats_no_nan[i])    
             has_label.append(stats_no_nan[i])
+
+    has_label = []
+
+    for i in range(len(stats_no_nan_u)):
+        if stats_no_nan_u[i] not in has_label:
+            m.add_label(lat_no_nan_u[i], lon_no_nan_u[i], stats_no_nan_u[i])    
+            has_label.append(stats_no_nan_u[i])
 
     m.save(dir_orient+'map_orient.png')
     print('Saved map with corr. angles for sensor orientations')
