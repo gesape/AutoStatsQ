@@ -133,7 +133,6 @@ class GainfactorsConfig(Object):
 
 
 class PSDConfig(Object):
-    # PSD section
     calc_psd = Bool.T()
     tinc = Int.T()
     tpad = Int.T()
@@ -163,6 +162,14 @@ class OrientConfig(Object):
     plot_angles_vs_events = Bool.T(default=False)
     orient_map_label = List.T(optional=True)
     debug_mode = Bool.T(default=False)
+
+class TimingConfig(Object):
+    timing_test = Bool.T()
+    bandpass = Tuple.T(3, Float.T())
+    time_wdw = List.T()
+    cc_thresh = Float.T()
+    debug_mode = Bool.T(default=False)
+
 
 
 class maps(Object):

@@ -21,10 +21,12 @@ from .catalogplots import *
 from .gainplots import plot_median_gain_map_from_file
 from . import freq_psd as fp
 from . import orient
+from . import timing as tt
 from .config_settings_defaults import generate_default_config
 from .config import GeneralSettings, CatalogConfig, ArrTConfig,\
 MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
-GainfactorsConfig, PSDConfig, OrientConfig, maps, AutoStatsQConfig
+GainfactorsConfig, PSDConfig, OrientConfig, TimingConfig,\
+maps, AutoStatsQConfig
 from .calc_ttt import *
 
 #st_liste_check = ['CHVC','CKRC','DPC','GOPC','HSKC','JAVC','KRLC','KRUC',
@@ -110,7 +112,7 @@ def main():
         # read existing config file:
 
         gensettings, catalogconf, arrTconf, ct, metaDataconf, RestDownconf,\
-        synthsconf, gainfconf, psdsconf, orientconf, maps =\
+        synthsconf, gainfconf, psdsconf, orientconf, timingconf, maps =\
         AutoStatsQConfig.load(filename=args.config).Settings
 
         data_dir = gensettings.data_dir
@@ -1246,7 +1248,7 @@ def main():
 
 
         # 9. Rayleigh wave polarization analysis for orientation
-        if orientconf.orient_rayl == True:
+        if orientconf.orient_rayl is True:
             print('starting rayleigh wave orientation section')
             dir_ro = data_dir + 'results/orient/'
             os.makedirs(dir_ro, exist_ok=True)
@@ -1303,16 +1305,90 @@ def main():
                                 n_ev, used_stats, dir_ro, orientconf.ccmin)
             orient.write_all_output_csv(list_all_angles, used_stats, dir_ro)
 
-        if orientconf.plot_orient_map_fromfile == True:
+        if orientconf.plot_orient_map_fromfile is True:
             dir_ro = data_dir + 'results/orient/'          
             orient.plot_corr_angles(ns, st_lats, st_lons,
                                     'CorrectionAngles.yaml', dir_ro,
                                     maps.pl_opt, maps.pl_topo,
                                     maps.map_size,
                                     orientconf.orient_map_label)
-        if orientconf.plot_angles_vs_events == True:
+        if orientconf.plot_angles_vs_events is True:
             dir_ro = data_dir + 'results/orient/'
             orient.plot_corr_time(ns, 'AllCorrectionAngles.yaml', dir_ro)
+
+
+
+        if timingconf.timing_test is True:
+            #print('this is a start')
+            #tt.test('hello')
+            if arrT_array is None:
+                try:
+                    data_dir = gensettings.data_dir
+                    arrT_array = num.load(data_dir+'ttt/ArrivalTimes_deep.npy')
+                except:
+                    print('Please calculate arrival times first!')
+                    sys.exit()
+
+
+            subset_catalog = subsets_events['deep']
+            print('Events:', len(subset_catalog))
+            datapath = data_dir + 'rrd/'
+            syndatapath = data_dir + 'synthetics/'
+
+            dir_time = data_dir + 'results/timing/'
+            os.makedirs(dir_time, exist_ok=True)
+
+            tshifts = num.empty((len(all_stations), len(subset_catalog)))
+            tshifts.fill(num.nan)
+
+            for i_ev, ev in enumerate(subset_catalog):
+                tshifts[:,i_ev] = tt.ccs_allstats_one_event(i_ev, ev, all_stations,
+                                                                   datapath, syndatapath,
+                                                                   dir_time, timingconf.bandpass,
+                                                                   arrT_array, timingconf.cc_thresh,
+                                                                   debug_mode=timingconf.debug_mode)
+
+
+            tshifts_cor = tt.correct_for_med_tshifts(tshifts)
+            
+            min_col = num.min([num.nanmin(tshifts), num.nanmin(tshifts_cor)])
+            max_col = num.max([num.nanmax(tshifts), num.nanmax(tshifts_cor)])
+
+
+            fig, ax = plt.subplots(nrows=2, figsize=(5, 10))
+            a = ax[0].imshow(tshifts, vmin=min_col,
+                         vmax=max_col, interpolation='nearest')
+            ax[0].set_title('Not corrected')
+            ax[0].set_xlabel('Events')            
+            ax[0].set_ylabel('Stations')
+            cbar = plt.colorbar(a, ax=ax[0])
+            cbar.set_label('Timing error [s]', rotation=90)
+            b = ax[1].imshow(tshifts_cor, vmin=min_col,
+                         vmax=max_col, interpolation='nearest')
+            ax[1].set_title('Corrected for median of event.')
+            ax[1].set_xlabel('Events')
+            ax[1].set_ylabel('Stations')            
+            cbar = plt.colorbar(b, ax=ax[1])
+            cbar.set_label('Timing error [s]', rotation=90)
+            plt.tight_layout()
+            fig.savefig(dir_time + 'timing_arrays.png')
+            plt.close()
+
+            #plt.show()
+
+            # get mean and stdev
+            means = num.nanmean(tshifts_cor, axis=1)
+            print(means.shape)
+            stdevs = num.nanstd(tshifts_cor, axis=1)
+
+
+            # plot
+            outfile = dir_time + 'timing_errors_allStats.png'
+            tt.plot_tshifts(tshifts_cor, means, stdevs, outfile, all_stations)
+
+
+
+
 
 if __name__ == '__main__':
     main()

@@ -1,7 +1,8 @@
 from .config import GeneralSettings, CatalogConfig, ArrTConfig,\
 CakeTTTGenerator,\
 MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
-GainfactorsConfig, PSDConfig, OrientConfig, AutoStatsQConfig, maps
+GainfactorsConfig, PSDConfig, OrientConfig, AutoStatsQConfig,\
+TimingConfig, maps
 
 
 def generate_default_config():
@@ -108,6 +109,12 @@ def generate_default_config():
                               plot_orient_map_fromfile=False,
                               plot_angles_vs_events=False)
 
+    timingconf = TimingConfig(timing_test=False,
+                              bandpass=(3, 0.01, 0.1),
+                              time_wdw=['firstP', 600],
+                              cc_thresh=0.7,
+                              debug_mode=False)
+
     _maps = maps(map_size=[30.0, 30.0],
                  pl_opt=[46, 11.75, 800000],
                  pl_topo=False)
@@ -115,6 +122,6 @@ def generate_default_config():
     config = AutoStatsQConfig(
       Settings=[gensettings, catalogconf, arrTconf, cake_ttt_gen, metaDataconf,
                 RestDownconf,
-                synthsconf, gainfconf, psdsconf, orientconf, _maps])
+                synthsconf, gainfconf, psdsconf, orientconf, timingconf, _maps])
 
     return config
