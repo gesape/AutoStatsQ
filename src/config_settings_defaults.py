@@ -113,6 +113,7 @@ def generate_default_config():
                               bandpass=(3, 0.01, 0.1),
                               time_wdw=['firstP', 600],
                               cc_thresh=0.7,
+                              search_locations=True,
                               debug_mode=False)
 
     _maps = maps(map_size=[30.0, 30.0],

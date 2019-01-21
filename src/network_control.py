@@ -1153,11 +1153,8 @@ def main():
             dir_gains = data_dir + 'results/gains/'
             for c in gainfconf.components:
                 plot_median_gain_map_from_file(ns, st_lats, st_lons, maps.pl_opt, maps.pl_topo,
-                                             'gains_median_and_mean%s.txt' % c, dir_gains, c,
-                                             maps.map_size)
-
-
-
+                                               'gains_median_and_mean%s.txt' % c, dir_gains, c,
+                                               maps.map_size)
 
         ''' 8. Frequency spectra'''
         # psd plot for each station, syn + obs
@@ -1165,7 +1162,6 @@ def main():
         # plot mean of psd ratio for each station
         # plot flat ranges of psd ratio
         # output flat-ratio-ranges as yaml file
-
 
         if psdsconf.calc_psd is True:
             print('starting calc_psd')
@@ -1180,15 +1176,17 @@ def main():
             if arrT_array is None:
                 try:
                     data_dir = gensettings.data_dir
-                    arrT_array = num.load(data_dir+'ttt/ArrivalTimes_deep.npy')
+                    arrT_array = num.load(data_dir+
+                                          'ttt/ArrivalTimes_deep.npy')
                 except:
                     print('Please calculate arrival times first!')
                     sys.exit()
-            
+
             if arrT_R_array is None:
                 try:
                     data_dir = gensettings.data_dir
-                    arrT_R_array = num.load(data_dir+'ttt/ArrivalTimes_estR_deep.npy')
+                    arrT_R_array = num.load(data_dir+
+                                            'ttt/ArrivalTimes_estR_deep.npy')
                 except:
                     print('Please calculate R arrival times first!')
                     sys.exit()
@@ -1196,18 +1194,19 @@ def main():
             st_numbers = [i_st for i_st in range(len(all_stations))]
             flat_f_ranges_ll = []
             freq_rat_list_y_ll = []
-            flat_by_next_ll = []
+            # flat_by_next_ll = []
             freq_neigh_list_y_ll = []
 
             nslc_list = []
-            nslc_list2 = []
-            freq_neigh_list_y_ll = []
+            # nslc_list2 = []
+            # freq_neigh_list_y_ll = []
 
             for i_st, st in zip(st_numbers, all_stations):
                 print(i_st, st.station)
-            #for i_st, st in enumerate(all_stations):
-                st_data_pile = pile.make_pile(datapath, regex='%s_%s_' % (st.network, st.station),
-                              show_progress=False)
+            # for i_st, st in enumerate(all_stations):
+                st_data_pile = pile.make_pile(datapath,
+                                              regex='%s_%s_' % (st.network, st.station),
+                                              show_progress=False)
                 locs = list(set(list(st_data_pile.locations.keys())))
                 for l in locs:
                     freq_rat_list_st, freq_rat_list_y, nslc_list_st = fp.prep_psd_fct(
@@ -1239,13 +1238,13 @@ def main():
 
             fp.dump_flat_ranges(flat_f_ranges_ll, freq_rat_list_y_ll,
                                 nslc_list, dir_f,
-                                fname_ext='linefit2', only_first=psdsconf.only_first)
+                                fname_ext='linefit2',
+                                only_first=psdsconf.only_first)
             '''
             dump_flat_ranges(flat_by_next_ll, freq_neigh_list_y_ll,
                                 nslc_list2, dir_f,
                                 fname_ext='neighbour2')
             '''
-
 
         # 9. Rayleigh wave polarization analysis for orientation
         if orientconf.orient_rayl is True:
@@ -1255,7 +1254,7 @@ def main():
             datapath = data_dir + 'rrd/'
             list_median_a = []
             list_mean_a = []
-            list_stdd_a = []            
+            list_stdd_a = []
             list_switched = []
             used_stats = []
             list_all_angles = []
@@ -1264,8 +1263,9 @@ def main():
             st_numbers = [i_st for i_st in range(len(all_stations))]
             for i_st, st in zip(st_numbers, all_stations):
                 print(st.station)
-                st_data_pile = pile.make_pile(datapath, regex='%s_%s_' % (st.network, st.station),
-                              show_progress=False)
+                st_data_pile = pile.make_pile(datapath,
+                                              regex='%s_%s_' % (st.network, st.station),
+                                              show_progress=False)
                 if not st_data_pile:
                     continue
                 locs = list(set(list(st_data_pile.locations.keys())))
@@ -1274,7 +1274,7 @@ def main():
                                             datapath,
                                             st,
                                             loc,
-                                            subsets_events['shallow'], 
+                                            subsets_events['shallow'],
                                             dir_ro,
                                             orientconf.bandpass,
                                             orientconf.start_before_ev,
@@ -1291,36 +1291,27 @@ def main():
                         list_switched.append(out[3])
                         list_all_angles.append(out[4])
                         n_ev.append(out[5])
-                        #print('loc station', st.location)
-                        #st.location = loc
-                        #print('loc station new', st.location)
                         used_stats.append((st.network, st.station, loc))
-                        #print([(st.network, st.station, st.location) for st in used_stats])
-                        #print('----------------------')
-                        
-                #break
 
-
-            orient.write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
+            orient.write_output(list_median_a, list_mean_a, list_stdd_a,
+                                list_switched,
                                 n_ev, used_stats, dir_ro, orientconf.ccmin)
             orient.write_all_output_csv(list_all_angles, used_stats, dir_ro)
 
         if orientconf.plot_orient_map_fromfile is True:
-            dir_ro = data_dir + 'results/orient/'          
+            dir_ro = data_dir + 'results/orient/'
             orient.plot_corr_angles(ns, st_lats, st_lons,
                                     'CorrectionAngles.yaml', dir_ro,
                                     maps.pl_opt, maps.pl_topo,
                                     maps.map_size,
                                     orientconf.orient_map_label)
+
         if orientconf.plot_angles_vs_events is True:
             dir_ro = data_dir + 'results/orient/'
             orient.plot_corr_time(ns, 'AllCorrectionAngles.yaml', dir_ro)
 
 
-
         if timingconf.timing_test is True:
-            #print('this is a start')
-            #tt.test('hello')
             if arrT_array is None:
                 try:
                     data_dir = gensettings.data_dir
@@ -1329,67 +1320,52 @@ def main():
                     print('Please calculate arrival times first!')
                     sys.exit()
 
-
             subset_catalog = subsets_events['deep']
             print('Events:', len(subset_catalog))
             datapath = data_dir + 'rrd/'
             syndatapath = data_dir + 'synthetics/'
-
             dir_time = data_dir + 'results/timing/'
             os.makedirs(dir_time, exist_ok=True)
 
-            tshifts = num.empty((len(all_stations), len(subset_catalog)))
+            if timingconf.search_locations is True:
+                p = pile.make_pile(datapath, show_progress=False)
+                nslc_list = []
+                for t in p.iter_traces(trace_selector=lambda tr: tr.channel=='Z'):
+                    nslc_list.append(t.nslc_id)
+                nslc_list = list(set(nslc_list))
+                p = None
+
+                stations = nslc_list
+
+            else:
+                stations = all_stations
+
+            tshifts = num.empty((len(stations), len(subset_catalog)))
             tshifts.fill(num.nan)
 
             for i_ev, ev in enumerate(subset_catalog):
-                tshifts[:,i_ev] = tt.ccs_allstats_one_event(i_ev, ev, all_stations,
-                                                                   datapath, syndatapath,
-                                                                   dir_time, timingconf.bandpass,
-                                                                   arrT_array, timingconf.cc_thresh,
-                                                                   debug_mode=timingconf.debug_mode)
-
+                tshifts[:, i_ev] = tt.ccs_allstats_one_event(i_ev, ev, stations, all_stations,
+                                                             datapath, syndatapath,
+                                                             dir_time, timingconf.bandpass,
+                                                             arrT_array, timingconf.cc_thresh,
+                                                             debug_mode=timingconf.debug_mode)
 
             tshifts_cor = tt.correct_for_med_tshifts(tshifts)
-            
-            min_col = num.min([num.nanmin(tshifts), num.nanmin(tshifts_cor)])
-            max_col = num.max([num.nanmax(tshifts), num.nanmax(tshifts_cor)])
-
-
-            fig, ax = plt.subplots(nrows=2, figsize=(5, 10))
-            a = ax[0].imshow(tshifts, vmin=min_col,
-                         vmax=max_col, interpolation='nearest')
-            ax[0].set_title('Not corrected')
-            ax[0].set_xlabel('Events')            
-            ax[0].set_ylabel('Stations')
-            cbar = plt.colorbar(a, ax=ax[0])
-            cbar.set_label('Timing error [s]', rotation=90)
-            b = ax[1].imshow(tshifts_cor, vmin=min_col,
-                         vmax=max_col, interpolation='nearest')
-            ax[1].set_title('Corrected for median of event.')
-            ax[1].set_xlabel('Events')
-            ax[1].set_ylabel('Stations')            
-            cbar = plt.colorbar(b, ax=ax[1])
-            cbar.set_label('Timing error [s]', rotation=90)
-            plt.tight_layout()
-            fig.savefig(dir_time + 'timing_arrays.png')
-            plt.close()
-
-            #plt.show()
+            tt.plot_matrix(tshifts, tshifts_cor, stations, dir_time)
 
             # get mean and stdev
+            medians = num.nanmedian(tshifts_cor, axis=1)
             means = num.nanmean(tshifts_cor, axis=1)
-            print(means.shape)
             stdevs = num.nanstd(tshifts_cor, axis=1)
-
+            n_evs = [tshifts_cor.shape[1] - num.isnan(tshifts_cor[i_st,:]).sum()
+                     for i_st in range(tshifts_cor.shape[0])]
 
             # plot
             outfile = dir_time + 'timing_errors_allStats.png'
-            tt.plot_tshifts(tshifts_cor, means, stdevs, outfile, all_stations)
+            tt.plot_tshifts(tshifts_cor, means, stdevs, outfile, stations)
 
-
-
+            tt.save_mms(medians, means, stdevs, stations, dir_time, n_evs)
 
 
 if __name__ == '__main__':
     main()
-
