@@ -7,10 +7,10 @@ Please contact me for further description, help or when something does not behav
 - Relative gain factors in time domain (relative to reference station or to synthetic data)
 - Rayleigh wave polarization analysis for detection of sensor misorientations
 - Comparison of obs. and synth. PSDs; determining frequency ranges suitable for MT inversion
-- Test for large timing errors
+- Test for large timing errors (resolution depends on sampling rate of synthetic data)
 
 
-Lates changes
+Latest changes
 -------------
 - new simple test for lare timing errors (not yet sufficiently tested...)
 - gain test: additional method comparing max A to synthetics
