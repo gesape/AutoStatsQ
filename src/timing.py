@@ -124,7 +124,7 @@ def plot_matrix(tshifts, tshifts_cor, stations, dir_time):
     fig, ax = plt.subplots(nrows=2, figsize=(10, 20))
     min_col = num.min([num.nanmin(tshifts), num.nanmin(tshifts_cor)])
     max_col = num.max([num.nanmax(tshifts), num.nanmax(tshifts_cor)])
-    absmax = num.max([abs(min_col), abs(max_col)])
+    absmax = 20#num.max([abs(min_col), abs(max_col)])
     a = ax[0].imshow(tshifts, vmin=-absmax,
                      vmax=+absmax, interpolation='nearest')
     ax[0].set_title('Not corrected')
@@ -134,18 +134,18 @@ def plot_matrix(tshifts, tshifts_cor, stations, dir_time):
         stats = ['%s.%s' % (st.network, st.station) for st in stations]
     except AttributeError:
         stats = ['%s.%s.%s' % (st[0], st[1], st[2]) for st in stations]
-    ax[0].set_xticks(num.arange(len(stats)))
-    ax[0].set_xticklabels(stats, rotation=60)
-    cbar = plt.colorbar(a, ax=ax[0])
+    ax[0].set_yticks(num.arange(len(stats)))
+    ax[0].set_yticklabels(stats)
+    cbar = plt.colorbar(a, ax=ax[0], extend='both')
     cbar.set_label('Timing error [s]', rotation=90)
     b = ax[1].imshow(tshifts_cor, vmin=-absmax,
                      vmax=absmax, interpolation='nearest')
     ax[1].set_title('Corrected for median of event.')
     ax[1].set_xlabel('Events')
     ax[1].set_ylabel('Stations')
-    ax[1].set_xticks(num.arange(len(stats)))
-    ax[1].set_xticklabels(stats, rotation=60)
-    cbar = plt.colorbar(b, ax=ax[1])
+    ax[1].set_yticks(num.arange(len(stats)))
+    ax[1].set_yticklabels(stats)
+    cbar = plt.colorbar(b, ax=ax[1], extend='both')
     cbar.set_label('Timing error [s]', rotation=90)
     plt.tight_layout()
     fig.savefig(dir_time + 'timing_arrays.png')
@@ -154,7 +154,7 @@ def plot_matrix(tshifts, tshifts_cor, stations, dir_time):
 
 def plot_tshifts(tshifts_cor, means, stdevs, outfile, stations):
     # scatter plot: for each station all offsets
-    n_per_row = 30
+    n_per_row = 20
     n_plotrows = math.ceil(len(stations)/n_per_row)
 
     try:
@@ -176,16 +176,16 @@ def plot_tshifts(tshifts_cor, means, stdevs, outfile, stations):
         # print([(s[0], s[1], s[2]) for s in stations])
         # print([(s[0], s[1], s[2]) for s in stations_sorted])
         # print(indices_st)
-
+    cnt=0
     fig, ax = plt.subplots(nrows=n_plotrows, figsize=(30, n_plotrows*10),
                            squeeze=False)
-
     for i_row in range(n_plotrows):
         ax[i_row, 0].set_ylim(num.nanmin(tshifts_cor), num.nanmax(tshifts_cor))
         ax[i_row, 0].set_xlim(-1, n_per_row)
-
-        for i_st, st in enumerate(stations_sorted[i_row+(i_row*(n_per_row-1)):(n_per_row-1)*(i_row+1)+1]):
-            i_st_all = indices_st[i_st]
+        i_start = i_row*n_per_row
+        i_stop = i_start + n_per_row
+        for i_st, st in enumerate(stations_sorted[i_start:i_stop]):
+            i_st_all = indices_st[i_st+i_row*(n_per_row)]
             yval = tshifts_cor[i_st_all, :]
             xval = [i_st for val in yval]
             ax[i_row, 0].scatter(xval, yval, marker='o', s=20)
