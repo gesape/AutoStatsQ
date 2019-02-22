@@ -261,6 +261,15 @@ Settings:
   plot_angles_vs_events: false
   # plot angle vs single events, one plot for each station
 
+- !autostatsq.config.TimingConfig
+  # simple test for large timing errors
+  timing_test: false
+  bandpass: [3, 0.01, 0.1]
+  time_wdw: [firstP, 600]
+  cc_thresh: 0.7
+  search_locations: false
+  debug_mode: false  
+
 - !autostatsq.config.maps
   # settings for all output maps
   map_size: [30.0, 30.0]
