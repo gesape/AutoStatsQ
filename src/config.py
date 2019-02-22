@@ -3,7 +3,7 @@ from pyrocko.gf import TPDef
 
 
 class GeneralSettings(Object):
-    data_dir = String.T(
+    work_dir = String.T(
         help='Upper data directory')
     list_station_lists = List.T(
         help='List of station list names, either txt or xml files')
@@ -77,6 +77,8 @@ class MetaDataDownloadConfig(Object):
     download_metadata = Bool.T()
     local_metadata = List.T(default=[])
     local_data = List.T(default=[])
+    local_waveforms_only = Bool.T(default=False)
+    sds_structure = Bool.T(default=False)
     use_downmeta = Bool.T(default=True)
     channels_download = String.T()
     all_channels = Bool.T(default=False)

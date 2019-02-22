@@ -115,7 +115,7 @@ def main():
         synthsconf, gainfconf, psdsconf, orientconf, timingconf, maps =\
         AutoStatsQConfig.load(filename=args.config).Settings
 
-        data_dir = gensettings.data_dir
+        data_dir = gensettings.work_dir
         os.makedirs(data_dir+'./results', exist_ok=True)
 
         sites = metaDataconf.sites
@@ -427,7 +427,7 @@ def main():
             arrT_array = None
             arrT_R_array = None
             if arrTconf.calc_first_arr_t is True:
-                data_dir = gensettings.data_dir
+                data_dir = gensettings.work_dir
                 os.makedirs(data_dir+'ttt', exist_ok=True)            
                 dist_array_sub = num.empty((len(subset_catalog), len(ns)))
 
@@ -459,7 +459,7 @@ def main():
 
             if arrTconf.calc_est_R is True:
                 print('computing R arrival times')
-                data_dir = gensettings.data_dir
+                data_dir = gensettings.work_dir
                 os.makedirs(data_dir+'ttt', exist_ok=True)            
                 dist_array_sub = num.empty((len(subset_catalog), len(ns)))
 
@@ -485,7 +485,7 @@ def main():
             # Method b) interpolating from fomosto travel time tables
             arrT_array = None
             if ct.calc_ttt is True:
-                data_dir = gensettings.data_dir
+                data_dir = gensettings.work_dir
                 os.makedirs(data_dir+'ttt', exist_ok=True)
                 arrT_array_ttt = num.empty((len(subset_catalog), len(ns)))
 
@@ -639,8 +639,10 @@ def main():
 
                     #stations_fn = data_dir + ev_t_str + '_resp_geofon.xml'
                     #response = stationxml.load_xml(filename=stations_fn)
-                    print(data_dir+ev_t_str)
-                    p = pile.make_pile(paths=data_dir+ev_t_str, show_progress=True)
+                    #print(data_dir+ev_t_str)
+                    if metaDataconf.local_waveforms_only is False:
+                        p = pile.make_pile(paths=data_dir+ev_t_str, show_progress=True)
+                    
                     dir_make = data_dir + 'rest/' + ev_t_str
                     os.makedirs(dir_make, exist_ok=True)
                     transf_taper = 1/min(RestDownconf.freqlim)
@@ -652,19 +654,31 @@ def main():
                         #if st.network not in net_check:
                         #    continue                        
                         nsl = st.nsl()
-                        trs = p.all(
-                            trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2])
+                        trs = []
+                        if not metaDataconf.local_waveforms_only:
+                            trs = p.all(
+                                trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2])
 
-                        if not trs and metaDataconf.local_data:
-                          print('Accessing local data.')
-                          p = pile.make_pile(paths=metaDataconf.local_data, show_progress=True)#,
-                            #regex=st.station)                       
-                          tmin=ev.time+metaDataconf.dt_start*3600
-                          tmax=ev.time+metaDataconf.dt_end*3600
-                          trs = p.all(
-                            tmin=tmin,
-                            tmax=tmax)
-                          # trace.snuffle(trs)
+                        if metaDataconf.local_data:
+                            print('Accessing local data.')
+                            if metaDataconf.sds_structure is False:
+                                p = pile.make_pile(paths=metaDataconf.local_data, show_progress=True)#,
+                            
+                            else:
+                                year = util.time_to_str(ev.time)[0:4]
+                                jul_day = util.julian_day_of_year(ev.time)
+                                local_data_dirs = metaDataconf.local_data
+                                tmin = ev.time+metaDataconf.dt_start*3600
+                                tmax = ev.time+metaDataconf.dt_end*3600
+                                for i_ldd, ldd in enumerate(local_data_dirs):
+                                    path_str = '%s%s/%s/%s' % (ldd, year, st.network, st.station)                                  
+                                    p = pile.make_pile(paths=path_str, regex='.%s' % jul_day, show_progress=True)
+                                    trs.extend(p.all(tmin=tmin, tmax=tmax))
+                                    #if jul_day == 117 and st.station == 'A111A':
+                                    #    print('---------------------')
+                                    #    print(year, jul_day, path_str)
+                                    #    trace.snuffle(trs)                                    
+                            # trace.snuffle(trs)
 
                         if trs:
                             comps = [tr.channel for tr in trs]
@@ -708,7 +722,6 @@ def main():
 
                                 elif 'HNZ' in comps and 'HNN' in comps and 'HNE' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['HNZ', 'HNN', 'HNE']]
-                                    print('here')
                                 elif 'HNZ' in comps and 'HN2' in comps and 'HN3' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['HNZ', 'HN2', 'HN3']]
                                 elif 'HNZ' in comps and 'HN1' in comps and 'HN1' in comps:
@@ -1096,7 +1109,7 @@ def main():
             # arrival times
             if arrT_array is None:
                 try:
-                    data_dir = gensettings.data_dir
+                    data_dir = gensettings.work_dir
                     arrT_array = num.load(data_dir+'ttt/ArrivalTimes_deep.npy')
                 except:
                     print('Please calculate arrival times first!')
@@ -1175,7 +1188,7 @@ def main():
 
             if arrT_array is None:
                 try:
-                    data_dir = gensettings.data_dir
+                    data_dir = gensettings.work_dir
                     arrT_array = num.load(data_dir+
                                           'ttt/ArrivalTimes_deep.npy')
                 except:
@@ -1184,7 +1197,7 @@ def main():
 
             if arrT_R_array is None:
                 try:
-                    data_dir = gensettings.data_dir
+                    data_dir = gensettings.work_dir
                     arrT_R_array = num.load(data_dir+
                                             'ttt/ArrivalTimes_estR_deep.npy')
                 except:
@@ -1314,7 +1327,7 @@ def main():
         if timingconf.timing_test is True:
             if arrT_array is None:
                 try:
-                    data_dir = gensettings.data_dir
+                    data_dir = gensettings.work_dir
                     arrT_array = num.load(data_dir+'ttt/ArrivalTimes_deep.npy')
                 except:
                     print('Please calculate arrival times first!')

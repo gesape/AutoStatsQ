@@ -71,7 +71,7 @@ The default config file should look like this (without the comments):
 --- !autostatsq.config.AutoStatsQConfig
 Settings:
 - !autostatsq.config.GeneralSettings
-  data_dir: /some/data/directory/
+  work_dir: /some/data/directory/
   list_station_lists: [/path/to/station-file/file.csv, /path/to/station-file/file.xml]
 
 - !autostatsq.config.CatalogConfig
@@ -158,11 +158,15 @@ Settings:
   # local_metadata: [stations.xml]
   # list of local metadata files (uncomment if needed)
   # local_data: [./data]
-  # list with paths to local data (uncomment if needed)
-  # this option works but might be very slow in case of large amounts of data. 
+  # list with paths to local waveform data (uncomment if needed)
+  # sds_structure: true
+  # if the local waveform data is saved in sds structure, set to true!
+  # otherwise assessing local data might be very slow in case of large amounts of data. 
   # working on it...
+  # local_data_only: true
+  # if only local, no freshly downloaded data is used
 
-  components_download: HH*
+  channels_download: HH*
   # '*' would download all and analyse the most broadband channel for each
   # station
   token:
@@ -271,7 +275,7 @@ Settings:
 Station list:
 -------------
 
-Lists of stations as input can be in station-xml format or as comma-spread-file with columns: network code, station code, latitude (float), longitude(float), station elevation [km], station depth [km].
+Lists of stations as input can be in pyrocko station format, as station-xml or as comma-spread-file with columns: network code, station code, latitude (float), longitude(float), station elevation [km], station depth [km]. Please use the file extensions 
 
 Step-by-step instructions:
 --------------------------
