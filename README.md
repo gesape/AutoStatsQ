@@ -100,10 +100,10 @@ Settings:
   max_mag: 8.5
   tmin_str: '2000-01-01 00:00:00'
   tmax_str: '2018-10-01 00:00:00'
-  min_dist_km: 1000.0
-  max_dist_km: 9999999.9  
+  min_dist_km: 4000.0
+  max_dist_km: 20000.0
   depth_options:
-    deep: [25000, 1000000] # [m]
+    deep: [25000, 600000] # [m]
     shallow: [100, 40000] # [m]
 
   wedges_width: 15
