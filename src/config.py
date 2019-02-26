@@ -125,7 +125,7 @@ class GainfactorsConfig(Object):
     taper_xfrac = Float.T()
     wdw_st_arr = Int.T()
     wdw_sp_arr = Int.T()
-    snr_thresh = Float.T(default=5.)
+    snr_thresh = Float.T(default=1.)
     debug_mode = Bool.T(default=False)
     phase_select = String.T()
     components = List.T()

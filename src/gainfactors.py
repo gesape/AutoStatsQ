@@ -250,13 +250,6 @@ class AutoGain():
                             if len(tr.ydata) > 0 and num.max(num.abs(tr.get_ydata())) != 0:
                                 dtype = type(tr.ydata[0])
                                 tr.ydata -= dtype(tr.get_ydata().mean())
-                                # make SNR threshold here!
-                                st_s = num.argmax(num.abs(tr.ydata))-10
-                                snr = num.mean([y*y for y in tr.ydata[st_s:st_s+60]])/\
-                                      num.mean([y*y for y in tr.ydata[0:60]])
-                                if snr < self.snr_thresh:
-                                    continue
-                                # mean(A*A_signal)/mean(A*A_noise)
                                 tr.highpass(fband['order'], fband['corner_hp'])
                                 tr.taper(taper, chop=False)
                                 tr.lowpass(fband['order'], fband['corner_lp'])

@@ -214,7 +214,7 @@ Settings:
   wdw_sp_arr: 60
   # time window around P phase onset, start [s] before and end [s] after theo. arrival time
 
-  snr_thresh: 5. # threshold for snr of used event
+  snr_thresh: 2. # threshold for snr of used event
   debug_mode: false # if true, time windows are opened in snuffler to check window settings.
 
   phase_select: first(P|p|P(cmb)P(icb)P(icb)p(cmb)p|P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p)
