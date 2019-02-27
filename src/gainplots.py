@@ -152,7 +152,7 @@ def plot_median_gain_map_from_file(ns,
                 nslc = '%s.%s.%s.%s' % (ns_now[0], ns_now[1], l, comp)
                 g = gains_fromfile.trace_gains_median[nslc]
 
-                if g < 10.0 and g > 0.1:  # g < 5 and g > 0.2:  # g < 10.0 and g > 0.1: #g > 0.0 or g < 0.0:
+                if g > 0.0 or g < 0.0:  # g < 5 and g > 0.2:  # g < 10.0 and g > 0.1: #g > 0.0 or g < 0.0:
                     gains_no_nan.append(g)
                     # stats_no_nan.append(ns_now[1])
                     lat_no_nan.append(st_lats[i_ns])
