@@ -93,9 +93,6 @@ Settings:
   # {'deep': 'catalog_deep_subset.txt',
   # 'shallow': 'catalog_shallow_subset.txt'}
 
-  catalog_fn: catalog.txt
-  # filename of catalog that is downloaded or already exists
-
   min_mag: 6.5
   max_mag: 8.5
   tmin_str: '2000-01-01 00:00:00'
@@ -114,14 +111,9 @@ Settings:
   # give a rough estimate of midpoint of array/ network
 
   ### catalog plotting options ###
-  dist: 165.0
-  # max. distance (degrees) for catalog plot  
   plot_catalog_all: false
   # plots entire catalog on a map
 
-  plot_hist_wedges: false
-  plot_wedges_vs_dist: false
-  plot_wedges_vs_magn: false
   plot_dist_vs_magn: false
   # catalog statistics plot
   
@@ -140,19 +132,12 @@ Settings:
   # (needed for orientation test)
 
 
-- !autostatsq.config.CakeTTTGenerator
-  # uses travel time tables instead of cake (faster, but settings more difficult)
-  # if you are not familiar with fomosto' travel time tables use ArrTConfig section 
-  # instead! (for settings see src/config.py)
-  calc_ttt: false
-
-
 - !autostatsq.config.MetaDataDownloadConfig
   # download of metadata and data
 
   download_data: false
   download_metadata: false 
-  use_downmeta: false
+  use_downmeta: true
   # Set to true if downloaded metadata should be used.
 
   # local_metadata: [stations.xml]

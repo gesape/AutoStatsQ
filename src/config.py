@@ -16,9 +16,9 @@ class CatalogConfig(Object):
     use_local_subsets = Bool.T()
     subset_fns = Dict.T()
     # catalog
-    catalog_fn = String.T(
+    catalog_fn = String.T(optional=True,
         help='Name of local catalog to save to or to read from')
-    dist = Float.T(
+    dist = Float.T(default=165.0,
         help='Max. distance to show on catalog plot (map) [deg]')
     min_mag = Float.T()
     max_mag = Float.T()
@@ -36,12 +36,12 @@ class CatalogConfig(Object):
     max_dist_km = Float.T()
     depth_options = Dict.T()
 
-    plot_catalog_all = Bool.T()
-    plot_hist_wedges = Bool.T()
-    plot_wedges_vs_dist = Bool.T()
-    plot_wedges_vs_magn = Bool.T()
-    plot_dist_vs_magn = Bool.T()
-    plot_catalog_subset = Bool.T()
+    plot_catalog_all = Bool.T(default=False)
+    plot_hist_wedges = Bool.T(default=False)
+    plot_wedges_vs_dist = Bool.T(default=False)
+    plot_wedges_vs_magn = Bool.T(default=False)
+    plot_dist_vs_magn = Bool.T(default=False)
+    plot_catalog_subset = Bool.T(default=False)
     # pl_opt = List.T(
     # help='[map center lat, centre lon, map radius [m]]')
 
@@ -53,22 +53,22 @@ class ArrTConfig(Object):
     calc_est_R = Bool.T(default=False)
 
 
-class CakeTTTGenerator(Object):
-    calc_ttt = Bool.T(default=False)
-    dir_ttt = String.T(optional=True)
-    earthmodel_id = String.T(optional=True)
-    tabulated_phases = List.T(
-        TPDef.T(), optional=True)
-    dist_min = Float.T(optional=True)
-    dist_max = Float.T(optional=True)
-    dist_acc = Float.T(optional=True)
-    s_depth_min = Float.T(optional=True)
-    s_depth_max = Float.T(optional=True)
-    s_acc = Float.T(optional=True)
-    r_depth_min = Float.T(optional=True)
-    r_depth_max = Float.T(optional=True)
-    r_acc = Float.T(optional=True)
-    t_acc = Float.T(optional=True)
+#class CakeTTTGenerator(Object):
+#    calc_ttt = Bool.T(default=False)
+#    dir_ttt = String.T(optional=True)
+#    earthmodel_id = String.T(optional=True)
+#    tabulated_phases = List.T(
+#        TPDef.T(), optional=True)
+#    dist_min = Float.T(optional=True)
+#    dist_max = Float.T(optional=True)
+#    dist_acc = Float.T(optional=True)
+#    s_depth_min = Float.T(optional=True)
+#    s_depth_max = Float.T(optional=True)
+#    s_acc = Float.T(optional=True)
+#    r_depth_min = Float.T(optional=True)
+#    r_depth_max = Float.T(optional=True)
+#    r_acc = Float.T(optional=True)
+#    t_acc = Float.T(optional=True)
 
 
 class MetaDataDownloadConfig(Object):

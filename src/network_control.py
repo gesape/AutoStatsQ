@@ -111,7 +111,7 @@ def main():
 
         # read existing config file:
 
-        gensettings, catalogconf, arrTconf, ct, metaDataconf, RestDownconf,\
+        gensettings, catalogconf, arrTconf, metaDataconf, RestDownconf,\
         synthsconf, gainfconf, psdsconf, orientconf, timingconf, maps =\
         AutoStatsQConfig.load(filename=args.config).Settings
 
@@ -483,6 +483,7 @@ def main():
                 num.save('%sttt/ArrivalTimes_estR_%s' % (data_dir, d), arrT_R_array)
 
             # Method b) interpolating from fomosto travel time tables
+            '''
             arrT_array = None
             if ct.calc_ttt is True:
                 data_dir = gensettings.work_dir
@@ -513,6 +514,7 @@ def main():
 
                 num.save('%sttt/ArrivalTimes_%s' % (data_dir, d), arrT_array_ttt)
                 # print(arrT_array_ttt[0:3,0:50])
+            '''    
 
 
         ''' 3. Download data and metadata '''

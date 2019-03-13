@@ -1,5 +1,4 @@
 from .config import GeneralSettings, CatalogConfig, ArrTConfig,\
-CakeTTTGenerator,\
 MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
 GainfactorsConfig, PSDConfig, OrientConfig, AutoStatsQConfig,\
 TimingConfig, maps
@@ -18,9 +17,9 @@ def generate_default_config():
                                 use_local_subsets=False,
                                 subset_fns={},
                                 # Filename of catalog (local or name for saving catalog)
-                                catalog_fn='catalog.txt',
+                                # catalog_fn='catalog.txt',
                                 # catalog plot (backazimuthal view) max. distance to show
-                                dist=165.,
+                                # dist=165.,
                                 min_mag=6.5,
                                 max_mag=8.5,
                                 tmin_str='2000-01-01 00:00:00',
@@ -36,9 +35,6 @@ def generate_default_config():
                                 depth_options={'deep': [25000, 1000000],
                                                'shallow': [100, 40000]},
                                 plot_catalog_all=False,
-                                plot_hist_wedges=False,
-                                plot_wedges_vs_dist=False,
-                                plot_wedges_vs_magn=False,
                                 plot_dist_vs_magn=False,
                                 plot_catalog_subset=False)
                                 #weighted_magn_baz_ev=True)
@@ -52,7 +48,7 @@ def generate_default_config():
                                        'P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p',
                           calc_est_R=False)
 
-    cake_ttt_gen = CakeTTTGenerator(calc_ttt=False)
+    #cake_ttt_gen = CakeTTTGenerator(calc_ttt=False)
 
     metaDataconf = MetaDataDownloadConfig(
         download_data=False,
