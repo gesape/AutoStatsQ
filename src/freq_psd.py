@@ -283,7 +283,7 @@ def dump_flat_ranges(flat_f_ranges_stlist, freq_rat_list_y,
     flfr.regularize()
     flfr.validate()
 
-    flfr.dump(filename='%s/psd_flat_ratio_%s.yaml'
+    flfr.dump(filename='%spsd_flat_ratio_%s.yaml'
               % (dir_f, fname_ext))
 
 
