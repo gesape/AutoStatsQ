@@ -109,12 +109,13 @@ Settings:
 
   mid_point: [46.98, 10.74]
   # give a rough estimate of midpoint of array/ network
+  # optional, if not provided a geographic station midpoint is calculated
 
   ### catalog plotting options ###
   plot_catalog_all: false
   # plots entire catalog on a map
 
-  plot_dist_vs_magn: false
+  plot_hist_wedges: false
   # catalog statistics plot
   
   plot_catalog_subset: false

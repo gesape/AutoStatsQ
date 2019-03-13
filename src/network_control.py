@@ -214,13 +214,21 @@ def main():
                 ev_catalog = model.load_events(catalogconf.catalog_fn)
 
             if catalogconf.subset_of_local_catalog is True:
+                if not catalogconf.mid_point:
+
+                    mid_point = orthodrome.geographic_midpoint(num.asarray(st_lats),
+                                                               num.asarray(st_lons))
+
+                else: 
+                    mid_point = catalogconf.mid_point
+
                 ev_catalog = subset_events_dist_cat(catalogconf.catalog_fn,
                                              catalogconf.min_mag,
                                              catalogconf.max_mag,
                                              catalogconf.tmin_str,
                                              catalogconf.tmax_str,
-                                             catalogconf.mid_point[0],
-                                             catalogconf.mid_point[1],
+                                             mid_point[0],
+                                             mid_point[1],
                                              catalogconf.min_dist_km,
                                              catalogconf.max_dist_km)
 
@@ -235,14 +243,21 @@ def main():
         for d, val in catalogconf.depth_options.items():
 
             if not catalogconf.use_local_subsets is True:
+                if not catalogconf.mid_point:
+
+                    mid_point = orthodrome.geographic_midpoint(num.asarray(st_lats),
+                                                               num.asarray(st_lons))
+                    
+                else: 
+                    mid_point = catalogconf.mid_point
 
                 ev_cat = subset_events_dist_evlist(ev_catalog,
                                                    catalogconf.min_mag,
                                                    catalogconf.max_mag,
                                                    catalogconf.tmin_str,
                                                    catalogconf.tmax_str,
-                                                   catalogconf.mid_point[0],
-                                                   catalogconf.mid_point[1],
+                                                   mid_point[0],
+                                                   mid_point[1],
                                                    val[0],
                                                    val[1],
                                                    catalogconf.min_dist_km,
@@ -262,8 +277,8 @@ def main():
                                            for (lat, lon) in zip(st_lats, st_lons)]
 
                     bazi_mp_array[i_ev] = orthodrome.azibazi(ev.lat, ev.lon,
-                                                             catalogconf.mid_point[0],
-                                                             catalogconf.mid_point[1])[1]
+                                                             mid_point[0],
+                                                             mid_point[1])[1]
 
                 if catalogconf.plot_catalog_all is True:
                     os.makedirs(data_dir+'results/catalog/', exist_ok=True)
@@ -271,7 +286,7 @@ def main():
                          str(catalogconf.min_mag), catalogconf.tmin_str[0:10],
                          catalogconf.tmax_str[0:10], d)
 
-                    gmtplot_catalog_azimuthal(ev_cat, catalogconf.mid_point,
+                    gmtplot_catalog_azimuthal(ev_cat, mid_point,
                                               catalogconf.dist, fn,
                                               catalogconf.wedges_width)
                 
@@ -409,7 +424,7 @@ def main():
                      str(catalogconf.min_mag),
                      _tmin[0:10], _tmax[0:10], d)
 
-                gmtplot_catalog_azimuthal(subset_catalog, catalogconf.mid_point, 
+                gmtplot_catalog_azimuthal(subset_catalog, mid_point, 
                                                catalogconf.dist, fn, catalogconf.wedges_width)
 
             if exclude_event != []:
@@ -573,8 +588,6 @@ def main():
                                     request_waveform = fdsn.dataselect(site=site,
                                                                        selection=selection)
 
-
-
                                 with open(mseed_fn, 'wb') as wffile:
                                     wffile.write(request_waveform.read())
 
@@ -587,7 +600,8 @@ def main():
                             else:
                                 print(ns_now, 'data downloaded', site)
                                 break
-
+                    if not os.listdir(dir_make):
+                        os.rmdir(dir_make)
 
         if metaDataconf.download_metadata is True:
             print('Downloading metadata')
@@ -816,6 +830,8 @@ def main():
 
                                             else:
                                                 break
+                    if not os.listdir(dir_make):
+                        os.rmdir(dir_make)
 
         ''' 5. Rotation NE --> RT '''
         if RestDownconf.rotate_data is True:
@@ -1014,6 +1030,9 @@ def main():
                     dir_rest = data_dir + 'rest/' + ev_t_str
                     downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, RestDownconf.deltat_down)
                     print('saved ev ', util.time_to_str(ev.time))
+
+                    if not os.listdir(data_dir+'rrd/'):
+                        os.rmdir(data_dir+'rrd/')
 
 
         ''' 6. Synthetic data '''

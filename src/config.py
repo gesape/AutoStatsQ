@@ -26,7 +26,7 @@ class CatalogConfig(Object):
     tmax_str = String.T()
     wedges_width = Int.T(
         help='Find one event in backazimuthal wedge of this width')
-    mid_point = List.T(
+    mid_point = List.T(optional=True,
         help='Enter some estimation on centre point of array, needed for\
              subset based on distances and plotting only.')
     median_ev_in_bin = Bool.T(default=True)

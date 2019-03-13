@@ -27,7 +27,7 @@ def generate_default_config():
                                 # backazimuthal distribution
                                 wedges_width=15,  # deg
                                 # enter a midpoint of array for global event maps
-                                mid_point=[46.98, 10.74],
+                                # mid_point=[46.98, 10.74],
                                 # enter lat, lon, radius for output maps showing gains,
                                 # polarisation, etc.
                                 min_dist_km=1000.,
@@ -35,7 +35,7 @@ def generate_default_config():
                                 depth_options={'deep': [25000, 1000000],
                                                'shallow': [100, 40000]},
                                 plot_catalog_all=False,
-                                plot_dist_vs_magn=False,
+                                plot_hist_wedges=False,
                                 plot_catalog_subset=False)
                                 #weighted_magn_baz_ev=True)
 
