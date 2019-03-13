@@ -1178,7 +1178,7 @@ def main():
 
         if psdsconf.calc_psd is True:
             print('starting calc_psd')
-            dir_f = data_dir + '/results/freq/'
+            dir_f = data_dir + 'results/freq/'
             os.makedirs(dir_f, exist_ok=True)
 
             datapath = data_dir + 'rrd/'
