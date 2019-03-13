@@ -1289,6 +1289,7 @@ def main():
                                             loc,
                                             subsets_events['shallow'],
                                             dir_ro,
+                                            orientconf.v_rayleigh,
                                             orientconf.bandpass,
                                             orientconf.start_before_ev,
                                             orientconf.stop_after_ev,

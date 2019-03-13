@@ -243,6 +243,7 @@ Settings:
 - !autostatsq.config.OrientConfig
   # settings for orientation test
   orient_rayl: false
+  v_rayleigh: 4.0  # [km/s] default, use debug mode if adjustment necessary!
   bandpass: [3.0, 0.01, 0.05]  # [Hz]
   start_before_ev: 30.0  # start befor theo. Rayleigh wave arrival, [s]
   stop_after_ev: 480.0  # end after theo. Rayleigh wave arrival, [s]

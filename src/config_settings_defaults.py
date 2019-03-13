@@ -100,6 +100,7 @@ def generate_default_config():
                          plot_flat_ranges=False)
 
     orientconf = OrientConfig(orient_rayl=False,
+                              v_rayleigh=4.0,
                               bandpass=(3, 0.01, 0.05),
                               start_before_ev=30,
                               stop_after_ev=480,

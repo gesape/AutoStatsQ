@@ -1,5 +1,6 @@
 import numpy as num
 import math
+import datetime
 from pyrocko import trace, pile
 from pyrocko import util
 from pyrocko.orthodrome import distance_accurate50m_numpy
@@ -8,10 +9,6 @@ from pyrocko.guts import Object, Dict, String, Float, List, Int, Tuple, load
 from pyrocko.plot.automap import Map
 import matplotlib.dates as mdates
 from pyrocko.gui import marker as pm
-
-
-
-v_rayleigh = 4.0  # km/s
 
 
 class dict_stats_rota(Object):
@@ -60,25 +57,35 @@ def plot_corr_time(nsl, filename, dir_ro):
             angle_list.append(float(angle))
         
         if ev_list and angle_list:
+            ev_list_d = [datetime.datetime.strptime(util.time_to_str(ev), '%Y-%m-%d %H:%M:%S.%f') for ev in ev_list]
             absmax = max(angle_list, key=abs)
             _median = num.median(angle_list)
             _mean = num.mean(angle_list)
             min_ev = num.min(ev_list)
             max_ev = num.max(ev_list)
-            xvals = num.linspace(min_ev-1000, max_ev+1000, 100)        
-            fig, ax = plt.subplots(nrows=1, figsize=(8, 3))
-            ax.plot(ev_list, angle_list, 'bo')
-            ax.plot(xvals, [_median for i in range(len(xvals))], 'g--', label='median')
-            ax.plot(xvals, [_mean for i in range(len(xvals))], 'r--', label='mean')
+            xvals = num.linspace(min_ev-1000, max_ev+1000, 100)
+            xvals_d = [datetime.datetime.strptime(util.time_to_str(x), '%Y-%m-%d %H:%M:%S.%f') for x in xvals]
+
+            fig, ax = plt.subplots(nrows=1, figsize=(10, 3))
+
+            ax.plot(ev_list_d, angle_list, 'bo')
+
+            ax.plot(xvals_d, [_median for i in range(len(xvals))], 'g--', label='median')
+            ax.plot(xvals_d, [_mean for i in range(len(xvals))], 'r--', label='mean')
+            
             ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-            ax.set_ylim((-abs(absmax),abs(absmax)))
+
+            ax.set_ylim((-abs(absmax)-1,abs(absmax)+1))
             ax.set_title('%s.%s' % (st[0],st[1]))
             ax.set_xlabel('Event date')
             ax.set_ylabel('Correction angle [°]')
-            xticks = ax.get_xticks()
-            ax.set_xticklabels([util.time_to_str(x)[0:10] for x in xticks], rotation=30)
+            #xticks = ax.get_xticks()
+            #print(xticks)
+            #ax.set_xticklabels([util.time_to_str(x)[0:16] for x in xticks], rotation=70)
+            plt.tick_params(labelsize=12)
             plt.tight_layout(rect=[0,0,0.8,1])
             # plt.show()
+            
             fig.savefig('%s/%s_%s_overtime.png'
                 % (dir_ro, st[0], st[1]))
             plt.close(fig)
@@ -270,7 +277,7 @@ def get_tr_by_cha(pile, start_twd, end_twd, loc, cha):
         tmin=start_twd,
         tmax=end_twd,
         trace_selector=lambda tr: tr.nslc_id[3] == cha and tr.nslc_id[2] == loc,
-        want_incomplete=False)
+        want_incomplete=True)
 
     return tr
 
@@ -332,7 +339,7 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
     plt.close(fig)
 
 
-def prep_orient(datapath, st, loc, catalog, dir_ro,
+def prep_orient(datapath, st, loc, catalog, dir_ro, v_rayleigh,
                 bp, dt_start, dt_stop, ccmin=0.80,
                 plot_heatmap=False,  plot_distr=False,
                 debug=False):
@@ -352,7 +359,6 @@ def prep_orient(datapath, st, loc, catalog, dir_ro,
     :param plot_heatmap: bool, optional
     :param plot_distr: bool, optional
     '''
-
     st_data_pile = pile.make_pile(datapath, regex='%s_%s_' % (st.network, st.station),
                                   show_progress=False)
     n_ev = len(catalog)
@@ -375,11 +381,12 @@ def prep_orient(datapath, st, loc, catalog, dir_ro,
             start_twd1 = ev.time
             end_twd1 = arrT + 1800
 
-            # if st.station == 'MATE':
-            #     print('origin time:', util.time_to_str(ev.time))
-            #     print('start:', util.time_to_str(start_twd),'end:',
-            #           util.time_to_str(end_twd) )
-            #     print('arrT:', util.time_to_str(arrT))
+            #if st.station == 'NICK':
+            #    print('origin time:', util.time_to_str(ev.time))
+            #    print('start:', util.time_to_str(start_twd1),'end:',
+            #          util.time_to_str(end_twd1) )
+            #    print('arrT:', util.time_to_str(arrT))
+                #st_data_pile.snuffle()
 
             trZ = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'Z')
             trR = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'R')
@@ -388,11 +395,9 @@ def prep_orient(datapath, st, loc, catalog, dir_ro,
             start_twd2 = ev.time + r_arr_by_ev[i_ev] - dt_start
             end_twd2 = arrT + dt_stop
 
-            # if st.station == 'MATE':
+            #if st.station == 'NICK':
             #    trace.snuffle([trZ[0],trR[0],trT[0]])
 
-            # print(len(trZ), len(trR), len(trT))
-            # print(trZ)
             if len(trZ) == 1 and len(trR) == 1 and len(trT) == 1:
                 trZ = trZ[0]
                 trR = trR[0]
