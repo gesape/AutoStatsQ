@@ -400,7 +400,7 @@ def plot_psdratio_from_dict(ratpsd_by_event, st, l, cha, catalog, dir_f):
             if r_minnow < r_min:
                 r_min = r_minnow
 
-    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(13, 9))
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(13, nrows*3))
 
     for i_ev, ev in enumerate(catalog):
         i_x = int(i_ev/ncols)
@@ -468,7 +468,7 @@ def plot_psd_from_dict(obspsd_by_event, synpsd_by_event,
             if a_minnow < a_min:
                 a_min = a_minnow
 
-    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(13, 9))
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(13, nrows*3))
 
     for i_ev, ev in enumerate(catalog):
         i_x = int(i_ev/ncols)

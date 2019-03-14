@@ -313,7 +313,7 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
     ncols = 5
     y_lim = (-1., 1.)
     x_lim = (-180, 180)
-    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, 9))
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, nrows*3))
     for (i_row, row), ev in zip(enumerate(cc_i_ev_vs_rota), catalog):
         i_x = int(i_row/ncols)
         i_y = int(i_row % ncols)
