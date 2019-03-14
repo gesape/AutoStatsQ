@@ -9,6 +9,11 @@ Please contact me for further description, help or when something does not behav
 - Comparison of obs. and synth. PSDs; determining frequency ranges suitable for MT inversion
 - Test for large timing errors (resolution depends on sampling rate of synthetic data)
 
+Citation:
+---------
+
+Petersen, G., Cesca, S., Kriegerowski, M. (2019 online): Automated Quality Control for Large Seismic Networks: Implementation and Application to the AlpArray Seismic Network. - Seismological Research Letters.
+DOI: http://doi.org/10.1785/0220180342
 
 Latest changes
 -------------
@@ -73,6 +78,9 @@ Settings:
 - !autostatsq.config.GeneralSettings
   work_dir: /some/data/directory/
   list_station_lists: [/path/to/station-file/file.csv, /path/to/station-file/file.xml]
+  st_white_list: [STATION] 
+  # if set, only stations in this list are considered. remove or set to [] to use all stations
+  # in station files.
 
 - !autostatsq.config.CatalogConfig
   search_events: true 
@@ -131,7 +139,7 @@ Settings:
   calc_est_R: true
   # compute arrival time of Rayleigh waves for each station-event pair? 
   # (needed for orientation test)
-
+  v_rayleigh: 4.0  # [km/s] default
 
 - !autostatsq.config.MetaDataDownloadConfig
   # download of metadata and data
@@ -229,13 +237,14 @@ Settings:
 - !autostatsq.config.OrientConfig
   # settings for orientation test
   orient_rayl: false
-  v_rayleigh: 4.0  # [km/s] default, use debug mode if adjustment necessary!
   bandpass: [3.0, 0.01, 0.05]  # [Hz]
   start_before_ev: 30.0  # start befor theo. Rayleigh wave arrival, [s]
   stop_after_ev: 480.0  # end after theo. Rayleigh wave arrival, [s]
   ccmin: 0.80
   # min. cross-correlation value. results below this value will not be
   # considered
+  debug_mode: false
+  # if true, time windows are opened in snuffler to check window settings.
 
   plot_heatmap: false
   # plot correction angle vs. cross-correlation value as imshow heatmap
