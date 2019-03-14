@@ -29,17 +29,6 @@ GainfactorsConfig, PSDConfig, OrientConfig, TimingConfig,\
 maps, AutoStatsQConfig
 from .calc_ttt import *
 
-#st_liste_check = ['CHVC','CKRC','DPC','GOPC','HSKC','JAVC','KRLC','KRUC',
-#                  'MORC','NKC','OSTC','PBCC','PRA','PVCC','TREC','UPC',
-#                  'VRAC','GRA1','GRFO','BNI']
-#st_liste_check = ['GOLS', 'PDKS', 'VNDS', 'GRFO']
-#net_check = ['CR'] #CH
-
-#st_liste_check = ['RNON', 'FFB1','AGO','CARF','CIEL','COLF','ILLK','ILLF',
-#                  'LBM','LEMB','OGS2','OGS3','PLDF','PLYF','PRIMA','SALF','SZBH',
-#                  'WALT','IMI','MAGO','NDIM','VIE']
-
-#st_liste_check = ['NICK', 'LAGB']
 
 '''
 Quality control of array stations
@@ -132,42 +121,51 @@ def main():
                     for line in f.readlines():
                         if len(line.strip().split(',')) == 6:
                             n, s, lat, lon, elev, d = line.strip().split(',')
-                            all_stations.append(model.Station(network=n, station=s,
-                                                              lat=float(lat), lon=float(lon),
-                                                              elevation=float(elev), depth=d))
+                            if s in gensettings.st_white_list or gensettings.st_white_list == []:
+                                all_stations.append(model.Station(network=n, station=s,
+                                                                  lat=float(lat), lon=float(lon),
+                                                                  elevation=float(elev), depth=d))
+                                st_lats.append(float(lat))
+                                st_lons.append(float(lon))
+                                ns.append((n, s))
+
                         elif len(line.strip().split(',')) == 5:
                             n, s, lat, lon, elev = line.strip().split(',')
-                            all_stations.append(model.Station(network=n, station=s,
-                                                              lat=float(lat), lon=float(lon),
-                                                              elevation=float(elev)))                            
-                        st_lats.append(float(lat))
-                        st_lons.append(float(lon))
-                        ns.append((n, s))
+                            if s in gensettings.st_white_list or gensettings.st_white_list == []:                            
+                                all_stations.append(model.Station(network=n, station=s,
+                                                                  lat=float(lat), lon=float(lon),
+                                                                  elevation=float(elev)))                            
+                                st_lats.append(float(lat))
+                                st_lons.append(float(lon))
+                                ns.append((n, s))
 
             elif stat_list.endswith('.xml'):
                 zs = stationxml.load_xml(filename=stat_list)
                 for net in zs.network_list:
                     for stat in net.station_list:
-                        st_lats.append(float(stat.latitude.value))
-                        st_lons.append(float(stat.longitude.value))
-                        ns.append((net.code, stat.code))
-                        all_stations.append(model.Station(network=net.code,
-                                            station=stat.code,
-                                            lat=float(stat.latitude.value),
-                                            lon=float(stat.longitude.value),
-                                            elevation=float(stat.elevation.value)))
+                        if stat.code in gensettings.st_white_list or gensettings.st_white_list == []:
 
-            elif stat_list.endswith('.yaml'):
+                            st_lats.append(float(stat.latitude.value))
+                            st_lons.append(float(stat.longitude.value))
+                            ns.append((net.code, stat.code))
+                            all_stations.append(model.Station(network=net.code,
+                                                station=stat.code,
+                                                lat=float(stat.latitude.value),
+                                                lon=float(stat.longitude.value),
+                                                elevation=float(stat.elevation.value)))
+
+            elif stat_list.endswith('.yaml') or stat_list.endswith('.pf'):
                 zs = model.station.load_stations(filename=stat_list)
                 for stat in zs:
-                    st_lats.append(float(stat.lat))
-                    st_lons.append(float(stat.lon))
-                    ns.append((stat.network, stat.station))
-                    all_stations.append(model.Station(network=stat.network,
-                                        station=stat.station,
-                                        lat=float(stat.lat),
-                                        lon=float(stat.lon),
-                                        elevation=float(stat.elevation)))
+                    if stat.station in gensettings.st_white_list or gensettings.st_white_list == []:
+                        st_lats.append(float(stat.lat))
+                        st_lons.append(float(stat.lon))
+                        ns.append((stat.network, stat.station))
+                        all_stations.append(model.Station(network=stat.network,
+                                            station=stat.station,
+                                            lat=float(stat.lat),
+                                            lon=float(stat.lon),
+                                            elevation=float(stat.elevation)))
             else:
               print('Station file extension not known: %s. Please use .xml, .csv or .yaml.'
                     % stat_list)
@@ -493,7 +491,7 @@ def main():
                         #print('dt', dist/4000.)
                         #print('t', ev.time)
                         #print('new t', ev.time + dist/4000.)
-                        arrT_R_array[i_ev, i_st] = ev.time + dist/4000.
+                        arrT_R_array[i_ev, i_st] = ev.time + dist/(arrTconf.v_rayleigh*1000.)
 
                 num.save('%sttt/ArrivalTimes_estR_%s' % (data_dir, d), arrT_R_array)
 
@@ -563,9 +561,6 @@ def main():
                             continue
                         #else:
                         #    print(glob.glob(mseed_fn_st+'*'))
-
-                        #if ns_now[1] not in st_liste_check:
-                        #    continue
                         
                         selection = [(ns_now[0], ns_now[1], '*',
                                       metaDataconf.channels_download,
@@ -665,8 +660,7 @@ def main():
 
                     for st in all_stations:
                         #print(st.station)
-                        #if st.station not in st_liste_check:
-                        #    continue
+
                         #if st.network not in net_check:
                         #    continue                        
                         nsl = st.nsl()
@@ -850,8 +844,7 @@ def main():
 
                 ev_data_pile = pile.make_pile(dir_rest, regex='rest2')
                 for st in all_stations:
-                    #if st.station not in st_liste_check:
-                    #    continue
+
                     #if st.network not in net_check:
                     #    continue 
                     nsl = st.nsl()
@@ -1066,9 +1059,7 @@ def main():
                     ev.time = ev.time + ev.duration/2
                     source = gf.MTSource.from_pyrocko_event(ev)
 
-                    for st in all_stations:
-                        #if st.station not in st_liste_check:
-                        #    continue                        
+                    for st in all_stations:                      
                         targets = []
                         sta = st.station
                         net = st.network
@@ -1310,7 +1301,7 @@ def main():
                                             loc,
                                             subsets_events['shallow'],
                                             dir_ro,
-                                            orientconf.v_rayleigh,
+                                            arrTconf.v_rayleigh,
                                             orientconf.bandpass,
                                             orientconf.start_before_ev,
                                             orientconf.stop_after_ev,

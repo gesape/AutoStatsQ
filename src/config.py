@@ -7,7 +7,7 @@ class GeneralSettings(Object):
         help='Upper data directory')
     list_station_lists = List.T(
         help='List of station list names, either txt or xml files')
-
+    st_white_list = List.T(default=[])
 
 class CatalogConfig(Object):
     search_events = Bool.T()
@@ -51,6 +51,7 @@ class ArrTConfig(Object):
         help='calculate first arrival times using cake?')
     phase_select = String.T()
     calc_est_R = Bool.T(default=False)
+    v_rayleigh = Float.T(default=4.0)
 
 
 #class CakeTTTGenerator(Object):
@@ -154,7 +155,6 @@ class PSDConfig(Object):
 class OrientConfig(Object):
     # orientations
     orient_rayl = Bool.T()
-    v_rayleigh = Float.T(default=4.0)
     bandpass = Tuple.T(3, Float.T())
     start_before_ev = Float.T()
     stop_after_ev = Float.T()
