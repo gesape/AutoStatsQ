@@ -6,7 +6,7 @@ TimingConfig, maps
 
 def generate_default_config():
     gensettings = GeneralSettings(
-        data_dir='/some/data/directory/',
+        work_dir='/some/data/directory/',
         list_station_lists=['/path/to/station-file/file.csv',
                             '/path/to/station-file/file.xml'])
 
@@ -54,9 +54,9 @@ def generate_default_config():
         download_data=False,
         download_metadata=False,
         channels_download='HH*',
-        local_metadata=[],
+        #local_metadata=[],
         use_downmeta=False,
-        token={'geofon': '/home/gesap/Documents/AlpArray/download-waveforms/swathD/token.asc'},
+        token={'geofon': '/path/to/token.asc'},
         sites=['geofon', 'orfeus', 'iris'],
         dt_start=0.1,
         dt_end=1.5)
@@ -71,16 +71,17 @@ def generate_default_config():
                                  store_id='global_2s')
 
     gainfconf = GainfactorsConfig(calc_gainfactors=False,
-                                  gain_factor_method=['reference_nsl', ('GE', 'MATE')],#['median_all_avail'],
+                                  gain_factor_method=['reference_nsl', ('NET', 'STAT')],#['median_all_avail'],
                                   fband={'order': 4, 'corner_hp': 0.01, 'corner_lp': 0.2},
                                   taper_xfrac=0.25,
                                   wdw_st_arr=5,
-                                  wdw_sp_arr=60,
+                                  wdw_sp_arr=120,
                                   phase_select='first(P|p|P(cmb)P(icb)P(icb)p(cmb)p|' +\
                                                'P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p)',
-                                  components=['Z', 'R', 'T'],
+                                  components=['Z'],
                                   plot_median_gain_on_map=False,
-                                  plot_allgains=False)
+                                  plot_allgains=False,
+                                  debug_mode=False)
 
     psdsconf = PSDConfig(calc_psd=False,
                          tinc=600,
@@ -96,7 +97,6 @@ def generate_default_config():
                          plot_flat_ranges=False)
 
     orientconf = OrientConfig(orient_rayl=False,
-                              v_rayleigh=4.0,
                               bandpass=(3, 0.01, 0.05),
                               start_before_ev=30,
                               stop_after_ev=480,
@@ -104,7 +104,8 @@ def generate_default_config():
                               plot_heatmap=False,
                               plot_distr=False,
                               plot_orient_map_fromfile=False,
-                              plot_angles_vs_events=False)
+                              plot_angles_vs_events=False,
+                              debug_mode=False)
 
     timingconf = TimingConfig(timing_test=False,
                               bandpass=(3, 0.01, 0.1),
@@ -114,11 +115,11 @@ def generate_default_config():
                               debug_mode=False)
 
     _maps = maps(map_size=[30.0, 30.0],
-                 pl_opt=[46, 11.75, 800000],
+                 pl_opt=['lat', 'lon', 'radius'],
                  pl_topo=False)
 
     config = AutoStatsQConfig(
-      Settings=[gensettings, catalogconf, arrTconf, cake_ttt_gen, metaDataconf,
+      Settings=[gensettings, catalogconf, arrTconf, metaDataconf,
                 RestDownconf,
                 synthsconf, gainfconf, psdsconf, orientconf, timingconf, _maps])
 
