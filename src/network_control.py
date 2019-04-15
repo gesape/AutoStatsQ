@@ -668,6 +668,10 @@ def main():
                         if not metaDataconf.local_waveforms_only:
                             trs = p.all(
                                 trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2])
+                            tmin = ev.time+metaDataconf.dt_start*3600
+                            tmax = ev.time+metaDataconf.dt_end*3600                                
+                            trs.extend(p.all(tmin=tmin, tmax=tmax,
+                                             trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2]))
 
                         if metaDataconf.local_data:
                             print('Accessing local data.')
@@ -729,6 +733,13 @@ def main():
                                     trs = [tr for tr in trs if tr.channel in ['CNZ', 'CN2', 'CN3']]
                                 elif 'CNZ' in comps and 'CN1' in comps and 'CN1' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['CNZ', 'CN1', 'CN2']]
+
+                                elif 'CHZ' in comps and 'CHN' in comps and 'CHE' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['CHZ', 'CHN', 'CHE']]
+                                elif 'CHZ' in comps and 'CH2' in comps and 'CH3' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['CHZ', 'CH2', 'CH3']]
+                                elif 'CHZ' in comps and 'CH1' in comps and 'CH1' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['CHZ', 'CH1', 'CH2']]
 
                                 elif 'HNZ' in comps and 'HNN' in comps and 'HNE' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['HNZ', 'HNN', 'HNE']]
