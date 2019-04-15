@@ -20,18 +20,11 @@ def plot_allgains(self, results_all, stats_list, directory, fn):
     miny = num.nanmin(results_all)
 
     times = [util.time_to_str(ev.time)[:10] for ev in self.events]
-    tag = [num.linspace(0, len(times), len(times))]
 
-    # define the colormap
-    cmap = plt.cm.jet
-    # extract all colors from the .jet map
-    cmaplist = [cmap(i) for i in range(cmap.N)]
-    # force the first color entry to be grey
-    cmaplist[0] = (.5, .5, .5, 1.0)
-    # create the new map
-    cmap = cmap.from_list('Custom cmap', cmaplist, cmap.N)
+    cmap = plt.get_cmap('CMRmap')
+    indices = num.linspace(0, cmap.N, len(self.events))
+    my_colors = [cmap(int(i)) for i in indices]
 
-    # define the bins and normalize
     bounds = num.linspace(0, len(times), len(times)+1)
     norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
 
@@ -57,8 +50,8 @@ def plot_allgains(self, results_all, stats_list, directory, fn):
             xval = [x for val in range(len(yval))]
 
             # make the scatter
-            axes.scatter(xval, yval, c=tag, s=60, marker='o', cmap=cmap, norm=norm,
-                         color='none')
+            axes.scatter(xval, yval, c=my_colors, s=60, marker='o', cmap=cmap,
+                         norm=norm, edgecolor='none')
 
             # axes.set_xlabel('Station', fontsize=14)
             axes.set_yscale('log')
