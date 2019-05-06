@@ -731,23 +731,31 @@ def main():
                                     trs = [tr for tr in trs if tr.channel in ['CNZ', 'CNN', 'CNE']]
                                 elif 'CNZ' in comps and 'CN2' in comps and 'HH3' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['CNZ', 'CN2', 'CN3']]
-                                elif 'CNZ' in comps and 'CN1' in comps and 'CN1' in comps:
+                                elif 'CNZ' in comps and 'CN1' in comps and 'CN2' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['CNZ', 'CN1', 'CN2']]
 
                                 elif 'CHZ' in comps and 'CHN' in comps and 'CHE' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['CHZ', 'CHN', 'CHE']]
                                 elif 'CHZ' in comps and 'CH2' in comps and 'CH3' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['CHZ', 'CH2', 'CH3']]
-                                elif 'CHZ' in comps and 'CH1' in comps and 'CH1' in comps:
+                                elif 'CHZ' in comps and 'CH1' in comps and 'CH2' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['CHZ', 'CH1', 'CH2']]
 
                                 elif 'HNZ' in comps and 'HNN' in comps and 'HNE' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['HNZ', 'HNN', 'HNE']]
                                 elif 'HNZ' in comps and 'HN2' in comps and 'HN3' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['HNZ', 'HN2', 'HN3']]
-                                elif 'HNZ' in comps and 'HN1' in comps and 'HN1' in comps:
+                                elif 'HNZ' in comps and 'HN1' in comps and 'HN2' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['HNZ', 'HN1', 'HN2']]
 
+                                elif 'DNZ' in comps and 'DNN' in comps and 'DNE' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['DNZ', 'DNN', 'DNE']]
+                                elif 'DNZ' in comps and 'DN2' in comps and 'DN3' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['DNZ', 'DN2', 'DN3']]
+                                elif 'DNZ' in comps and 'DN1' in comps and 'DN2' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['DNZ', 'DN1', 'DN2']]
+                                elif 'DN1' in comps and 'DN2' in comps and 'DN3' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['DN1', 'DN2', 'DN3']]
 
                                 else:
                                     # print('no BH* or HH* data for station %s found' % (str(nsl)))
@@ -914,11 +922,14 @@ def main():
                                         naming = '1,2'
                                     elif  '2' in test and '3' in test:
                                         naming = '2,3'
+                                    elif '1' in test and '2' in test and '3' in test:
+                                        naming = '1,2,3'
 
                                     for tr in trs_ch:
                                         if tr.channel.endswith('N') or\
                                          (tr.channel.endswith('2') and naming == '2,3')\
-                                          or (tr.channel.endswith('1') and naming == '1,2'):
+                                          or (tr.channel.endswith('1') and naming == '1,2')\
+                                          or (tr.channel.endswith('2') and naming == '1,2,3'):
 
                                             for ch in stat.channels:
                                                 if tr.channel == ch.name:
@@ -940,7 +951,8 @@ def main():
 
                                         if tr.channel.endswith('E') or\
                                          (tr.channel.endswith('3') and naming == '2,3')\
-                                          or (tr.channel.endswith('2') and naming == '1,2'):
+                                          or (tr.channel.endswith('2') and naming == '1,2')\
+                                          or (tr.channel.endswith('1') and naming == '1,2,3'):
 
                                             for ch in stat.channels:
                                                 if tr.channel == ch.name:
@@ -959,7 +971,8 @@ def main():
                                                         tr2 = None
                                                         print('E/3 downsampling not successfull')
 
-                                        if tr.channel.endswith('Z'):
+                                        if tr.channel.endswith('Z')\
+                                           or tr.channel.endswith('3') and naming == '1,2,3':
                                             trZ = tr.copy()
 
                                             try:
@@ -985,22 +998,26 @@ def main():
                                    
                                     if str(tr1.channel).endswith('N') is True\
                                        or str(tr1.channel).endswith('2') is True and naming == '2,3'\
-                                       or str(tr1.channel).endswith('1') is True and naming == '1,2':
+                                       or str(tr1.channel).endswith('1') is True and naming == '1,2'\
+                                       or str(tr1.channel).endswith('2') is True and naming == '1,2,3':
                                         tr1_ch = tr1.channel
 
                                     if str(tr1.channel).endswith('E') is True\
                                       or str(tr1.channel).endswith('3') is True and naming == '2,3'\
-                                      or str(tr1.channel).endswith('2') is True and naming == '1,2':
+                                      or str(tr1.channel).endswith('2') is True and naming == '1,2'\
+                                      or str(tr1.channel).endswith('1') is True and naming == '1,2,3':
                                         tr2_ch = tr1.channel
 
                                     if str(tr2.channel).endswith('N') is True\
                                      or str(tr2.channel).endswith('2') is True and naming == '2,3'\
-                                     or str(tr2.channel).endswith('1') is True and naming == '1,2':
+                                     or str(tr2.channel).endswith('1') is True and naming == '1,2'\
+                                     or str(tr2.channel).endswith('2') is True and naming == '1,2,3':
                                         tr1_ch = tr2.channel
 
                                     if str(tr2.channel).endswith('E') is True\
                                      or str(tr2.channel).endswith('3') is True and naming == '2,3'\
-                                     or str(tr2.channel).endswith('2') is True and naming == '1,2':
+                                     or str(tr2.channel).endswith('2') is True and naming == '1,2'\
+                                     or str(tr2.channel).endswith('1') is True and naming == '1,2,3':
                                         tr2_ch = tr2.channel
 
 

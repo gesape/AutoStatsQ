@@ -21,7 +21,7 @@ def plot_allgains(self, results_all, stats_list, directory, fn):
 
     times = [util.time_to_str(ev.time)[:10] for ev in self.events]
 
-    cmap = plt.get_cmap('CMRmap')
+    cmap = plt.get_cmap('viridis')
     indices = num.linspace(0, cmap.N, len(self.events))
     my_colors = [cmap(int(i)) for i in indices]
 
