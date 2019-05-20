@@ -757,6 +757,15 @@ def main():
                                 elif 'DN1' in comps and 'DN2' in comps and 'DN3' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['DN1', 'DN2', 'DN3']]
 
+                                elif 'DHZ' in comps and 'DHN' in comps and 'DHE' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['DHZ', 'DHN', 'DHE']]
+                                elif 'DHZ' in comps and 'DH2' in comps and 'DH3' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['DHZ', 'DH2', 'DH3']]
+                                elif 'DHZ' in comps and 'DH1' in comps and 'DH2' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['DHZ', 'DH1', 'DH2']]
+                                elif 'DH1' in comps and 'DH2' in comps and 'DH3' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['DH1', 'DH2', 'DH3']]
+
                                 else:
                                     # print('no BH* or HH* data for station %s found' % (str(nsl)))
                                     # print('found these:', [tr.channel for tr in trs])
