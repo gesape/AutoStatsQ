@@ -653,6 +653,9 @@ def main():
                     print(util.time_to_str(ev.time))
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
 
+                    tmin = ev.time+metaDataconf.dt_start*3600
+                    tmax = ev.time+metaDataconf.dt_end*3600
+
                     #stations_fn = data_dir + ev_t_str + '_resp_geofon.xml'
                     #response = stationxml.load_xml(filename=stations_fn)
                     #print(data_dir+ev_t_str)
@@ -664,19 +667,13 @@ def main():
                     transf_taper = 1/min(RestDownconf.freqlim)
 
                     for st in all_stations:
-                        print(st.station)
-
                         #if st.network not in net_check:
                         #    continue                        
                         nsl = st.nsl()
-                        print(nsl[:2])
-                        input()
                         trs = []
                         if not metaDataconf.local_waveforms_only:
                             #trs = p.all(
-                            #    trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2])
-                            tmin = ev.time+metaDataconf.dt_start*3600
-                            tmax = ev.time+metaDataconf.dt_end*3600                                
+                            #    trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2])                              
                             trs.extend(p.all(tmin=tmin, tmax=tmax,
                                              trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2]))
 
@@ -689,8 +686,6 @@ def main():
                                 year = util.time_to_str(ev.time)[0:4]
                                 jul_day = util.julian_day_of_year(ev.time)
                                 local_data_dirs = metaDataconf.local_data
-                                tmin = ev.time+metaDataconf.dt_start*3600
-                                tmax = ev.time+metaDataconf.dt_end*3600
                                 for i_ldd, ldd in enumerate(local_data_dirs):
                                     path_str = '%s%s/%s/%s' % (ldd, year, st.network, st.station)                                  
                                     p = pile.make_pile(paths=path_str, regex='.%s' % jul_day, show_progress=True)
