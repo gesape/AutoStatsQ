@@ -669,10 +669,12 @@ def main():
                         #if st.network not in net_check:
                         #    continue                        
                         nsl = st.nsl()
+                        print(nsl[:2])
+                        input()
                         trs = []
                         if not metaDataconf.local_waveforms_only:
-                            trs = p.all(
-                                trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2])
+                            #trs = p.all(
+                            #    trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2])
                             tmin = ev.time+metaDataconf.dt_start*3600
                             tmax = ev.time+metaDataconf.dt_end*3600                                
                             trs.extend(p.all(tmin=tmin, tmax=tmax,
@@ -701,7 +703,6 @@ def main():
                             # trace.snuffle(trs)
 
                         if trs:
-                            print(trs)
                             comps = [tr.channel for tr in trs]
 
                             if metaDataconf.all_channels == False:
@@ -772,7 +773,6 @@ def main():
                                     trs = [tr for tr in trs if tr.channel in ['DHZ', 'DH1', 'DH2']]
                                 elif 'DH1' in comps and 'DH2' in comps and 'DH3' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['DH1', 'DH2', 'DH3']]
-                                    print('channels found')
 
                                 else:
                                     # print('no BH* or HH* data for station %s found' % (str(nsl)))
@@ -783,26 +783,24 @@ def main():
                                     cnt_resp = 0
                                     for resp_now in responses:
                                         try:
-                                            print('1')
                                             polezero_resp = resp_now.get_pyrocko_response(
                                                 nslc=tr.nslc_id,
                                                 timespan=(tr.tmin, tr.tmax),
                                                 fake_input_units='M'
                                                 )
-                                            print('2')
+
                                             restituted = tr.transfer(
                                                 tfade=transf_taper,
                                                 freqlimits=RestDownconf.freqlim,
                                                 transfer_function=polezero_resp,
                                                 invert=True)
-                                            print('3')
+
                                             rest_fn = dir_make + '/' + str(tr.nslc_id[0]) + '_' +\
                                                       str(tr.nslc_id[1])\
                                                       + '_' + str(tr.nslc_id[2]) + '_' +\
                                                       '_' + str(tr.nslc_id[3]) + '_' +\
                                                       ev_t_str + 'rest2.mseed'
                                             io.save(restituted, rest_fn)
-                                            print('saved')
 
                                         except stationxml.NoResponseInformation:
                                             cnt_resp += 1
