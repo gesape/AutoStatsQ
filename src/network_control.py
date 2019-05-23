@@ -642,6 +642,13 @@ def main():
             i_resp = len(responses)
             print(i_resp)
 
+            if metaDataconf.local_data and not metaDataconf.sds_structure:
+                print('Accessing local data.')
+                print('click')
+                input()
+                p_local = pile.make_pile(paths=metaDataconf.local_data,
+                                         show_progress=True)
+
             for key, subset_catalog in subsets_events.items(): 
 
                 for ev in subset_catalog:
@@ -676,8 +683,9 @@ def main():
                         if metaDataconf.local_data:
                             print('Accessing local data.')
                             if metaDataconf.sds_structure is False:
-                                p = pile.make_pile(paths=metaDataconf.local_data, show_progress=True)#,
-                            
+                                trs.extend(p_local.all(tmin=tmin, tmax=tmax,
+                                                 trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2]))
+
                             else:
                                 year = util.time_to_str(ev.time)[0:4]
                                 jul_day = util.julian_day_of_year(ev.time)
@@ -687,7 +695,8 @@ def main():
                                 for i_ldd, ldd in enumerate(local_data_dirs):
                                     path_str = '%s%s/%s/%s' % (ldd, year, st.network, st.station)                                  
                                     p = pile.make_pile(paths=path_str, regex='.%s' % jul_day, show_progress=True)
-                                    trs.extend(p.all(tmin=tmin, tmax=tmax))
+                                    trs.extend(p.all(tmin=tmin, tmax=tmax,
+                                                     trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2]))
                                     #if jul_day == 117 and st.station == 'A111A':
                                     #    print('---------------------')
                                     #    print(year, jul_day, path_str)
