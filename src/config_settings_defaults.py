@@ -115,7 +115,7 @@ def generate_default_config():
                               debug_mode=False)
 
     _maps = maps(map_size=[30.0, 30.0],
-                 pl_opt=['lat', 'lon', 'radius'],
+                 pl_opt=['lat', 'lon', 'radius', 'scale_gains'],
                  pl_topo=False)
 
     config = AutoStatsQConfig(

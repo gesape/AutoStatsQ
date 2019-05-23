@@ -189,7 +189,7 @@ def plot_median_gain_map_from_file(ns,
     miny = miny  # -0.1*miny
     maxy = maxy  # +0.1*maxy
     m.gmt.makecpt(
-                C='split',#'polar',  # '/home/gesap/Documents/CETperceptual_GMT/CET-D4.cpt',#'split',#'polar',
+                C=pl_options[3],#'split',#'polar',  # '/home/gesap/Documents/CETperceptual_GMT/CET-D4.cpt',#'split',#'polar',
                 T='%g/%g' % (miny, maxy),  # (miny, maxy), # (-1,1),#(-0.7, 0.7), (-20, 20)
                 Q=True,
                 out_filename=cptfile, suppress_defaults=True)

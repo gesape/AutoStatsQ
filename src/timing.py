@@ -6,15 +6,11 @@ import matplotlib
 from pyrocko.guts import Object, Dict, String, Float, Int
 
 
-def test(input):
-    print(input)
-
-
 matplotlib.rc('xtick', labelsize=20)
 matplotlib.rc('ytick', labelsize=20)
 
 def ccs_allstats_one_event(i_ev, ev, stat_list, all_stations,
-                           datapath, syndatapath,
+                           p_obs, p_syn,
                            out_dir, bp, arrT_array, cc_thresh,
                            debug_mode=False):
     '''
@@ -24,9 +20,8 @@ def ccs_allstats_one_event(i_ev, ev, stat_list, all_stations,
     '''
 
     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
-    # load data and syndata
-    p_obs = pile.make_pile(datapath+ev_t_str, show_progress=False)
-    p_syn = pile.make_pile(syndatapath+ev_t_str, show_progress=False)
+    #p_obs = pile.make_pile(datapath+ev_t_str, show_progress=False)
+    #p_syn = pile.make_pile(syndatapath+ev_t_str, show_progress=False)
 
     tshift_list = []
 

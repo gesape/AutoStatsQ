@@ -1389,19 +1389,18 @@ def main():
                     sys.exit()
 
             subset_catalog = subsets_events['deep']
-            datapath = data_dir + 'rrd/'
-            syndatapath = data_dir + 'synthetics/'
-            dir_time = data_dir + 'results/timing/'
+            datapath = os.path.join(gensettings.work_dir, 'rrd/')
+            syndatapath = os.path.join(gensettings.work_dir, 'synthetics/')
+            dir_time = os.path.join(gensettings.work_dir, 'results/timing/')
             os.makedirs(dir_time, exist_ok=True)
+            p_obs = pile.make_pile(datapath, show_progress=False)
+            p_syn = pile.make_pile(syndatapath, show_progress=False)
 
             if timingconf.search_locations is True:
-                p = pile.make_pile(datapath, show_progress=True)
                 nslc_list = []
-                for t in p.iter_traces(trace_selector=lambda tr: tr.channel=='Z'):
+                for t in p_obs.iter_traces(trace_selector=lambda tr: tr.channel=='Z'):
                     nslc_list.append(t.nslc_id)
                 nslc_list = list(set(nslc_list))
-                p = None
-
                 stations = nslc_list
 
             else:
@@ -1412,7 +1411,7 @@ def main():
 
             for i_ev, ev in enumerate(subset_catalog):
                 tshifts[:, i_ev] = tt.ccs_allstats_one_event(i_ev, ev, stations, all_stations,
-                                                             datapath, syndatapath,
+                                                             p_obs, p_syn,
                                                              dir_time, timingconf.bandpass,
                                                              arrT_array, timingconf.cc_thresh,
                                                              debug_mode=timingconf.debug_mode)
