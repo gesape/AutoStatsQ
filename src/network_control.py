@@ -115,9 +115,9 @@ def main():
         ns = []
         all_stations = []
 
-        for stat_list in gensettings.list_station_lists: # depth fehlt gerade
+        for stat_list in gensettings.list_station_lists:
             if stat_list.endswith('.csv'):
-               with open(stat_list, 'r') as f:
+                with open(stat_list, 'r') as f:
                     for line in f.readlines():
                         if len(line.strip().split(',')) == 6:
                             n, s, lat, lon, elev, d = line.strip().split(',')
@@ -190,6 +190,7 @@ def main():
         tmin = util.ctimegm(catalogconf.tmin_str)
         tmax = util.ctimegm(catalogconf.tmax_str)
         os.makedirs(data_dir+'./results/catalog', exist_ok=True)
+        ev_catalog = []
 
         if catalogconf.search_events is True:
 
@@ -197,7 +198,6 @@ def main():
             event_names = geofon.get_event_names(
                 time_range=(tmin, tmax),
                 magmin=catalogconf.min_mag)
-            ev_catalog = []
 
             for ev_name in event_names:
                 ev_catalog.append(geofon.get_event(ev_name))
@@ -232,23 +232,24 @@ def main():
 
             print('length catalog:', len(ev_catalog))
 
+        if not ev_catalog and not catalogconf.use_local_subsets:
+            print('A catalog is needed to continue.')
+            sys.exit() 
+
 
         ''' 2. Subset of events for quality control'''
 
         subsets_events = {}
         no_bins = int(360/catalogconf.wedges_width)
 
+        if not catalogconf.mid_point:
+            mid_point = orthodrome.geographic_midpoint(num.asarray(st_lats),
+                                                       num.asarray(st_lons))    
+        else: 
+            mid_point = catalogconf.mid_point
+
         for d, val in catalogconf.depth_options.items():
-
-            if not catalogconf.use_local_subsets is True:
-                if not catalogconf.mid_point:
-
-                    mid_point = orthodrome.geographic_midpoint(num.asarray(st_lats),
-                                                               num.asarray(st_lons))
-                    
-                else: 
-                    mid_point = catalogconf.mid_point
-
+            if not catalogconf.use_local_subsets:
                 ev_cat = subset_events_dist_evlist(ev_catalog,
                                                    catalogconf.min_mag,
                                                    catalogconf.max_mag,
@@ -930,9 +931,9 @@ def main():
                                         elif tr.channel.endswith('1'):
                                             test.append('1')
                                     
-                                    if '1' in test and '2' in test:
+                                    if '1' in test and '2' in test and '3' not in test:
                                         naming = '1,2'
-                                    elif  '2' in test and '3' in test:
+                                    elif  '2' in test and '3' in test and '1' not in test:
                                         naming = '2,3'
                                     elif '1' in test and '2' in test and '3' in test:
                                         naming = '1,2,3'
@@ -1378,6 +1379,7 @@ def main():
 
 
         if timingconf.timing_test is True:
+            print('Starting timing test')
             if arrT_array is None:
                 try:
                     data_dir = gensettings.work_dir
@@ -1387,14 +1389,13 @@ def main():
                     sys.exit()
 
             subset_catalog = subsets_events['deep']
-            print('Events:', len(subset_catalog))
             datapath = data_dir + 'rrd/'
             syndatapath = data_dir + 'synthetics/'
             dir_time = data_dir + 'results/timing/'
             os.makedirs(dir_time, exist_ok=True)
 
             if timingconf.search_locations is True:
-                p = pile.make_pile(datapath, show_progress=False)
+                p = pile.make_pile(datapath, show_progress=True)
                 nslc_list = []
                 for t in p.iter_traces(trace_selector=lambda tr: tr.channel=='Z'):
                     nslc_list.append(t.nslc_id)
@@ -1415,7 +1416,6 @@ def main():
                                                              dir_time, timingconf.bandpass,
                                                              arrT_array, timingconf.cc_thresh,
                                                              debug_mode=timingconf.debug_mode)
-
             tshifts_cor = tt.correct_for_med_tshifts(tshifts)
             tt.plot_matrix(tshifts, tshifts_cor, stations, dir_time)
 
@@ -1423,13 +1423,13 @@ def main():
             medians = num.nanmedian(tshifts_cor, axis=1)
             means = num.nanmean(tshifts_cor, axis=1)
             stdevs = num.nanstd(tshifts_cor, axis=1)
+
             n_evs = [tshifts_cor.shape[1] - num.isnan(tshifts_cor[i_st,:]).sum()
                      for i_st in range(tshifts_cor.shape[0])]
 
             # plot
             outfile = dir_time + 'timing_errors_allStats.png'
             tt.plot_tshifts(tshifts_cor, means, stdevs, outfile, stations)
-
             tt.save_mms(medians, means, stdevs, stations, dir_time, n_evs)
 
 
