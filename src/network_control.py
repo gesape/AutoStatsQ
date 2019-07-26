@@ -121,7 +121,8 @@ def main():
                     for line in f.readlines():
                         if len(line.strip().split(',')) == 6:
                             n, s, lat, lon, elev, d = line.strip().split(',')
-                            if s in gensettings.st_white_list or gensettings.st_white_list == []:
+                            n_s = '%s.%s' % (n, s)
+                            if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
                                 all_stations.append(model.Station(network=n, station=s,
                                                                   lat=float(lat), lon=float(lon),
                                                                   elevation=float(elev), depth=d))
@@ -131,7 +132,8 @@ def main():
 
                         elif len(line.strip().split(',')) == 5:
                             n, s, lat, lon, elev = line.strip().split(',')
-                            if s in gensettings.st_white_list or gensettings.st_white_list == []:                            
+                            n_s = '%s.%s' % (n, s)
+                            if n_s in gensettings.st_white_list or gensettings.st_white_list == []:                            
                                 all_stations.append(model.Station(network=n, station=s,
                                                                   lat=float(lat), lon=float(lon),
                                                                   elevation=float(elev)))                            
@@ -143,7 +145,8 @@ def main():
                 zs = stationxml.load_xml(filename=stat_list)
                 for net in zs.network_list:
                     for stat in net.station_list:
-                        if stat.code in gensettings.st_white_list or gensettings.st_white_list == []:
+                        n_s = '%s.%s' % (net, stat)
+                        if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
 
                             st_lats.append(float(stat.latitude.value))
                             st_lons.append(float(stat.longitude.value))
@@ -157,7 +160,8 @@ def main():
             elif stat_list.endswith('.yaml') or stat_list.endswith('.pf'):
                 zs = model.station.load_stations(filename=stat_list)
                 for stat in zs:
-                    if stat.station in gensettings.st_white_list or gensettings.st_white_list == []:
+                    n_s = '%s.%s' % (stat.network, stat.station)
+                    if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
                         st_lats.append(float(stat.lat))
                         st_lons.append(float(stat.lon))
                         ns.append((stat.network, stat.station))
@@ -409,7 +413,10 @@ def main():
                 # print([(util.time_to_str(ev.time), ev.magnitude, ev.depth)
 
             else:
-                subset_catalog = model.load_events(catalogconf.subset_fns[d])
+                try:
+                    subset_catalog = model.load_events(catalogconf.subset_fns[d])
+                except:
+                    subset_catalog = []
                 subsets_events[d] = subset_catalog
 
             if catalogconf.plot_catalog_subset is True:
@@ -538,7 +545,6 @@ def main():
         if metaDataconf.download_data is True:   ### clean up!
 
             for subset_catalog in subsets_events.values():
-
                 for ev in subset_catalog:
                     ev_t_str = util.time_to_str(ev.time)
                     ev_t = datetime.datetime.strptime(ev_t_str, "%Y-%m-%d %H:%M:%S.%f")
@@ -710,19 +716,26 @@ def main():
                                 elif 'HHZ' in comps and 'HH1' in comps and 'HH1' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH1', 'HH2']]
 
-                                elif 'EHZ' in comps and 'EHN' in comps and 'EHE' in comps:
-                                    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EHN', 'EHE']]
-                                elif 'EHZ' in comps and 'EH2' in comps and 'EH3' in comps:
-                                    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EH2', 'EH3']]                            
-                                elif 'EHZ' in comps and 'EH1' in comps and 'EH2' in comps:
-                                    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EH1', 'EH2']] 
-
                                 elif 'BHZ' in comps and 'BHN' in comps and 'BHE' in comps:
                                     trs = [tr for tr in trs  if tr.channel in ['BHZ', 'BHN', 'BHE']] 
                                 elif 'BHZ' in comps and 'BH2' in comps and 'BH3' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['BHZ', 'BH2', 'BH3']]
                                 elif 'BHZ' in comps and 'BH1' in comps and 'BH2' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['BHZ', 'BH1', 'BH2']] 
+
+                                elif 'HNZ' in comps and 'HNN' in comps and 'HNE' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['HNZ', 'HNN', 'HNE']]
+                                elif 'HNZ' in comps and 'HN2' in comps and 'HN3' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['HNZ', 'HN2', 'HN3']]
+                                elif 'HNZ' in comps and 'HN1' in comps and 'HN2' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['HNZ', 'HN1', 'HN2']]
+
+                                elif 'EHZ' in comps and 'EHN' in comps and 'EHE' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EHN', 'EHE']]
+                                elif 'EHZ' in comps and 'EH2' in comps and 'EH3' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EH2', 'EH3']]                            
+                                elif 'EHZ' in comps and 'EH1' in comps and 'EH2' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['EHZ', 'EH1', 'EH2']] 
 
                                 elif 'LHZ' in comps and 'LHN' in comps and 'LHE' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['LHZ', 'LHN', 'LHE']]
@@ -744,13 +757,6 @@ def main():
                                     trs = [tr for tr in trs if tr.channel in ['CHZ', 'CH2', 'CH3']]
                                 elif 'CHZ' in comps and 'CH1' in comps and 'CH2' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['CHZ', 'CH1', 'CH2']]
-
-                                elif 'HNZ' in comps and 'HNN' in comps and 'HNE' in comps:
-                                    trs = [tr for tr in trs if tr.channel in ['HNZ', 'HNN', 'HNE']]
-                                elif 'HNZ' in comps and 'HN2' in comps and 'HN3' in comps:
-                                    trs = [tr for tr in trs if tr.channel in ['HNZ', 'HN2', 'HN3']]
-                                elif 'HNZ' in comps and 'HN1' in comps and 'HN2' in comps:
-                                    trs = [tr for tr in trs if tr.channel in ['HNZ', 'HN1', 'HN2']]
 
                                 elif 'DNZ' in comps and 'DNN' in comps and 'DNE' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['DNZ', 'DNN', 'DNE']]
@@ -961,6 +967,9 @@ def main():
                                                     except ValueError:
                                                         tr1 = None
                                                         print('N/2 downsampling not successfull')
+                                                    except util.UnavailableDecimation:
+                                                        print('unavailable decimation ', tr1.station)
+                                                        tr1 = None
 
                                         if tr.channel.endswith('E') or\
                                          (tr.channel.endswith('3') and naming == '2,3')\
@@ -983,6 +992,9 @@ def main():
                                                     except ValueError:
                                                         tr2 = None
                                                         print('E/3 downsampling not successfull')
+                                                    except util.UnavailableDecimation:
+                                                        print('unavailable decimation ', tr2.station)
+                                                        tr2 = None
 
                                         if tr.channel.endswith('Z')\
                                            or tr.channel.endswith('3') and naming == '1,2,3':
@@ -1000,7 +1012,9 @@ def main():
                                             except ValueError:
                                                 trZ = None
                                                 print('Z downsampling not successfull')
-                                        
+                                            except util.UnavailableDecimation:
+                                                print('unavailable decimation ', trZ.station)
+                                                trZ = None                                        
 
                                 if az1 is not None and tr1 is not None\
                                   and tr2 is not None:
