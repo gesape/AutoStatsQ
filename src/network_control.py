@@ -22,11 +22,12 @@ from .gainplots import plot_median_gain_map_from_file
 from . import freq_psd as fp
 from . import orient
 from . import timing as tt
+from . import phase_correlations as phc
 from .config_settings_defaults import generate_default_config
 from .config import GeneralSettings, CatalogConfig, ArrTConfig,\
 MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
 GainfactorsConfig, PSDConfig, OrientConfig, TimingConfig,\
-maps, AutoStatsQConfig
+CCConfig, maps, AutoStatsQConfig
 from .calc_ttt import *
 
 
@@ -101,7 +102,7 @@ def main():
         # read existing config file:
 
         gensettings, catalogconf, arrTconf, metaDataconf, RestDownconf,\
-        synthsconf, gainfconf, psdsconf, orientconf, timingconf, maps =\
+        synthsconf, gainfconf, psdsconf, orientconf, timingconf, ccconf, maps =\
         AutoStatsQConfig.load(filename=args.config).Settings
 
         data_dir = gensettings.work_dir
@@ -121,7 +122,8 @@ def main():
                     for line in f.readlines():
                         if len(line.strip().split(',')) == 6:
                             n, s, lat, lon, elev, d = line.strip().split(',')
-                            if s in gensettings.st_white_list or gensettings.st_white_list == []:
+                            n_s = '%s.%s' % (n, s)
+                            if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
                                 all_stations.append(model.Station(network=n, station=s,
                                                                   lat=float(lat), lon=float(lon),
                                                                   elevation=float(elev), depth=d))
@@ -131,7 +133,8 @@ def main():
 
                         elif len(line.strip().split(',')) == 5:
                             n, s, lat, lon, elev = line.strip().split(',')
-                            if s in gensettings.st_white_list or gensettings.st_white_list == []:                            
+                            n_s = '%s.%s' % (n, s)
+                            if n_s in gensettings.st_white_list or gensettings.st_white_list == []:                            
                                 all_stations.append(model.Station(network=n, station=s,
                                                                   lat=float(lat), lon=float(lon),
                                                                   elevation=float(elev)))                            
@@ -143,7 +146,8 @@ def main():
                 zs = stationxml.load_xml(filename=stat_list)
                 for net in zs.network_list:
                     for stat in net.station_list:
-                        if stat.code in gensettings.st_white_list or gensettings.st_white_list == []:
+                        n_s = '%s.%s' % (net, stat)
+                        if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
 
                             st_lats.append(float(stat.latitude.value))
                             st_lons.append(float(stat.longitude.value))
@@ -157,7 +161,8 @@ def main():
             elif stat_list.endswith('.yaml') or stat_list.endswith('.pf'):
                 zs = model.station.load_stations(filename=stat_list)
                 for stat in zs:
-                    if stat.station in gensettings.st_white_list or gensettings.st_white_list == []:
+                    n_s = '%s.%s' % (stat.network, stat.station)
+                    if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
                         st_lats.append(float(stat.lat))
                         st_lons.append(float(stat.lon))
                         ns.append((stat.network, stat.station))
@@ -409,7 +414,11 @@ def main():
                 # print([(util.time_to_str(ev.time), ev.magnitude, ev.depth)
 
             else:
-                subset_catalog = model.load_events(catalogconf.subset_fns[d])
+                try:
+                    subset_catalog = model.load_events(catalogconf.subset_fns[d])
+                except:
+                    # subset_catalog = []
+                    continue
                 subsets_events[d] = subset_catalog
 
             if catalogconf.plot_catalog_subset is True:
@@ -432,8 +441,6 @@ def main():
                     if util.time_to_str(ev.time) not in exclude_event:
                         new_subset_catalog.append(ev)
                 subset_catalog = new_subset_catalog
-
-
 
 
             ''' 2.1 Calculate arrival times for all event/station pairs '''
@@ -1431,6 +1438,29 @@ def main():
             tt.plot_tshifts(tshifts_cor, means, stdevs, outfile, stations)
             tt.save_mms(medians, means, stdevs, stations, dir_time, n_evs)
 
+
+        if ccconf.compute_ccs is True:
+            try:
+                cat = subsets_events['deep']
+                cat = sorted(cat, key=lambda ev: ev.time)
+            except:
+                print('catalog not found')
+
+            cat, phase_dict = phc.get_ev_phases(cat, gensettings.work_dir+ccconf.infile)
+
+            if not ccconf.rotate:
+                ccs = phc.get_ccs(all_stations, cat, phase_dict, gensettings.work_dir)
+                phc.plot_ccs(ccs, all_stations, cat)
+            # ccs[i_comp, i_ev, i_st, i_st2]
+            
+            if ccconf.rotate:
+                print(ccconf.rotate)
+                ccs, ccs_rot, angles = phc.get_ccs(all_stations, cat, phase_dict, 
+                                                   gensettings.work_dir, 
+                                                   rotate=ccconf.rotate)
+
+                phc.plot_ccs(ccs, all_stations, cat)
+                phc.plot_ccs_rot(ccs_rot, angles, all_stations, cat)
 
 if __name__ == '__main__':
     main()

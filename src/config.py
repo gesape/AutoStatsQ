@@ -174,7 +174,10 @@ class TimingConfig(Object):
     search_locations = Bool.T()
     debug_mode = Bool.T(default=False)
 
-
+class CCConfig(Object):
+    compute_ccs = Bool.T()
+    infile = String.T()
+    rotate = String.T(optional=True)
 
 class maps(Object):
     map_size = List.T()
