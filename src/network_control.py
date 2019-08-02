@@ -145,7 +145,8 @@ def main():
                 zs = stationxml.load_xml(filename=stat_list)
                 for net in zs.network_list:
                     for stat in net.station_list:
-                        n_s = '%s.%s' % (net, stat)
+                        n_s = '%s.%s' % (net.code, stat.code)
+                        print(n_s)
                         if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
 
                             st_lats.append(float(stat.latitude.value))
