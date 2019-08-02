@@ -22,10 +22,11 @@ from .gainplots import plot_median_gain_map_from_file
 from . import freq_psd as fp
 from . import orient
 from . import timing as tt
+from . import call_tele_check as tele
 from .config_settings_defaults import generate_default_config
 from .config import GeneralSettings, CatalogConfig, ArrTConfig,\
 MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
-GainfactorsConfig, PSDConfig, OrientConfig, TimingConfig,\
+GainfactorsConfig, PSDConfig, OrientConfig, TimingConfig, TeleCheck,\
 maps, AutoStatsQConfig
 from .calc_ttt import *
 
@@ -101,7 +102,7 @@ def main():
         # read existing config file:
 
         gensettings, catalogconf, arrTconf, metaDataconf, RestDownconf,\
-        synthsconf, gainfconf, psdsconf, orientconf, timingconf, maps =\
+        synthsconf, gainfconf, psdsconf, orientconf, timingconf, tc, maps =\
         AutoStatsQConfig.load(filename=args.config).Settings
 
         data_dir = gensettings.work_dir
@@ -146,7 +147,6 @@ def main():
                 for net in zs.network_list:
                     for stat in net.station_list:
                         n_s = '%s.%s' % (net.code, stat.code)
-                        print(n_s)
                         if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
 
                             st_lats.append(float(stat.latitude.value))
@@ -1445,6 +1445,27 @@ def main():
             outfile = dir_time + 'timing_errors_allStats.png'
             tt.plot_tshifts(tshifts_cor, means, stdevs, outfile, stations)
             tt.save_mms(medians, means, stdevs, stations, dir_time, n_evs)
+
+
+        if tc.tele_check is True:
+            print('hej')
+            
+            subset_catalog = subsets_events['deep']
+            datapath = os.path.join(gensettings.work_dir, 'rrd/')
+            dir_tc = os.path.join(gensettings.work_dir, 'results/tele_check/')
+            os.makedirs(dir_tc, exist_ok=True)
+            
+            
+            for ev in subset_catalog:
+                ev.name = util.time_to_str(ev.time).replace(' ','_')
+                p_obs = pile.make_pile(os.path.join(datapath, ev.name),
+                                       show_progress=False)
+                p_obs.snuffle(stations=all_stations, events=[ev])
+            
+            filename_list = glob.glob('./results/tele_check/*.cor')
+            tele.get_correction_statistcs(all_stations, filename_list)
+
+
 
 
 if __name__ == '__main__':

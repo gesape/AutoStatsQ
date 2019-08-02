@@ -175,6 +175,8 @@ class TimingConfig(Object):
     debug_mode = Bool.T(default=False)
 
 
+class TeleCheck(Object):
+    tele_check = Bool.T()
 
 class maps(Object):
     map_size = List.T()
