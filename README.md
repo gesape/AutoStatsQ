@@ -8,6 +8,8 @@ Please contact me for further description, help or when something does not behav
 - Rayleigh wave polarization analysis for detection of sensor misorientations
 - Comparison of obs. and synth. PSDs; determining frequency ranges suitable for MT inversion
 - Test for large timing errors (resolution depends on sampling rate of synthetic data)
+- second independent and interactive test for exact and reliable amplitude corrections based on phase picking in snuffler and correlating waveforms
+
 
 Citation:
 ---------
@@ -17,11 +19,10 @@ DOI: http://doi.org/10.1785/0220180342
 
 Latest changes
 -------------
-- new simple test for lare timing errors (not yet sufficiently tested...)
+- new independent and interactive test for amplitude corrections based on waveform correlations of teleseismic P phases --> please contact me for detailed instructions, I didn't have time to document the work-flow yet, but it is a great new test ;-)
+- new simple test for large timing errors (not yet sufficiently tested...)
 - gain test: additional method comparing max A to synthetics
-- added SNR event filter for gain test
 - added debug mode for a nice to gain and orientation test window selection experience;) can also be used to test filter settings
-- all tests can now deal with multiple locations at one station
 
 
 Requirements
@@ -30,6 +31,7 @@ Requirements
 - python3
 - Seismology toolbox pyrocko: https://pyrocko.org/ (Heimann et al. 2017) (and all requirements needed for pyrocko)
 - To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto download` from the pyrocko environment. http://kinherd.org:8080/gfws/static/stores/
+- for new interactive test: grond
 
 
 Tested on Ubuntu 16.04 and openSUSE, using matplotlib version 1.5.1 and gmt version 5.4.2 (Wessel et al., 2013).
@@ -264,7 +266,10 @@ Settings:
   time_wdw: [firstP, 600]
   cc_thresh: 0.7
   search_locations: false
-  debug_mode: false  
+  debug_mode: false
+
+- !autostatsq.config.TeleCheckConfig
+  tele_check: false
 
 - !autostatsq.config.maps
   # settings for all output maps

@@ -114,13 +114,18 @@ def generate_default_config():
                               search_locations=True,
                               debug_mode=False)
 
+    _tele_check = TeleCheckConfig(tele_check=False)
+
+    
     _maps = maps(map_size=[30.0, 30.0],
                  pl_opt=['lat', 'lon', 'radius', 'scale_gains'],
                  pl_topo=False)
 
+
     config = AutoStatsQConfig(
       Settings=[gensettings, catalogconf, arrTconf, metaDataconf,
                 RestDownconf,
-                synthsconf, gainfconf, psdsconf, orientconf, timingconf, _maps])
+                synthsconf, gainfconf, psdsconf, orientconf, timingconf, 
+                _tele_check, _maps])
 
     return config
