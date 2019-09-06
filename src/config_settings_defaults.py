@@ -1,7 +1,7 @@
 from .config import GeneralSettings, CatalogConfig, ArrTConfig,\
 MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
 GainfactorsConfig, PSDConfig, OrientConfig, AutoStatsQConfig,\
-TimingConfig, maps
+TimingConfig, maps, TeleCheckConfig
 
 
 def generate_default_config():
