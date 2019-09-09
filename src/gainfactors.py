@@ -250,6 +250,9 @@ class AutoGain():
                             if len(tr.ydata) > 0 and num.max(num.abs(tr.get_ydata())) != 0:
                                 dtype = type(tr.ydata[0])
                                 tr.ydata -= dtype(tr.get_ydata().mean())
+                                st_s = num.argmax(num.abs(tt.ydata))-10
+                                snr = num.mean([y*y for y in tt.ydata[st_s:st_s+60]])/\
+                                      num.mean([y*y for y in tt.ydata[0:60]])
                                 tr.highpass(fband['order'], fband['corner_hp'])
                                 tr.taper(taper, chop=False)
                                 tr.lowpass(fband['order'], fband['corner_lp'])
