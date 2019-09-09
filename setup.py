@@ -7,6 +7,7 @@ version = '0.1'
 
 
 setup(
+    name='autostatsq',
     version=version,
     author='Gesa Petersen',
     author_email='gesap@gfz-potsdam.de',
