@@ -59,6 +59,8 @@ def plot_corr_time(nsl, filename, dir_ro):
         if ev_list and angle_list:
             ev_list_d = [datetime.datetime.strptime(util.time_to_str(ev), '%Y-%m-%d %H:%M:%S.%f') for ev in ev_list]
             absmax = max(angle_list, key=abs)
+            if abs(absmax) < 60:
+                absmax=60
             _median = num.median(angle_list)
             _mean = num.mean(angle_list)
             min_ev = num.min(ev_list)
@@ -74,7 +76,6 @@ def plot_corr_time(nsl, filename, dir_ro):
             ax.plot(xvals_d, [_mean for i in range(len(xvals))], 'r--', label='mean')
             
             ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-
             ax.set_ylim((-abs(absmax)-1,abs(absmax)+1))
             ax.set_title('%s.%s' % (st[0],st[1]))
             ax.set_xlabel('Event date')
@@ -579,8 +580,8 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     abs_angs = list(num.abs(angle_no_nan))
     m.gmt.makecpt(
                 C='/home/gesap/Documents/CETperceptual_GMT/CET-D8.cpt',
-                T='%g/%g' % (0., 180.),
-                out_filename=cptfile, suppress_defaults=True)
+                T='%g/%g' % (0.1, 180.),
+                out_filename=cptfile)#, suppress_defaults=True)
 
 
     # same length for every vector:
