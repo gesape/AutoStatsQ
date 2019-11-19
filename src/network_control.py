@@ -123,6 +123,11 @@ def main():
                     for line in f.readlines():
                         if len(line.strip().split(',')) == 6:
                             n, s, lat, lon, elev, d = line.strip().split(',')
+                            # Consider elevation and depth as 0 if empty
+                            if not len(elev):
+                                elev = '0'
+                            if not len(d):
+                                d = '0'
                             n_s = '%s.%s' % (n, s)
                             if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
                                 all_stations.append(model.Station(network=n, station=s,
@@ -134,6 +139,9 @@ def main():
 
                         elif len(line.strip().split(',')) == 5:
                             n, s, lat, lon, elev = line.strip().split(',')
+                            # Consider elevation and depth as 0 if empty
+                            if not len(elev):
+                                elev = '0'
                             n_s = '%s.%s' % (n, s)
                             if n_s in gensettings.st_white_list or gensettings.st_white_list == []:                            
                                 all_stations.append(model.Station(network=n, station=s,
