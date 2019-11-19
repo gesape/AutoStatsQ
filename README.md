@@ -1,5 +1,5 @@
 # AutoStatsQ
-Toolbox for automated station quality control for MT inversion 
+Toolbox for automated station quality control for MT inversion.
 Please contact me for further description, help or when something does not behave as expected ;-) : gesap@gfz-potsdam.de
 
 - Catalog search for teleseismic events with uniform azimuthal coverage around array
@@ -14,8 +14,7 @@ Please contact me for further description, help or when something does not behav
 Citation:
 ---------
 
-Petersen, G., Cesca, S., Kriegerowski, M. (2019 online): Automated Quality Control for Large Seismic Networks: Implementation and Application to the AlpArray Seismic Network. - Seismological Research Letters.
-DOI: http://doi.org/10.1785/0220180342
+Petersen, G. M., Cesca, S., Kriegerowski, M. (2019): Automated Quality Control for Large Seismic Networks: Implementation and Application to the AlpArray Seismic Network. - Seismological Research Letters. 90 (3): 1177–1190. DOI: http://doi.org/10.1785/0220180342
 
 Latest changes
 -------------
@@ -30,9 +29,8 @@ Requirements
 
 - python3
 - Seismology toolbox pyrocko: https://pyrocko.org/ (Heimann et al. 2017) (and all requirements needed for pyrocko)
-- To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto download` from the pyrocko environment. http://kinherd.org:8080/gfws/static/stores/
-- for new interactive test: grond
-
+- To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto`. For instance, `fomosto download kinherd global_2s` from the pyrocko environment. http://kinherd.org:8080/gfws/static/stores/
+- for new interactive test: [Grond](https://pyrocko.org/grond/docs/current/) (from the pyrocko suite of applications).
 
 Tested on Ubuntu 16.04 and openSUSE, using matplotlib version 1.5.1 and gmt version 5.4.2 (Wessel et al., 2013).
 
