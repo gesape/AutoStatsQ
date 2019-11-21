@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from pyrocko import util, model, orthodrome, pile, trace, io
 from pyrocko import cake, gf
 from pyrocko.client import catalog, fdsn
+from pyrocko.client.fdsn import EmptyResult
 from pyrocko.io import stationxml
 from pyrocko.fdsn import station as fs
 
@@ -633,9 +634,12 @@ def main():
             for site in sites:
                 # This sometimes does not work properly, why? Further testing?...
                 print(site)
-                #try:
-                request_response = fdsn.station(
-                        site=site, selection=selection, level='response')
+                try:
+                    request_response = fdsn.station(
+                            site=site, selection=selection, level='response')
+                except EmptyResult:
+                    print('no metadata at all', site, selection[1])
+                    continue
                 request_response.dump_xml(filename=meta_fn + '_' +
                                               str(site) + '.xml')
                 #except:
