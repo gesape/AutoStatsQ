@@ -76,15 +76,13 @@ def main():
     # Any event with "bad" data to be excluded?
     exclude_event = ['2017-11-04 09:00:19.000']
 
-
     # Command line input handling
-    parser = argparse.ArgumentParser(
-                    description='')
+    desc = 'AutoStatsQ - Automated station quality control for MT inversion'
+    parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--config')
     parser.add_argument('--run')
     parser.add_argument('--generate_config')
     args = parser.parse_args()
-
 
     # Generate a (template) config file:
     if args.generate_config:
@@ -97,7 +95,6 @@ def main():
         config.dump(filename=fn_config)
         print('created a fresh config file "%s"' % fn_config)
 
-
     # run AutoStatsQ
     if args.run:
 
@@ -108,7 +105,8 @@ def main():
         AutoStatsQConfig.load(filename=args.config).Settings
 
         data_dir = gensettings.work_dir
-        os.makedirs(data_dir+'./results', exist_ok=True)
+        # os.path.join takes properly into account the case of trailing slash
+        os.makedirs(os.path.join(data_dir, 'results'), exist_ok=True)
 
         sites = metaDataconf.sites
 
