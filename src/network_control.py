@@ -88,12 +88,12 @@ def main():
     if args.generate_config:
         fn_config = 'AutoStatsQ_settings.config'
         if os.path.exists('AutoStatsQ_settings.config'):
-            print('file exists: %s' % fn_config)
+            logging.warning('file exists: %s' % fn_config)
 
         config = generate_default_config()
 
         config.dump(filename=fn_config)
-        print('created a fresh config file "%s"' % fn_config)
+        logging.info('created a fresh config file "%s"' % fn_config)
 
     # run AutoStatsQ
     if args.run:
@@ -180,10 +180,11 @@ def main():
                                             lon=float(stat.lon),
                                             elevation=float(stat.elevation)))
             else:
-              print('Station file extension not known: %s. Please use .xml, .csv or .yaml.'
-                    % stat_list)
+                msg = 'Station file extension not known: %s. Please use .xml, .csv or .yaml.' % stat_list
+                logging.error(msg)
+                raise Exception('Unknown file extension')
 
-        print('stations:', len(ns))
+        logging.info('stations: %d' % len(ns))
 
         ##### FOR SHORT TESTING
         '''
@@ -197,12 +198,12 @@ def main():
         '''
         #####
 
-
         ''' 1. Catalog search for teleseismic events '''
 
         tmin = util.ctimegm(catalogconf.tmin_str)
         tmax = util.ctimegm(catalogconf.tmax_str)
-        os.makedirs(data_dir+'./results/catalog', exist_ok=True)
+        # os.path.join takes properly into account the case of trailing slash
+        os.makedirs(os.path.join(data_dir, 'results', 'catalog'), exist_ok=True)
         ev_catalog = []
 
         if catalogconf.search_events is True:
@@ -215,9 +216,10 @@ def main():
             for ev_name in event_names:
                 ev_catalog.append(geofon.get_event(ev_name))
 
-            print('%s events found.' % (str(len(ev_catalog))))
-            model.dump_events(ev_catalog, data_dir+'results/catalog/catalog_Mgr'+str(catalogconf.min_mag)+'.txt')
-            print('length catalog:', len(ev_catalog))
+            logging.info('%s events found.' % (str(len(ev_catalog))))
+            catfilename = os.path.join(data_dir, 'results/catalog', 'catalog_Mgr%s.txt' % (catalogconf.min_mag))
+            model.dump_events(ev_catalog, catfilename)
+            logging.info('length catalog: %d' % len(ev_catalog))
 
         if catalogconf.use_local_catalog is True:
 
@@ -243,12 +245,11 @@ def main():
                                              catalogconf.min_dist_km,
                                              catalogconf.max_dist_km)
 
-            print('length catalog:', len(ev_catalog))
+            logging.info('length catalog: %d' % len(ev_catalog))
 
         if not ev_catalog and not catalogconf.use_local_subsets:
-            print('A catalog is needed to continue.')
-            sys.exit() 
-
+            logging.error('A catalog is needed to continue.')
+            raise Exception('No catalog!')
 
         ''' 2. Subset of events for quality control'''
 
@@ -293,10 +294,13 @@ def main():
                                                              mid_point[1])[1]
 
                 if catalogconf.plot_catalog_all is True:
-                    os.makedirs(data_dir+'results/catalog/', exist_ok=True)
-                    fn = '%sresults/catalog/catalog_global_Mgr%s_%s-%s_%s.png' % (data_dir,
-                         str(catalogconf.min_mag), catalogconf.tmin_str[0:10],
-                         catalogconf.tmax_str[0:10], d)
+                    auxdir = os.path.join(data_dir, 'results/catalog')
+                    os.makedirs(auxdir, exist_ok=True)
+                    pltfilename = 'catalog_global_Mgr%s_%s-%s_%s.png' % \
+                                  (catalogconf.min_mag,
+                                   catalogconf.tmin_str[0:10],
+                                   catalogconf.tmax_str[0:10], d)
+                    fn = os.path.join(auxdir, pltfilename)
 
                     gmtplot_catalog_azimuthal(ev_cat, mid_point,
                                               catalogconf.dist, fn,
@@ -330,8 +334,9 @@ def main():
                     bin_ev_ind = num.argwhere(mean_wedges_mp == bin_nr)
 
                     if len(bin_ev_ind) == 0:
-                        print('no event for %d - %d deg' % (bin_nr*catalogconf.wedges_width,
-                             (bin_nr+1)*catalogconf.wedges_width))
+                        logging.warning('no event for %d - %d deg' % \
+                                        (bin_nr*catalogconf.wedges_width,
+                                         (bin_nr+1)*catalogconf.wedges_width))
 
                     if len(bin_ev_ind) == 1:
                         subset_catalog.append(ev_cat[int(bin_ev_ind[0])])
@@ -351,7 +356,7 @@ def main():
                             subset_catalog.append(ev_cat[max_bazi_ev_ind])
 
                         elif bin_nr != 0 and hist[bin_nr-1] == 0:
-                                # choose one which is more to that side
+                            # choose one which is more to that side
                             ev_ind_next = bin_ev_ind[
                                                      num.argsort(
                                                                 bazi_mp_array[bin_ev_ind],
@@ -359,7 +364,7 @@ def main():
                             subset_catalog.append(ev_cat[ev_ind_next])
 
                         elif bin_nr != no_bins-1 and hist[bin_nr+1] == 0:
-                                # choose one more to that side
+                            # choose one more to that side
                             ev_ind_next = bin_ev_ind[num.argsort(
                                                                 bazi_mp_array[bin_ev_ind],
                                                                 axis=0)
@@ -409,7 +414,8 @@ def main():
                                   catalog[median_ev_ind].magnitude)
                             '''
               
-                print('Subset of %d events was generated for %s.' % (len(subset_catalog), d))
+                logging.info('Subset of %d events was generated for %s.' % \
+                             (len(subset_catalog), d))
                 
                 # sort subset catalog by time:
                 subset_catalog.sort(key=lambda x: x.time)
@@ -417,14 +423,15 @@ def main():
                 # append to subsets-dict
                 subsets_events[d] = subset_catalog
 
-                model.dump_events(subset_catalog, '%sresults/catalog/catalog_Mgr%s_%s.txt' 
-                                  %(data_dir, str(catalogconf.min_mag), d))
+                catfilename = 'catalog_Mgr%s_%s.txt' % (catalogconf.min_mag, d)
+                catfullpath = os.path.join(data_dir, 'results/catalog', catfilename)
+                model.dump_events(subset_catalog, catfullpath)
                 # print([(util.time_to_str(ev.time), ev.magnitude, ev.depth)
 
             else:
                 try:
                     subset_catalog = model.load_events(catalogconf.subset_fns[d])
-                except:
+                except Exception:
                     subset_catalog = []
                 subsets_events[d] = subset_catalog
 
@@ -432,12 +439,12 @@ def main():
                 '''
                 plot all events of catalog
                 '''
-                os.makedirs(data_dir+'results/catalog/', exist_ok=True)
+                os.makedirs(os.path.join(data_dir, 'results/catalog'), exist_ok=True)
                 _tmin = util.time_to_str(min([ev.time for ev in subset_catalog]))
                 _tmax = util.time_to_str(max([ev.time for ev in subset_catalog]))                
-                fn = '%sresults/catalog/catalog_global_Mgr%s_%s-%s_%s_subset.pdf' % (data_dir, 
-                     str(catalogconf.min_mag),
-                     _tmin[0:10], _tmax[0:10], d)
+                catfilename = 'catalog_global_Mgr%s_%s-%s_%s_subset.pdf' % \
+                              (catalogconf.min_mag, _tmin[0:10], _tmax[0:10], d)
+                fn = os.path.join(data_dir, 'results/catalog', catfilename)
 
                 gmtplot_catalog_azimuthal(subset_catalog, mid_point, 
                                                catalogconf.dist, fn, catalogconf.wedges_width)
@@ -449,16 +456,13 @@ def main():
                         new_subset_catalog.append(ev)
                 subset_catalog = new_subset_catalog
 
-
-
-
             ''' 2.1 Calculate arrival times for all event/station pairs '''
             # Method a) using cake
             arrT_array = None
             arrT_R_array = None
             if arrTconf.calc_first_arr_t is True:
                 data_dir = gensettings.work_dir
-                os.makedirs(data_dir+'ttt', exist_ok=True)            
+                os.makedirs(os.path.join(data_dir, 'ttt'), exist_ok=True)
                 dist_array_sub = num.empty((len(subset_catalog), len(ns)))
 
                 for i_ev, ev in enumerate(subset_catalog):
@@ -473,24 +477,24 @@ def main():
 
                 for i_ev, ev in enumerate(subset_catalog):
                     ds = depths[i_ev]
-                    print(' calculating arr times for:', util.time_to_str(ev.time))
+                    logging.info(' calculating arr times for: %s' % (util.time_to_str(ev.time)))
 
                     for i_st in range(len(ns)):
                         dist = dist_array_sub[i_ev, i_st]
                         arrivals = vmodel.arrivals(distances=[dist*cake.m2d],
-                                                  phases=phases,
-                                                  zstart=ds)
+                                                   phases=phases,
+                                                   zstart=ds)
 
                         min_t = min(arrivals, key=lambda x: x.t).t
 
                         arrT_array[i_ev, i_st] = ev.time + min_t
 
-                num.save('%sttt/ArrivalTimes_%s' % (data_dir, d), arrT_array)
+                num.save(os.path.join(data_dir, 'ttt', 'ArrivalTimes_%s' % (d)), arrT_array)
 
             if arrTconf.calc_est_R is True:
-                print('computing R arrival times')
+                logging.info('computing R arrival times')
                 data_dir = gensettings.work_dir
-                os.makedirs(data_dir+'ttt', exist_ok=True)            
+                os.makedirs(os.path.join(data_dir, 'ttt'), exist_ok=True)
                 dist_array_sub = num.empty((len(subset_catalog), len(ns)))
 
                 for i_ev, ev in enumerate(subset_catalog):
@@ -510,7 +514,7 @@ def main():
                         #print('new t', ev.time + dist/4000.)
                         arrT_R_array[i_ev, i_st] = ev.time + dist/(arrTconf.v_rayleigh*1000.)
 
-                num.save('%sttt/ArrivalTimes_estR_%s' % (data_dir, d), arrT_R_array)
+                num.save(os.path.join(data_dir, 'ttt', 'ArrivalTimes_estR_%s' % (d)), arrT_R_array)
 
             # Method b) interpolating from fomosto travel time tables
             '''
@@ -565,15 +569,14 @@ def main():
                                              format='%Y-%m-%d %H:%M:%S.OPTFRAC')
                     ev_t_str = ev_t_str.replace(' ', '_')
                     ev_dir = ev_t_str + '/'
-                    dir_make = data_dir + ev_dir
+                    dir_make = os.path.join(data_dir, ev_dir)
                     os.makedirs(dir_make, exist_ok=True)
 
                     for ns_now in ns:
-                        mseed_fn_st = data_dir + ev_dir + ns_now[0] + '_' +\
-                                   ns_now[1] + '_' +\
-                                   ev_t_str
+                        mseed_fn_st = os.path.join(dir_make, '%s_%s_%s' %
+                                                   (ns_now[0], ns_now[1], ev_t_str))
 
-                        if glob.glob(mseed_fn_st+'*'):
+                        if glob.glob(mseed_fn_st + '*'):
                             continue
                         #else:
                         #    print(glob.glob(mseed_fn_st+'*'))
@@ -581,7 +584,7 @@ def main():
                         selection = [(ns_now[0], ns_now[1], '*',
                                       metaDataconf.channels_download,
                                       t_start, t_end)]
-                        print(selection)
+                        logging.info(selection)
 
                         for site in sites:
                             mseed_fn = mseed_fn_st + site + 'tr.mseed'
@@ -603,13 +606,13 @@ def main():
                                     wffile.write(request_waveform.read())
 
                             except fdsn.EmptyResult:
-                                print(ns_now, 'no data', site)
+                                logging.warning('%s no data %s' % (ns_now, site))
 
                             except:
-                                print('exception unknown', ns_now)
+                                logging.error('exception unknown %s' % ns_now)
 
                             else:
-                                print(ns_now, 'data downloaded', site)
+                                logging.info('%s data downloaded %s' % (ns_now, site))
                                 break
                     if not os.listdir(dir_make):
                         os.rmdir(dir_make)
