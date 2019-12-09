@@ -888,16 +888,20 @@ def main():
 
         ''' 5. Rotation NE --> RT '''
         if RestDownconf.rotate_data is True:
-            print('Starting downsampling and rotation')
+            logging.info('Starting downsampling and rotation')
 
             def save_rot_down_tr(tr, dir_rot, ev_t_str):
-                rot_fn = dir_rot + '/' + str(tr.nslc_id[0]) + '_' +\
-                         str(tr.nslc_id[1])\
-                         + '_' + str(tr.nslc_id[2]) + '_' +\
-                         '_' + str(tr.nslc_id[3]) + '_' +\
-                         ev_t_str + 'rrd2.mseed'
+                fname = '%s_%s_%s__%s_%srrd2.mseed' % \
+                        (tr.nslc_id[0], tr.nslc_id[1],
+                         tr.nslc_id[2], tr.nslc_id[3],
+                         ev_t_str)
+                rot_fn = os.path.join(dir_rot, fname)
+                # rot_fn = dir_rot + '/' + str(tr.nslc_id[0]) + '_' +\
+                #          str(tr.nslc_id[1])\
+                #          + '_' + str(tr.nslc_id[2]) + '_' +\
+                #          '_' + str(tr.nslc_id[3]) + '_' +\
+                #          ev_t_str + 'rrd2.mseed'
                 io.save(tr, rot_fn)
-
 
             def downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, deltat_down):
 
@@ -983,13 +987,13 @@ def main():
                                                         save_rot_down_tr(tr1, dir_rot, ev_t_str)
 
                                                     except trace.NoData:
-                                                        print('N/2 comp no data in twd', nsl)
+                                                        logging.error('N/2 comp no data in twd %s' % nsl)
                                                         tr1 = None
                                                     except ValueError:
                                                         tr1 = None
-                                                        print('N/2 downsampling not successfull')
+                                                        logging.error('N/2 downsampling not successfull')
                                                     except util.UnavailableDecimation:
-                                                        print('unavailable decimation ', tr1.station)
+                                                        logging.error('unavailable decimation %s' % tr1.station)
                                                         tr1 = None
 
                                         if tr.channel.endswith('E') or\
@@ -1008,13 +1012,13 @@ def main():
                                                         save_rot_down_tr(tr2, dir_rot, ev_t_str)
 
                                                     except trace.NoData:
-                                                        print('E/3 comp no data in twd', nsl)
+                                                        logging.error('E/3 comp no data in twd %s' % nsl)
                                                         tr2 = None
                                                     except ValueError:
                                                         tr2 = None
-                                                        print('E/3 downsampling not successfull')
+                                                        logging.error('E/3 downsampling not successful')
                                                     except util.UnavailableDecimation:
-                                                        print('unavailable decimation ', tr2.station)
+                                                        logging.error('unavailable decimation %s' % tr2.station)
                                                         tr2 = None
 
                                         if tr.channel.endswith('Z')\
@@ -1029,13 +1033,13 @@ def main():
                                                 save_rot_down_tr(trZ, dir_rot, ev_t_str)
 
                                             except trace.NoData:
-                                                print('E/3 comp no data in twd', nsl)
+                                                logging.error('E/3 comp no data in twd %s' % nsl)
                                             except ValueError:
                                                 trZ = None
-                                                print('Z downsampling not successfull')
+                                                logging.error('Z downsampling not successful')
                                             except util.UnavailableDecimation:
-                                                print('unavailable decimation ', trZ.station)
-                                                trZ = None                                        
+                                                logging.error('unavailable decimation %s' % trZ.station)
+                                                trZ = None
 
                                 if az1 is not None and tr1 is not None\
                                   and tr2 is not None:
@@ -1068,14 +1072,12 @@ def main():
                                      or str(tr2.channel).endswith('1') is True and naming == '1,2,3':
                                         tr2_ch = tr2.channel
 
-
                                     if tr1_ch != '0' and tr2_ch != '0':
                                         rots = trace.rotate(traces=[tr1,tr2], azimuth=az_r, 
                                                             in_channels=[tr1_ch, tr2_ch],
                                                             out_channels=['R', 'T'])
                                         for tr in rots:
                                             save_rot_down_tr(tr, dir_rot, ev_t_str)
-
 
             st_xml = []
             if metaDataconf.local_metadata != []:
@@ -1084,7 +1086,7 @@ def main():
             
             if metaDataconf.use_downmeta is True:            
                 for site in sites:
-                    stations_fn = data_dir + 'Resp_all_' + str(site) + '.xml'
+                    stations_fn = os.path.join(data_dir, 'Resp_all_' + str(site) + '.xml')
                     st_xml.append(stationxml.load_xml(filename=stations_fn))
 
             i_st_xml = len(st_xml)
@@ -1094,35 +1096,34 @@ def main():
                     gc.collect()
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
                     # print(ev_t_str)
-                    os.makedirs(data_dir+'rrd/', exist_ok=True)
-                    dir_rot = data_dir + 'rrd/' + ev_t_str
-                    dir_rest = data_dir + 'rest/' + ev_t_str
+                    os.makedirs(os.path.join(data_dir, 'rrd'), exist_ok=True)
+                    dir_rot = os.path.join(data_dir, 'rrd', ev_t_str)
+                    dir_rest = os.path.join(data_dir, 'rest', ev_t_str)
                     downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, RestDownconf.deltat_down)
-                    print('saved ev ', util.time_to_str(ev.time))
+                    logging.info('saved ev ', util.time_to_str(ev.time))
 
-                    if not os.listdir(data_dir+'rrd/'):
-                        os.rmdir(data_dir+'rrd/')
-
+                    if not os.listdir(os.path.join(data_dir, 'rrd')):
+                        os.rmdir(os.path.join(data_dir, 'rrd'))
 
         ''' 6. Synthetic data '''
         if synthsconf.make_syn_data is True:
-            print('Starting to generate synthetic data')
+            logging.info('Starting to generate synthetic data')
 
             freqlim = RestDownconf.freqlim
             transf_taper = 1/min(freqlim)
             store_id = synthsconf.store_id
             engine = gf.LocalEngine(store_superdirs=
                                    [synthsconf.engine_path])
-            os.makedirs(data_dir+'synthetics/', exist_ok=True)
+            os.makedirs(os.path.join(data_dir, 'synthetics'), exist_ok=True)
             loc = '0'
             for key, subset_catalog in subsets_events.items(): 
 
                 for ev in subset_catalog:
 
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
-                    print(ev_t_str)
+                    logging.info(ev_t_str)
 
-                    dir_syn_ev = data_dir + 'synthetics/' + ev_t_str
+                    dir_syn_ev = os.path.join(data_dir, 'synthetics', ev_t_str)
                     os.makedirs(dir_syn_ev, exist_ok=True)
                     # ev.duration = ev.
                     # ev.duration
@@ -1130,7 +1131,7 @@ def main():
                     # source.stf = gf.BoxcarSTF(duration=)
                     # scaling mit magnitude
                     if ev.duration < 1:
-                        print('warning ev.duratiom')
+                        logging.warning('warning ev.duration: %s' % ev.duration)
                     #ev.duration = None
                     ev.time = ev.time + ev.duration/2
                     source = gf.MTSource.from_pyrocko_event(ev)
@@ -1167,7 +1168,7 @@ def main():
                                 response = engine.process(source, targets)
                                 trs_syn = response.pyrocko_traces()
 
-                            except:
+                            except Exception:
                                 continue
 
                             else:
