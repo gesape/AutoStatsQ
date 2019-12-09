@@ -649,7 +649,7 @@ def main():
 
         ''' 4. Data preparation: restitution of data '''
         if RestDownconf.rest_data is True:
-            print('Starting restitution of data.')
+            logging.info('Starting restitution of data.')
             responses = []
 
             if metaDataconf.local_metadata != []:
@@ -658,21 +658,21 @@ def main():
             
             if metaDataconf.use_downmeta is True:
                 for site in sites:
-                    stations_fn = data_dir + 'Resp_all_' + str(site) + '.xml'
+                    stations_fn = os.path.join(data_dir, 'Resp_all_' + str(site) + '.xml')
                     responses.append(stationxml.load_xml(filename=stations_fn))
 
             i_resp = len(responses)
-            print(i_resp)
+            logging.info(i_resp)
 
             if metaDataconf.local_data and not metaDataconf.sds_structure:
-                print('Accessing local data.')
+                logging.info('Accessing local data.')
                 p_local = pile.make_pile(paths=metaDataconf.local_data,
                                          show_progress=True)
 
             for key, subset_catalog in subsets_events.items(): 
 
                 for ev in subset_catalog:
-                    print(util.time_to_str(ev.time))
+                    logging.info(util.time_to_str(ev.time))
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
 
                     tmin = ev.time+metaDataconf.dt_start*3600
@@ -682,9 +682,9 @@ def main():
                     #response = stationxml.load_xml(filename=stations_fn)
                     #print(data_dir+ev_t_str)
                     if metaDataconf.local_waveforms_only is False:
-                        p = pile.make_pile(paths=data_dir+ev_t_str, show_progress=True)
+                        p = pile.make_pile(paths=os.path.join(data_dir, ev_t_str), show_progress=True)
                     
-                    dir_make = data_dir + 'rest/' + ev_t_str
+                    dir_make = os.path.join(data_dir, 'rest', ev_t_str)
                     os.makedirs(dir_make, exist_ok=True)
                     transf_taper = 1/min(RestDownconf.freqlim)
 
@@ -709,14 +709,10 @@ def main():
                                 jul_day = util.julian_day_of_year(ev.time)
                                 local_data_dirs = metaDataconf.local_data
                                 for i_ldd, ldd in enumerate(local_data_dirs):
-                                    path_str = '%s%s/%s/%s' % (ldd, year, st.network, st.station)                                  
+                                    path_str = os.path.join(ldd, year, st.network, st.station)
                                     p = pile.make_pile(paths=path_str, regex='.%s' % jul_day, show_progress=True)
                                     trs.extend(p.all(tmin=tmin, tmax=tmax,
                                                      trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2]))
-                                    #if jul_day == 117 and st.station == 'A111A':
-                                    #    print('---------------------')
-                                    #    print(year, jul_day, path_str)
-                                    #    trace.snuffle(trs)                                    
                             # trace.snuffle(trs)
 
                         if trs:
@@ -812,23 +808,28 @@ def main():
                                                 transfer_function=polezero_resp,
                                                 invert=True)
 
-                                            rest_fn = dir_make + '/' + str(tr.nslc_id[0]) + '_' +\
-                                                      str(tr.nslc_id[1])\
-                                                      + '_' + str(tr.nslc_id[2]) + '_' +\
-                                                      '_' + str(tr.nslc_id[3]) + '_' +\
-                                                      ev_t_str + 'rest2.mseed'
+                                            fname = '%s_%s_%s__%s_%srest2.mseed' \
+                                                    % (tr.nslc_id[0], tr.nslc_id[1],
+                                                       tr.nslc_id[2], tr.nslc_id[3],
+                                                       ev_t_str)
+                                            rest_fn = os.path.join(dir_make, fname)
+                                            # rest_fn = dir_make + '/' + str(tr.nslc_id[0]) + '_' + \
+                                            #                     str(tr.nslc_id[1])\
+                                            #           + '_' + str(tr.nslc_id[2]) + '_' +\
+                                            #           '_' + str(tr.nslc_id[3]) + '_' +\
+                                            #           ev_t_str + 'rest2.mseed'
                                             io.save(restituted, rest_fn)
 
                                         except stationxml.NoResponseInformation:
                                             cnt_resp += 1
                                             if cnt_resp == i_resp:
-                                                print('no resp found:', tr.nslc_id)
+                                                logging.warning('no resp found:', tr.nslc_id)
 
                                         except trace.TraceTooShort:
-                                            print('trace too short', tr.nslc_id)
+                                            logging.error('trace too short', tr.nslc_id)
 
                                         except ValueError:
-                                            print('downsampling does not work', tr.nslc_id)
+                                            logging.error('downsampling does not work', tr.nslc_id)
 
                                         else:
                                             break
@@ -857,23 +858,28 @@ def main():
                                                     transfer_function=polezero_resp,
                                                     invert=True)
 
-                                                rest_fn = dir_make + '/' + str(tr.nslc_id[0]) + '_' +\
-                                                          str(tr.nslc_id[1])\
-                                                          + '_' + str(tr.nslc_id[2]) + '_' +\
-                                                          '_' + str(tr.nslc_id[3]) + '_' +\
-                                                          ev_t_str + 'rest2.mseed'
+                                                fname = '%s_%s_%s__%s_%srest2.mseed' % \
+                                                        (tr.nslc_id[0], tr.nslc_id[1],
+                                                         tr.nslc_id[2], tr.nslc_id[3],
+                                                         ev_t_str)
+                                                rest_fn = os.path.join(dir_make, fname)
+                                                # rest_fn = dir_make + '/' + str(tr.nslc_id[0]) + '_' +\
+                                                #           str(tr.nslc_id[1])\
+                                                #           + '_' + str(tr.nslc_id[2]) + '_' +\
+                                                #           '_' + str(tr.nslc_id[3]) + '_' +\
+                                                #           ev_t_str + 'rest2.mseed'
                                                 io.save(restituted, rest_fn)
 
                                             except stationxml.NoResponseInformation:
                                                 cnt_resp += 1
                                                 if cnt_resp == i_resp:
-                                                    print('no resp found:', tr.nslc_id)
+                                                    logging.error('no resp found: %s' % tr.nslc_id)
 
                                             except trace.TraceTooShort:
-                                                print('trace too short', tr.nslc_id)
+                                                logging.error('trace too short: %s' % tr.nslc_id)
 
                                             except ValueError:
-                                                print('downsampling does not work', tr.nslc_id)
+                                                logging.error('downsampling does not work: %s' % tr.nslc_id)
 
                                             else:
                                                 break
