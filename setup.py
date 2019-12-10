@@ -1,10 +1,9 @@
-import sys
+# import sys
 
-from setuptools import setup, find_packages
-
+# from setuptools import setup, find_packages
+from setuptools import setup
 
 version = '0.1'
-
 
 setup(
     name='autostatsq',
