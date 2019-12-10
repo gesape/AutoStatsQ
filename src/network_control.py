@@ -86,11 +86,16 @@ def main():
                         help='Verbosity in the output.', default='WARNING',
                         choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO',
                                  'DEBUG'])
+    parser.add_argument('--logoutput', '-o', default=None,
+                        help='File to save the log')
     args = parser.parse_args()
 
     # Set verbose level for logging
     verbo = getattr(logging, args.loglevel)
-    logging.basicConfig(level=verbo)
+    if args.logoutput is None:
+        logging.basicConfig(level=verbo)
+    else:
+        logging.basicConfig(filename=args.logoutput, level=verbo)
 
     # Generate a (template) config file:
     if args.generate_config:
