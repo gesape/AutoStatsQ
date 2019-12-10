@@ -1,4 +1,5 @@
 import math
+import os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as num
@@ -95,7 +96,7 @@ def plot_allgains(self, results_all, stats_list, directory, fn):
     # ax[-1].axis('off')
 
     plt.tight_layout()
-    plt.savefig(directory+fn[:-4]+'_all_gains.png')
+    plt.savefig(os.path.join(directory, fn)[:-4]+'_all_gains.png')
 
 
 def plot_median_gain_map_from_file(ns,
@@ -125,7 +126,7 @@ def plot_median_gain_map_from_file(ns,
                    MAP_GRID_PEN_PRIMARY='thinnest,0/50/0',
                    MAP_ANNOT_OBLIQUE='6')
 
-    gains_fromfile = load(filename=directory+gains_file)
+    gains_fromfile = load(filename=os.path.join(directory, gains_file))
     try:
         ns_rel = gains_fromfile.ref_stats
         # print(ns_rel)
@@ -216,6 +217,6 @@ def plot_median_gain_map_from_file(ns,
 
     # for i in range(len(stats_no_nan)):
     #    m.add_label(lat_no_nan[i], lon_no_nan[i], stats_no_nan[i])
-    fn = '%s%s%s_map_log.png' % (directory, gains_file[0:12], comp)
+    fn = os.path.join(directory, '%s%s_map_log.png' % (gains_file[0:12], comp))
     m.save(fn)
     print('saved file', fn)

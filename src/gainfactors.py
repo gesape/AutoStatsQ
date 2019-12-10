@@ -14,8 +14,6 @@ from .gainplots import plot_allgains
 
 # based on https://github.com/HerrMuellerluedenscheid/autogain
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
 km = 1000.
 
 
@@ -62,8 +60,8 @@ class Section():
             self.____reference_nslc = reference_nslc
 
             if not len(reference_nslc) == 1:
-                logger.info('no reference trace available. ' +
-                            'remains unfinished: %s' % self.event)
+                logging.info('no reference trace available. ' +
+                             'remains unfinished: %s' % self.event)
                 self.finished = False
             else:
                 self.reference_scale = self.max_tr[reference_nslc[0]]
@@ -107,9 +105,6 @@ class Section():
     def iter_scalings(self):
         for nslc_id, scaling in self.relative_scalings.items():
             yield (nslc_id, scaling)
-    
-
-
 
 
 class AutoGain():
@@ -300,7 +295,7 @@ class AutoGain():
                     #    print('no trace', s.network, s.station, tr, util.time_to_str(event.time))
                 #break
                 # print(i_s)
-            logger.debug('skipped %s/%s' % (skipped, unskipped))
+            logging.debug('skipped %s/%s' % (skipped, unskipped))
 
             section.finish(self.method, fband, taper, i_ev)
 
@@ -447,7 +442,7 @@ class AutoGain():
             g.ref_stats = '%s %s' % (self.method[1][0], self.method[1][1])
         g.regularize()
         g.validate()
-        g.dump(filename=directory+fn)
+        g.dump(filename=os.path.join(directory, fn))
 
     def save_median(self, fn, directory):
         g = Gains()
@@ -456,7 +451,7 @@ class AutoGain():
             g.ref_stats = '%s %s' % (self.method[1][0], self.method[1][1])
         g.regularize()
         g.validate()
-        g.dump(filename=directory+fn)
+        g.dump(filename=os.path.join(directory, fn))
 
     def save_median_and_mean_and_stdev(self, fn, directory):
         g = Gains()
@@ -468,7 +463,7 @@ class AutoGain():
             g.ref_stats = '%s %s' % (self.method[1][0], self.method[1][1])
         g.regularize()
         g.validate()
-        g.dump(filename=directory+fn)        
+        g.dump(filename=os.path.join(directory, fn))
 
     def save_single_events(self, fn, directory, plot=False):
         ''' Save table with all gains (for all events + stations)
@@ -490,7 +485,7 @@ class AutoGain():
         if self.method == 'syn':
             stats_list = self.stations
 
-        with open(directory+fn, 'w') as outfile:
+        with open(os.path.join(directory, fn), 'w') as outfile:
             outfile.write('Gain relative to station %s. \n'
                           % (str(self.method[1])))
             outfile.write('Station:')
