@@ -584,7 +584,7 @@ def main():
                         selection = [(ns_now[0], ns_now[1], '*',
                                       metaDataconf.channels_download,
                                       t_start, t_end)]
-                        logging.info(selection)
+                        logging.debug(selection)
 
                         for site in sites:
                             mseed_fn = mseed_fn_st + site + 'tr.mseed'
