@@ -1,5 +1,6 @@
 import numpy as num
 import math
+import logging
 import os
 import datetime
 from pyrocko import trace, pile
@@ -41,11 +42,11 @@ class Polarity_switch(Object):
 
 
 def plot_corr_time(nsl, filename, dir_ro):
-    '''
+    """
     Plot angle of max. cr-corr vs event time for each station.
     Results below cr-corr threshold are ignored.
 
-    '''
+    """
     angles_fromfile = load(filename=os.path.join(dir_ro, filename))
     # y_lim = (-180., 180.)
 
@@ -81,9 +82,9 @@ def plot_corr_time(nsl, filename, dir_ro):
             ax.set_title('%s.%s' % (st[0],st[1]))
             ax.set_xlabel('Event date')
             ax.set_ylabel('Correction angle [°]')
-            #xticks = ax.get_xticks()
-            #print(xticks)
-            #ax.set_xticklabels([util.time_to_str(x)[0:16] for x in xticks], rotation=70)
+            # xticks = ax.get_xticks()
+            # print(xticks)
+            # ax.set_xticklabels([util.time_to_str(x)[0:16] for x in xticks], rotation=70)
             plt.tick_params(labelsize=12)
             plt.tight_layout(rect=[0,0,0.8,1])
             # plt.show()
@@ -136,13 +137,13 @@ def write_all_output_csv(list_all_angles, used_stats, dir_ro):
 
 
 def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
-    '''
+    """
     1) did polarity swith occur? for single events, say if
     max c-c is closer to 180 deg than to 0 deg! (only trusted if
     coef > 0.80)
     2) provide median of correction angle associated to max-cc,
     only use those with max cc-coef > 0.85 or sth like that
-    '''
+    """
     angles = []
     values = []
     switched = []
@@ -238,8 +239,8 @@ def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
                 sum_d_xi_xm += phi_d*phi_d
                 # print(sum_d_xi_xm)
             std_a = num.sqrt(sum_d_xi_xm / n_ev)
-            #print('new std', std_a)
-            #print('old std',num.std([a for (a, v) in zip(angles, values) if v > ccmin]))
+            # print('new std', std_a)
+            # print('old std',num.std([a for (a, v) in zip(angles, values) if v > ccmin]))
         else:
             std_a = num.nan    
 
@@ -279,11 +280,11 @@ def get_tr_by_cha(pile, start_twd, end_twd, loc, cha):
 
 
 def max_or_min(c):
-    '''
+    """
     for testing... not used because valid cc is used which returns only
     one value (no time shifts!)
     Get time and value of maximum of the absolute of data.
-    '''
+    """
     tmi, mi = c.min()
     tma, ma = c.max()
     if abs(mi) > abs(ma):
@@ -293,7 +294,7 @@ def max_or_min(c):
 
 
 def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_ro):
-    '''
+    """
     Plots max. cc-coef vs. rotation angle for each event in subplots.
     rather for debugging than for including into normal testing workflow!
 
@@ -303,7 +304,7 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
     :param rot_angles: range of rotation angles
     :param st: current station (pyrocko Station)
     :param dir_ro: output directory
-    '''
+    """
     n_ev = len(catalog)
     nrows = math.ceil(n_ev / 5)
     ncols = 5
@@ -338,7 +339,7 @@ def prep_orient(datapath, st, loc, catalog, dir_ro, v_rayleigh,
                 bp, dt_start, dt_stop, ccmin=0.80,
                 plot_heatmap=False,  plot_distr=False,
                 debug=False):
-    '''
+    """
     Perform orientation analysis using Rayleigh waves, main function.
 
     time wdw: 20s before 4.0km/s arrival and 600 s afterwards
@@ -353,7 +354,8 @@ def prep_orient(datapath, st, loc, catalog, dir_ro, v_rayleigh,
     :param dir_ro: output directory
     :param plot_heatmap: bool, optional
     :param plot_distr: bool, optional
-    '''
+    """
+    logs = logging.getLogger('prep_orient')
     st_data_pile = pile.make_pile(datapath, regex='%s_%s_' % (st.network, st.station),
                                   show_progress=False)
     n_ev = len(catalog)
@@ -376,13 +378,6 @@ def prep_orient(datapath, st, loc, catalog, dir_ro, v_rayleigh,
             start_twd1 = ev.time
             end_twd1 = arrT + 1800
 
-            #if st.station == 'NICK':
-            #    print('origin time:', util.time_to_str(ev.time))
-            #    print('start:', util.time_to_str(start_twd1),'end:',
-            #          util.time_to_str(end_twd1) )
-            #    print('arrT:', util.time_to_str(arrT))
-                #st_data_pile.snuffle()
-
             trZ = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'Z')
             trR = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'R')
             trT = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'T')
@@ -390,15 +385,12 @@ def prep_orient(datapath, st, loc, catalog, dir_ro, v_rayleigh,
             start_twd2 = ev.time + r_arr_by_ev[i_ev] - dt_start
             end_twd2 = arrT + dt_stop
 
-            #if st.station == 'NICK':
-            #    trace.snuffle([trZ[0],trR[0],trT[0]])
-
             if len(trZ) == 1 and len(trR) == 1 and len(trT) == 1:
                 trZ = trZ[0]
                 trR = trR[0]
                 trT = trT[0]
                 # debugging - window selection:
-                if debug == True:
+                if debug is True:
                     trace.snuffle([trZ,trR,trT], markers=
                         [pm.Marker(nslc_ids=[trZ.nslc_id, trR.nslc_id, trT.nslc_id],
                                    tmin=start_twd2, tmax=end_twd2),
@@ -413,13 +405,11 @@ def prep_orient(datapath, st, loc, catalog, dir_ro, v_rayleigh,
                 trZ.bandpass(bp[0], bp[1], bp[2])
                 trZ.chop(tmin=start_twd2, tmax=end_twd2)
             except trace.NoData:
-                print('no data')
-                print(trZ, trR, trT)
+                logs.warning('no data %s %s %s' % (trZ, trR, trT))
                 continue
 
-
             for i_r, r in enumerate(rot_angles):
-                print('rotation angle [deg]: %5d' % r, end='\r')
+                logs.info('rotation angle [deg]: %5d' % r, end='\r')
                 rot_2, rot_3 = trace.rotate(traces=[trR, trT], azimuth=r,
                                             in_channels=['R', 'T'],
                                             out_channels=['2', '3'])
@@ -500,6 +490,8 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
 
     :param ls: label position [lon (symbol), lat (symbol + label), lon (label)]
     '''
+
+    logs = logging.getLogger('plot_corr_angles')
 
     gmtconf = dict(
                    MAP_TICK_PEN_PRIMARY='1.25p',
@@ -639,4 +631,4 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
             has_label.append(stats_no_nan_u[i])
 
     m.save(os.path.join(dir_orient, 'map_orient.png'))
-    print('Saved map with corr. angles for sensor orientations')
+    logs.info('Saved map with corr. angles for sensor orientations')
