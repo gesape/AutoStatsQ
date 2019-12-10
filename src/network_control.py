@@ -82,21 +82,36 @@ def main():
     parser.add_argument('--config')
     parser.add_argument('--run')
     parser.add_argument('--generate_config')
+    parser.add_argument('-l', '--loglevel',
+                        help='Verbosity in the output.', default='WARNING',
+                        choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO',
+                                 'DEBUG'])
     args = parser.parse_args()
+
+    # Set verbose level for logging
+    verbo = getattr(logging, args.loglevel)
+    logging.basicConfig(level=verbo)
 
     # Generate a (template) config file:
     if args.generate_config:
+        # Set Logger name and verbosity
+        logs = logging.getLogger('Generate config')
+        logs.setLevel(verbo)
+
         fn_config = 'AutoStatsQ_settings.config'
         if os.path.exists('AutoStatsQ_settings.config'):
-            logging.warning('file exists: %s' % fn_config)
+            logs.warning('file exists: %s' % fn_config)
 
         config = generate_default_config()
 
         config.dump(filename=fn_config)
-        logging.info('created a fresh config file "%s"' % fn_config)
+        logs.info('created a fresh config file "%s"' % fn_config)
 
     # run AutoStatsQ
     if args.run:
+        # Set Logger name and verbosity
+        logs = logging.getLogger('Run')
+        logs.setLevel(verbo)
 
         # read existing config file:
 
@@ -181,10 +196,10 @@ def main():
                                             elevation=float(stat.elevation)))
             else:
                 msg = 'Station file extension not known: %s. Please use .xml, .csv or .yaml.' % stat_list
-                logging.error(msg)
+                logs.error(msg)
                 raise Exception('Unknown file extension')
 
-        logging.info('stations: %d' % len(ns))
+        logs.info('stations: %d' % len(ns))
 
         ##### FOR SHORT TESTING
         '''
@@ -199,6 +214,9 @@ def main():
         #####
 
         ''' 1. Catalog search for teleseismic events '''
+        # Set Logger name and verbosity
+        logs = logging.getLogger('Catalog search')
+        logs.setLevel(verbo)
 
         tmin = util.ctimegm(catalogconf.tmin_str)
         tmax = util.ctimegm(catalogconf.tmax_str)
@@ -216,10 +234,10 @@ def main():
             for ev_name in event_names:
                 ev_catalog.append(geofon.get_event(ev_name))
 
-            logging.info('%s events found.' % (str(len(ev_catalog))))
+            logs.info('%s events found.' % (str(len(ev_catalog))))
             catfilename = os.path.join(data_dir, 'results/catalog', 'catalog_Mgr%s.txt' % (catalogconf.min_mag))
             model.dump_events(ev_catalog, catfilename)
-            logging.info('length catalog: %d' % len(ev_catalog))
+            logs.info('length catalog: %d' % len(ev_catalog))
 
         if catalogconf.use_local_catalog is True:
 
@@ -245,13 +263,16 @@ def main():
                                              catalogconf.min_dist_km,
                                              catalogconf.max_dist_km)
 
-            logging.info('length catalog: %d' % len(ev_catalog))
+            logs.info('length catalog: %d' % len(ev_catalog))
 
         if not ev_catalog and not catalogconf.use_local_subsets:
-            logging.error('A catalog is needed to continue.')
+            logs.error('A catalog is needed to continue.')
             raise Exception('No catalog!')
 
         ''' 2. Subset of events for quality control'''
+        # Set Logger name and verbosity
+        logs = logging.getLogger('Subset events')
+        logs.setLevel(verbo)
 
         subsets_events = {}
         no_bins = int(360/catalogconf.wedges_width)
@@ -334,7 +355,7 @@ def main():
                     bin_ev_ind = num.argwhere(mean_wedges_mp == bin_nr)
 
                     if len(bin_ev_ind) == 0:
-                        logging.warning('no event for %d - %d deg' % \
+                        logs.warning('no event for %d - %d deg' % \
                                         (bin_nr*catalogconf.wedges_width,
                                          (bin_nr+1)*catalogconf.wedges_width))
 
@@ -414,7 +435,7 @@ def main():
                                   catalog[median_ev_ind].magnitude)
                             '''
               
-                logging.info('Subset of %d events was generated for %s.' % \
+                logs.info('Subset of %d events was generated for %s.' % \
                              (len(subset_catalog), d))
                 
                 # sort subset catalog by time:
@@ -477,7 +498,7 @@ def main():
 
                 for i_ev, ev in enumerate(subset_catalog):
                     ds = depths[i_ev]
-                    logging.info(' calculating arr times for: %s' % (util.time_to_str(ev.time)))
+                    logs.info(' calculating arr times for: %s' % (util.time_to_str(ev.time)))
 
                     for i_st in range(len(ns)):
                         dist = dist_array_sub[i_ev, i_st]
@@ -492,7 +513,7 @@ def main():
                 num.save(os.path.join(data_dir, 'ttt', 'ArrivalTimes_%s' % (d)), arrT_array)
 
             if arrTconf.calc_est_R is True:
-                logging.info('computing R arrival times')
+                logs.info('computing R arrival times')
                 data_dir = gensettings.work_dir
                 os.makedirs(os.path.join(data_dir, 'ttt'), exist_ok=True)
                 dist_array_sub = num.empty((len(subset_catalog), len(ns)))
@@ -550,8 +571,11 @@ def main():
                 # print(arrT_array_ttt[0:3,0:50])
             '''    
 
-
         ''' 3. Download data and metadata '''
+        # Set Logger name and verbosity
+        logs = logging.getLogger('Download data')
+        logs.setLevel(verbo)
+
         data_pile = None
         # token = open(metaDataconf.token, 'rb').read()
 
@@ -584,7 +608,7 @@ def main():
                         selection = [(ns_now[0], ns_now[1], '*',
                                       metaDataconf.channels_download,
                                       t_start, t_end)]
-                        logging.debug(selection)
+                        logs.debug(selection)
 
                         for site in sites:
                             mseed_fn = mseed_fn_st + site + 'tr.mseed'
@@ -606,19 +630,23 @@ def main():
                                     wffile.write(request_waveform.read())
 
                             except fdsn.EmptyResult:
-                                logging.warning('%s no data from %s' % (ns_now, site))
+                                logs.warning('%s no data from %s' % (ns_now, site))
 
                             except:
-                                logging.error('exception unknown %s' % ns_now)
+                                logs.error('exception unknown %s' % ns_now)
 
                             else:
-                                logging.debug('%s data downloaded from %s' % (ns_now, site))
+                                logs.debug('%s data downloaded from %s' % (ns_now, site))
                                 break
                     if not os.listdir(dir_make):
                         os.rmdir(dir_make)
 
         if metaDataconf.download_metadata is True:
-            logging.info('Downloading metadata')
+            # Set Logger name and verbosity
+            logs = logging.getLogger('Download metadata')
+            logs.setLevel(verbo)
+
+            logs.info('Downloading metadata')
 
             cat_tmin = min([ev.time for ev in subset_catalog for k, subset_catalog in subsets_events.items()])
             cat_tmax = max([ev.time for ev in subset_catalog for k, subset_catalog in subsets_events.items()])
@@ -634,12 +662,12 @@ def main():
 
             for site in sites:
                 # This sometimes does not work properly, why? Further testing?...
-                logging.info(site)
+                logs.info(site)
                 try:
                     request_response = fdsn.station(
                             site=site, selection=selection, level='response')
                 except EmptyResult:
-                    logging.warning('no metadata for %s from %s' % (selection[1], site))
+                    logs.warning('no metadata for %s from %s' % (selection[1], site))
                     continue
                 request_response.dump_xml(filename='%s_%s.xml' % (meta_fn, site))
                 #except:
@@ -648,7 +676,11 @@ def main():
 
         ''' 4. Data preparation: restitution of data '''
         if RestDownconf.rest_data is True:
-            logging.info('Starting restitution of data.')
+            # Set Logger name and verbosity
+            logs = logging.getLogger('Restitution')
+            logs.setLevel(verbo)
+
+            logs.info('Starting restitution of data.')
             responses = []
 
             if metaDataconf.local_metadata != []:
@@ -661,17 +693,17 @@ def main():
                     responses.append(stationxml.load_xml(filename=stations_fn))
 
             i_resp = len(responses)
-            logging.info(i_resp)
+            logs.info(i_resp)
 
             if metaDataconf.local_data and not metaDataconf.sds_structure:
-                logging.info('Accessing local data.')
+                logs.info('Accessing local data.')
                 p_local = pile.make_pile(paths=metaDataconf.local_data,
                                          show_progress=True)
 
             for key, subset_catalog in subsets_events.items(): 
 
                 for ev in subset_catalog:
-                    logging.info(util.time_to_str(ev.time))
+                    logs.info(util.time_to_str(ev.time))
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
 
                     tmin = ev.time+metaDataconf.dt_start*3600
@@ -822,13 +854,13 @@ def main():
                                         except stationxml.NoResponseInformation:
                                             cnt_resp += 1
                                             if cnt_resp == i_resp:
-                                                logging.warning('no resp found:', tr.nslc_id)
+                                                logs.warning('no resp found: %s' % tr.nslc_id)
 
                                         except trace.TraceTooShort:
-                                            logging.error('trace too short', tr.nslc_id)
+                                            logs.error('trace too short: %s' % tr.nslc_id)
 
                                         except ValueError:
-                                            logging.error('downsampling does not work', tr.nslc_id)
+                                            logs.error('downsampling does not work: %s' % tr.nslc_id)
 
                                         else:
                                             break
@@ -872,13 +904,13 @@ def main():
                                             except stationxml.NoResponseInformation:
                                                 cnt_resp += 1
                                                 if cnt_resp == i_resp:
-                                                    logging.error('no resp found: %s' % tr.nslc_id)
+                                                    logs.error('no resp found: %s' % tr.nslc_id)
 
                                             except trace.TraceTooShort:
-                                                logging.error('trace too short: %s' % tr.nslc_id)
+                                                logs.error('trace too short: %s' % tr.nslc_id)
 
                                             except ValueError:
-                                                logging.error('downsampling does not work: %s' % tr.nslc_id)
+                                                logs.error('downsampling does not work: %s' % tr.nslc_id)
 
                                             else:
                                                 break
@@ -887,7 +919,11 @@ def main():
 
         ''' 5. Rotation NE --> RT '''
         if RestDownconf.rotate_data is True:
-            logging.info('Starting downsampling and rotation')
+            # Set Logger name and verbosity
+            logs = logging.getLogger('Rotation')
+            logs.setLevel(verbo)
+
+            logs.info('Starting downsampling and rotation')
 
             def save_rot_down_tr(tr, dir_rot, ev_t_str):
                 fname = '%s_%s_%s__%s_%srrd2.mseed' % \
@@ -986,13 +1022,13 @@ def main():
                                                         save_rot_down_tr(tr1, dir_rot, ev_t_str)
 
                                                     except trace.NoData:
-                                                        logging.error('N/2 comp no data in twd %s' % nsl)
+                                                        logs.error('N/2 comp no data in twd %s' % nsl)
                                                         tr1 = None
                                                     except ValueError:
                                                         tr1 = None
-                                                        logging.error('N/2 downsampling not successfull')
+                                                        logs.error('N/2 downsampling not successful')
                                                     except util.UnavailableDecimation:
-                                                        logging.error('unavailable decimation %s' % tr1.station)
+                                                        logs.error('unavailable decimation %s' % tr1.station)
                                                         tr1 = None
 
                                         if tr.channel.endswith('E') or\
@@ -1011,13 +1047,13 @@ def main():
                                                         save_rot_down_tr(tr2, dir_rot, ev_t_str)
 
                                                     except trace.NoData:
-                                                        logging.error('E/3 comp no data in twd %s' % nsl)
+                                                        logs.error('E/3 comp no data in twd %s' % nsl)
                                                         tr2 = None
                                                     except ValueError:
                                                         tr2 = None
-                                                        logging.error('E/3 downsampling not successful')
+                                                        logs.error('E/3 downsampling not successful')
                                                     except util.UnavailableDecimation:
-                                                        logging.error('unavailable decimation %s' % tr2.station)
+                                                        logs.error('unavailable decimation %s' % tr2.station)
                                                         tr2 = None
 
                                         if tr.channel.endswith('Z')\
@@ -1032,12 +1068,12 @@ def main():
                                                 save_rot_down_tr(trZ, dir_rot, ev_t_str)
 
                                             except trace.NoData:
-                                                logging.error('E/3 comp no data in twd %s' % nsl)
+                                                logs.error('E/3 comp no data in twd %s' % nsl)
                                             except ValueError:
                                                 trZ = None
-                                                logging.error('Z downsampling not successful')
+                                                logs.error('Z downsampling not successful')
                                             except util.UnavailableDecimation:
-                                                logging.error('unavailable decimation %s' % trZ.station)
+                                                logs.error('unavailable decimation %s' % trZ.station)
                                                 trZ = None
 
                                 if az1 is not None and tr1 is not None\
@@ -1099,14 +1135,18 @@ def main():
                     dir_rot = os.path.join(data_dir, 'rrd', ev_t_str)
                     dir_rest = os.path.join(data_dir, 'rest', ev_t_str)
                     downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, RestDownconf.deltat_down)
-                    logging.info('saved ev ', util.time_to_str(ev.time))
+                    logs.info('saved ev ', util.time_to_str(ev.time))
 
                     if not os.listdir(os.path.join(data_dir, 'rrd')):
                         os.rmdir(os.path.join(data_dir, 'rrd'))
 
         ''' 6. Synthetic data '''
         if synthsconf.make_syn_data is True:
-            logging.info('Starting to generate synthetic data')
+            # Set Logger name and verbosity
+            logs = logging.getLogger('Synthetics')
+            logs.setLevel(verbo)
+
+            logs.info('Starting to generate synthetic data')
 
             freqlim = RestDownconf.freqlim
             transf_taper = 1/min(freqlim)
@@ -1120,7 +1160,7 @@ def main():
                 for ev in subset_catalog:
 
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
-                    logging.info(ev_t_str)
+                    logs.info(ev_t_str)
 
                     dir_syn_ev = os.path.join(data_dir, 'synthetics', ev_t_str)
                     os.makedirs(dir_syn_ev, exist_ok=True)
@@ -1130,7 +1170,7 @@ def main():
                     # source.stf = gf.BoxcarSTF(duration=)
                     # scaling mit magnitude
                     if ev.duration < 1:
-                        logging.warning('warning ev.duration: %s' % ev.duration)
+                        logs.warning('warning ev.duration: %s' % ev.duration)
                     #ev.duration = None
                     ev.time = ev.time + ev.duration/2
                     source = gf.MTSource.from_pyrocko_event(ev)
@@ -1189,7 +1229,11 @@ def main():
 
         ''' 7. Gain factors '''
         if gainfconf.calc_gainfactors is True:
-            logging.info('Starting evaluation of gainfactors.')
+            # Set Logger name and verbosity
+            logs = logging.getLogger('Gain factors')
+            logs.setLevel(verbo)
+
+            logs.info('Starting evaluation of gain factors.')
             dir_gains = os.path.join(data_dir, 'results', 'gains')
             os.makedirs(dir_gains, exist_ok=True)
             twd = (gainfconf.wdw_st_arr, gainfconf.wdw_sp_arr)
@@ -1201,7 +1245,7 @@ def main():
                     atfile = os.path.join(data_dir, 'ttt', 'ArrivalTimes_deep.npy')
                     arrT_array = num.load(atfile)
                 except Exception:
-                    logging.error('Please calculate arrival times first!')
+                    logs.error('Please calculate arrival times first!')
                     raise Exception('Arrival times not calculated!')
 
             def run_autogain(data_dir, all_stations, subset_catalog,
@@ -1233,7 +1277,7 @@ def main():
                 ag.process(fband, taper, twd, gainfconf.debug_mode)
 
                 # Store mean results in YAML format:
-                logging.info('saving mean gains: gains_median_and_mean%s.txt %s' % (c, dir_gains))
+                logs.info('saving mean gains: gains_median_and_mean%s.txt %s' % (c, dir_gains))
                 ag.save_median_and_mean_and_stdev('gains_median_and_mean%s.txt' % c, directory=dir_gains)
                 # Store all results in comma-spread text file:
                 ag.save_single_events('gains_all_events%s.txt' % c,
@@ -1241,7 +1285,7 @@ def main():
                 ag = None
             
             for c in gainfconf.components:
-                logging.info(c)
+                logs.info(c)
                 run_autogain(data_dir, all_stations, subsets_events['deep'],
                              gainfconf.gain_factor_method,
                              dir_gains, twd, arrT_array, c)
@@ -1263,14 +1307,18 @@ def main():
         # output flat-ratio-ranges as yaml file
 
         if psdsconf.calc_psd is True:
-            logging.info('starting calc_psd')
+            # Set Logger name and verbosity
+            logs = logging.getLogger('PSD')
+            logs.setLevel(verbo)
+
+            logs.info('starting calc_psd')
             dir_f = os.path.join(data_dir, 'results', 'freq')
             os.makedirs(dir_f, exist_ok=True)
 
             datapath = os.path.join(data_dir, 'rrd')
             syndatapath = os.path.join(data_dir, 'synthetics')
 
-            logging.info('Data path: %s\nSynthetic data path: %s' % (datapath, syndatapath))
+            logs.info('Data path: %s\nSynthetic data path: %s' % (datapath, syndatapath))
 
             if arrT_array is None:
                 try:
@@ -1278,7 +1326,7 @@ def main():
                     atfile = os.path.join(data_dir, 'ttt', 'ArrivalTimes_deep.npy')
                     arrT_array = num.load(atfile)
                 except:
-                    logging.error('Please calculate arrival times first!')
+                    logs.error('Please calculate arrival times first!')
                     raise Exception('Arrival times not calculated!')
 
             if arrT_R_array is None:
@@ -1287,7 +1335,7 @@ def main():
                     atrfile = os.path.join(data_dir, 'ttt', 'ArrivalTimes_estR_deep.npy')
                     arrT_R_array = num.load(atrfile)
                 except Exception:
-                    logging.error('Please calculate R arrival times first!')
+                    logs.error('Please calculate R arrival times first!')
                     raise Exception('R arrival times not calculated!')
 
             st_numbers = [i_st for i_st in range(len(all_stations))]
@@ -1301,7 +1349,7 @@ def main():
             # freq_neigh_list_y_ll = []
 
             for i_st, st in zip(st_numbers, all_stations):
-                logging.info('%s %s' % (i_st, st.station))
+                logs.info('%s %s' % (i_st, st.station))
             # for i_st, st in enumerate(all_stations):
                 st_data_pile = pile.make_pile(datapath,
                                               regex='%s_%s_' % (st.network, st.station),
@@ -1347,7 +1395,11 @@ def main():
 
         # 9. Rayleigh wave polarization analysis for orientation
         if orientconf.orient_rayl is True:
-            logging.info('starting rayleigh wave orientation section')
+            # Set Logger name and verbosity
+            logs = logging.getLogger('Orientation')
+            logs.setLevel(verbo)
+
+            logs.info('starting rayleigh wave orientation section')
             dir_ro = os.path.join(data_dir, 'results', 'orient')
             os.makedirs(dir_ro, exist_ok=True)
             datapath = os.path.join(data_dir, 'rrd')
@@ -1361,7 +1413,7 @@ def main():
 
             st_numbers = [i_st for i_st in range(len(all_stations))]
             for i_st, st in zip(st_numbers, all_stations):
-                logging.info(st.station)
+                logs.info(st.station)
                 st_data_pile = pile.make_pile(datapath,
                                               regex='%s_%s_' % (st.network, st.station),
                                               show_progress=False)
@@ -1411,13 +1463,17 @@ def main():
             orient.plot_corr_time(ns, 'AllCorrectionAngles.yaml', dir_ro)
 
         if timingconf.timing_test is True:
-            logging.info('Starting timing test')
+            # Set Logger name and verbosity
+            logs = logging.getLogger('Timing')
+            logs.setLevel(verbo)
+
+            logs.info('Starting timing test')
             if arrT_array is None:
                 try:
                     data_dir = gensettings.work_dir
                     arrT_array = num.load(os.path.join(data_dir, 'ttt', 'ArrivalTimes_deep.npy'))
                 except:
-                    logging.error('Please calculate arrival times first!')
+                    logs.error('Please calculate arrival times first!')
                     raise Exception('Arrival times must be calculated first!')
 
             subset_catalog = subsets_events['deep']
@@ -1464,7 +1520,11 @@ def main():
             tt.save_mms(medians, means, stdevs, stations, dir_time, n_evs)
 
         if tc.tele_check is True:
-            logging.info('Starting interactive tele-check')
+            # Set Logger name and verbosity
+            logs = logging.getLogger('Teleseismic')
+            logs.setLevel(verbo)
+
+            logs.info('Starting interactive tele-check')
             
             subset_catalog = subsets_events['deep']
             datapath = os.path.join(gensettings.work_dir, 'rrd')
