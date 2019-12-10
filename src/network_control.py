@@ -1348,10 +1348,10 @@ def main():
 
         # 9. Rayleigh wave polarization analysis for orientation
         if orientconf.orient_rayl is True:
-            print('starting rayleigh wave orientation section')
-            dir_ro = data_dir + 'results/orient/'
+            logging.info('starting rayleigh wave orientation section')
+            dir_ro = os.path.join(data_dir, 'results', 'orient')
             os.makedirs(dir_ro, exist_ok=True)
-            datapath = data_dir + 'rrd/'
+            datapath = os.path.join(data_dir, 'rrd')
             list_median_a = []
             list_mean_a = []
             list_stdd_a = []
@@ -1362,7 +1362,7 @@ def main():
 
             st_numbers = [i_st for i_st in range(len(all_stations))]
             for i_st, st in zip(st_numbers, all_stations):
-                print(st.station)
+                logging.info(st.station)
                 st_data_pile = pile.make_pile(datapath,
                                               regex='%s_%s_' % (st.network, st.station),
                                               show_progress=False)
@@ -1400,7 +1400,7 @@ def main():
             orient.write_all_output_csv(list_all_angles, used_stats, dir_ro)
 
         if orientconf.plot_orient_map_fromfile is True:
-            dir_ro = data_dir + 'results/orient/'
+            dir_ro = os.path.join(data_dir, 'results', 'orient')
             orient.plot_corr_angles(ns, st_lats, st_lons,
                                     'CorrectionAngles.yaml', dir_ro,
                                     maps.pl_opt, maps.pl_topo,
@@ -1408,24 +1408,23 @@ def main():
                                     orientconf.orient_map_label)
 
         if orientconf.plot_angles_vs_events is True:
-            dir_ro = data_dir + 'results/orient/'
+            dir_ro = os.path.join(data_dir, 'results', 'orient')
             orient.plot_corr_time(ns, 'AllCorrectionAngles.yaml', dir_ro)
 
-
         if timingconf.timing_test is True:
-            print('Starting timing test')
+            logging.info('Starting timing test')
             if arrT_array is None:
                 try:
                     data_dir = gensettings.work_dir
-                    arrT_array = num.load(data_dir+'ttt/ArrivalTimes_deep.npy')
+                    arrT_array = num.load(os.path.join(data_dir, 'ttt', 'ArrivalTimes_deep.npy'))
                 except:
-                    print('Please calculate arrival times first!')
-                    sys.exit()
+                    logging.error('Please calculate arrival times first!')
+                    raise Exception('Arrival times must be calculated first!')
 
             subset_catalog = subsets_events['deep']
-            datapath = os.path.join(gensettings.work_dir, 'rrd/')
-            syndatapath = os.path.join(gensettings.work_dir, 'synthetics/')
-            dir_time = os.path.join(gensettings.work_dir, 'results/timing/')
+            datapath = os.path.join(gensettings.work_dir, 'rrd')
+            syndatapath = os.path.join(gensettings.work_dir, 'synthetics')
+            dir_time = os.path.join(gensettings.work_dir, 'results/timing')
             os.makedirs(dir_time, exist_ok=True)
             p_obs = pile.make_pile(datapath, show_progress=False)
             p_syn = pile.make_pile(syndatapath, show_progress=False)
@@ -1461,17 +1460,16 @@ def main():
                      for i_st in range(tshifts_cor.shape[0])]
 
             # plot
-            outfile = dir_time + 'timing_errors_allStats.png'
+            outfile = os.path.join(dir_time, 'timing_errors_allStats.png')
             tt.plot_tshifts(tshifts_cor, means, stdevs, outfile, stations)
             tt.save_mms(medians, means, stdevs, stations, dir_time, n_evs)
 
-
         if tc.tele_check is True:
-            print('Starting interactive tele-check')
+            logging.info('Starting interactive tele-check')
             
             subset_catalog = subsets_events['deep']
-            datapath = os.path.join(gensettings.work_dir, 'rrd/')
-            dir_tc = os.path.join(gensettings.work_dir, 'results/tele_check/')
+            datapath = os.path.join(gensettings.work_dir, 'rrd')
+            dir_tc = os.path.join(gensettings.work_dir, 'results/tele_check')
             os.makedirs(dir_tc, exist_ok=True)
 
             def load_snuffling(win):
@@ -1488,10 +1486,8 @@ def main():
                 p_obs.snuffle(stations=all_stations, events=[ev],
                               launch_hook=load_snuffling)
             
-            filename_list = glob.glob('./results/tele_check/*.cor')
+            filename_list = glob.glob(os.path.join(dir_tc, '*.cor'))
             tele.get_correction_statistcs(all_stations, filename_list)
-
-
 
 
 if __name__ == '__main__':
