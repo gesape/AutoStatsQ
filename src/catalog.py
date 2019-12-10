@@ -70,18 +70,14 @@ def subset_events_dist_evlist(ev_list, mag_min, mag_max,
 
     use_events = []
     for ev in ev_list:
-        if ev.magnitude < mag_max and\
-          ev.magnitude > mag_min and\
-          ev.time < util.str_to_time(tmax) and\
-          ev.time > util.str_to_time(tmin) and \
-          ev.depth > float(depth_min) and\
-          ev.depth < float(depth_max):
+        if (mag_min < ev.magnitude < mag_max) and \
+                (util.str_to_time(tmin) < ev.time < util.str_to_time(tmax)) and \
+                (float(depth_min) < ev.depth < float(depth_max)):
             if dist_min or dist_max:
                 dist = orthodrome.distance_accurate50m_numpy(
                        ev.lat, ev.lon, st_lat, st_lon)/1000.
 
-                if dist_min and dist_max and\
-                  dist > dist_min and dist < dist_max:
+                if dist_min and dist_max and dist > dist_min and dist < dist_max:
                     use_events.append(ev)
 
                 if dist_min and not dist_max and dist > dist_min:
