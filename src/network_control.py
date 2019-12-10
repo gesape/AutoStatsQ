@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from pyrocko import util, model, orthodrome, pile, trace, io
 from pyrocko import cake, gf
 from pyrocko.client import catalog, fdsn
+from pyrocko.client.fdsn import EmptyResult
 from pyrocko.io import stationxml
 from pyrocko.fdsn import station as fs
 
@@ -75,27 +76,24 @@ def main():
     # Any event with "bad" data to be excluded?
     exclude_event = ['2017-11-04 09:00:19.000']
 
-
     # Command line input handling
-    parser = argparse.ArgumentParser(
-                    description='')
+    desc = 'AutoStatsQ - Automated station quality control for MT inversion'
+    parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--config')
     parser.add_argument('--run')
     parser.add_argument('--generate_config')
     args = parser.parse_args()
 
-
     # Generate a (template) config file:
     if args.generate_config:
         fn_config = 'AutoStatsQ_settings.config'
         if os.path.exists('AutoStatsQ_settings.config'):
-            print('file exists: %s' % fn_config)
+            logging.warning('file exists: %s' % fn_config)
 
         config = generate_default_config()
 
         config.dump(filename=fn_config)
-        print('created a fresh config file "%s"' % fn_config)
-
+        logging.info('created a fresh config file "%s"' % fn_config)
 
     # run AutoStatsQ
     if args.run:
@@ -107,7 +105,8 @@ def main():
         AutoStatsQConfig.load(filename=args.config).Settings
 
         data_dir = gensettings.work_dir
-        os.makedirs(data_dir+'./results', exist_ok=True)
+        # os.path.join takes properly into account the case of trailing slash
+        os.makedirs(os.path.join(data_dir, 'results'), exist_ok=True)
 
         sites = metaDataconf.sites
 
@@ -123,6 +122,11 @@ def main():
                     for line in f.readlines():
                         if len(line.strip().split(',')) == 6:
                             n, s, lat, lon, elev, d = line.strip().split(',')
+                            # Consider elevation and depth as 0 if empty
+                            if not len(elev):
+                                elev = '0'
+                            if not len(d):
+                                d = '0'
                             n_s = '%s.%s' % (n, s)
                             if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
                                 all_stations.append(model.Station(network=n, station=s,
@@ -134,6 +138,9 @@ def main():
 
                         elif len(line.strip().split(',')) == 5:
                             n, s, lat, lon, elev = line.strip().split(',')
+                            # Consider elevation and depth as 0 if empty
+                            if not len(elev):
+                                elev = '0'
                             n_s = '%s.%s' % (n, s)
                             if n_s in gensettings.st_white_list or gensettings.st_white_list == []:                            
                                 all_stations.append(model.Station(network=n, station=s,
@@ -173,10 +180,11 @@ def main():
                                             lon=float(stat.lon),
                                             elevation=float(stat.elevation)))
             else:
-              print('Station file extension not known: %s. Please use .xml, .csv or .yaml.'
-                    % stat_list)
+                msg = 'Station file extension not known: %s. Please use .xml, .csv or .yaml.' % stat_list
+                logging.error(msg)
+                raise Exception('Unknown file extension')
 
-        print('stations:', len(ns))
+        logging.info('stations: %d' % len(ns))
 
         ##### FOR SHORT TESTING
         '''
@@ -190,12 +198,12 @@ def main():
         '''
         #####
 
-
         ''' 1. Catalog search for teleseismic events '''
 
         tmin = util.ctimegm(catalogconf.tmin_str)
         tmax = util.ctimegm(catalogconf.tmax_str)
-        os.makedirs(data_dir+'./results/catalog', exist_ok=True)
+        # os.path.join takes properly into account the case of trailing slash
+        os.makedirs(os.path.join(data_dir, 'results', 'catalog'), exist_ok=True)
         ev_catalog = []
 
         if catalogconf.search_events is True:
@@ -208,9 +216,10 @@ def main():
             for ev_name in event_names:
                 ev_catalog.append(geofon.get_event(ev_name))
 
-            print('%s events found.' % (str(len(ev_catalog))))
-            model.dump_events(ev_catalog, data_dir+'results/catalog/catalog_Mgr'+str(catalogconf.min_mag)+'.txt')
-            print('length catalog:', len(ev_catalog))
+            logging.info('%s events found.' % (str(len(ev_catalog))))
+            catfilename = os.path.join(data_dir, 'results/catalog', 'catalog_Mgr%s.txt' % (catalogconf.min_mag))
+            model.dump_events(ev_catalog, catfilename)
+            logging.info('length catalog: %d' % len(ev_catalog))
 
         if catalogconf.use_local_catalog is True:
 
@@ -236,12 +245,11 @@ def main():
                                              catalogconf.min_dist_km,
                                              catalogconf.max_dist_km)
 
-            print('length catalog:', len(ev_catalog))
+            logging.info('length catalog: %d' % len(ev_catalog))
 
         if not ev_catalog and not catalogconf.use_local_subsets:
-            print('A catalog is needed to continue.')
-            sys.exit() 
-
+            logging.error('A catalog is needed to continue.')
+            raise Exception('No catalog!')
 
         ''' 2. Subset of events for quality control'''
 
@@ -286,10 +294,13 @@ def main():
                                                              mid_point[1])[1]
 
                 if catalogconf.plot_catalog_all is True:
-                    os.makedirs(data_dir+'results/catalog/', exist_ok=True)
-                    fn = '%sresults/catalog/catalog_global_Mgr%s_%s-%s_%s.png' % (data_dir,
-                         str(catalogconf.min_mag), catalogconf.tmin_str[0:10],
-                         catalogconf.tmax_str[0:10], d)
+                    auxdir = os.path.join(data_dir, 'results/catalog')
+                    os.makedirs(auxdir, exist_ok=True)
+                    pltfilename = 'catalog_global_Mgr%s_%s-%s_%s.png' % \
+                                  (catalogconf.min_mag,
+                                   catalogconf.tmin_str[0:10],
+                                   catalogconf.tmax_str[0:10], d)
+                    fn = os.path.join(auxdir, pltfilename)
 
                     gmtplot_catalog_azimuthal(ev_cat, mid_point,
                                               catalogconf.dist, fn,
@@ -323,8 +334,9 @@ def main():
                     bin_ev_ind = num.argwhere(mean_wedges_mp == bin_nr)
 
                     if len(bin_ev_ind) == 0:
-                        print('no event for %d - %d deg' % (bin_nr*catalogconf.wedges_width,
-                             (bin_nr+1)*catalogconf.wedges_width))
+                        logging.warning('no event for %d - %d deg' % \
+                                        (bin_nr*catalogconf.wedges_width,
+                                         (bin_nr+1)*catalogconf.wedges_width))
 
                     if len(bin_ev_ind) == 1:
                         subset_catalog.append(ev_cat[int(bin_ev_ind[0])])
@@ -344,7 +356,7 @@ def main():
                             subset_catalog.append(ev_cat[max_bazi_ev_ind])
 
                         elif bin_nr != 0 and hist[bin_nr-1] == 0:
-                                # choose one which is more to that side
+                            # choose one which is more to that side
                             ev_ind_next = bin_ev_ind[
                                                      num.argsort(
                                                                 bazi_mp_array[bin_ev_ind],
@@ -352,7 +364,7 @@ def main():
                             subset_catalog.append(ev_cat[ev_ind_next])
 
                         elif bin_nr != no_bins-1 and hist[bin_nr+1] == 0:
-                                # choose one more to that side
+                            # choose one more to that side
                             ev_ind_next = bin_ev_ind[num.argsort(
                                                                 bazi_mp_array[bin_ev_ind],
                                                                 axis=0)
@@ -402,7 +414,8 @@ def main():
                                   catalog[median_ev_ind].magnitude)
                             '''
               
-                print('Subset of %d events was generated for %s.' % (len(subset_catalog), d))
+                logging.info('Subset of %d events was generated for %s.' % \
+                             (len(subset_catalog), d))
                 
                 # sort subset catalog by time:
                 subset_catalog.sort(key=lambda x: x.time)
@@ -410,14 +423,15 @@ def main():
                 # append to subsets-dict
                 subsets_events[d] = subset_catalog
 
-                model.dump_events(subset_catalog, '%sresults/catalog/catalog_Mgr%s_%s.txt' 
-                                  %(data_dir, str(catalogconf.min_mag), d))
+                catfilename = 'catalog_Mgr%s_%s.txt' % (catalogconf.min_mag, d)
+                catfullpath = os.path.join(data_dir, 'results/catalog', catfilename)
+                model.dump_events(subset_catalog, catfullpath)
                 # print([(util.time_to_str(ev.time), ev.magnitude, ev.depth)
 
             else:
                 try:
                     subset_catalog = model.load_events(catalogconf.subset_fns[d])
-                except:
+                except Exception:
                     subset_catalog = []
                 subsets_events[d] = subset_catalog
 
@@ -425,12 +439,12 @@ def main():
                 '''
                 plot all events of catalog
                 '''
-                os.makedirs(data_dir+'results/catalog/', exist_ok=True)
+                os.makedirs(os.path.join(data_dir, 'results/catalog'), exist_ok=True)
                 _tmin = util.time_to_str(min([ev.time for ev in subset_catalog]))
                 _tmax = util.time_to_str(max([ev.time for ev in subset_catalog]))                
-                fn = '%sresults/catalog/catalog_global_Mgr%s_%s-%s_%s_subset.pdf' % (data_dir, 
-                     str(catalogconf.min_mag),
-                     _tmin[0:10], _tmax[0:10], d)
+                catfilename = 'catalog_global_Mgr%s_%s-%s_%s_subset.pdf' % \
+                              (catalogconf.min_mag, _tmin[0:10], _tmax[0:10], d)
+                fn = os.path.join(data_dir, 'results/catalog', catfilename)
 
                 gmtplot_catalog_azimuthal(subset_catalog, mid_point, 
                                                catalogconf.dist, fn, catalogconf.wedges_width)
@@ -442,16 +456,13 @@ def main():
                         new_subset_catalog.append(ev)
                 subset_catalog = new_subset_catalog
 
-
-
-
             ''' 2.1 Calculate arrival times for all event/station pairs '''
             # Method a) using cake
             arrT_array = None
             arrT_R_array = None
             if arrTconf.calc_first_arr_t is True:
                 data_dir = gensettings.work_dir
-                os.makedirs(data_dir+'ttt', exist_ok=True)            
+                os.makedirs(os.path.join(data_dir, 'ttt'), exist_ok=True)
                 dist_array_sub = num.empty((len(subset_catalog), len(ns)))
 
                 for i_ev, ev in enumerate(subset_catalog):
@@ -466,24 +477,24 @@ def main():
 
                 for i_ev, ev in enumerate(subset_catalog):
                     ds = depths[i_ev]
-                    print(' calculating arr times for:', util.time_to_str(ev.time))
+                    logging.info(' calculating arr times for: %s' % (util.time_to_str(ev.time)))
 
                     for i_st in range(len(ns)):
                         dist = dist_array_sub[i_ev, i_st]
                         arrivals = vmodel.arrivals(distances=[dist*cake.m2d],
-                                                  phases=phases,
-                                                  zstart=ds)
+                                                   phases=phases,
+                                                   zstart=ds)
 
                         min_t = min(arrivals, key=lambda x: x.t).t
 
                         arrT_array[i_ev, i_st] = ev.time + min_t
 
-                num.save('%sttt/ArrivalTimes_%s' % (data_dir, d), arrT_array)
+                num.save(os.path.join(data_dir, 'ttt', 'ArrivalTimes_%s' % (d)), arrT_array)
 
             if arrTconf.calc_est_R is True:
-                print('computing R arrival times')
+                logging.info('computing R arrival times')
                 data_dir = gensettings.work_dir
-                os.makedirs(data_dir+'ttt', exist_ok=True)            
+                os.makedirs(os.path.join(data_dir, 'ttt'), exist_ok=True)
                 dist_array_sub = num.empty((len(subset_catalog), len(ns)))
 
                 for i_ev, ev in enumerate(subset_catalog):
@@ -503,7 +514,7 @@ def main():
                         #print('new t', ev.time + dist/4000.)
                         arrT_R_array[i_ev, i_st] = ev.time + dist/(arrTconf.v_rayleigh*1000.)
 
-                num.save('%sttt/ArrivalTimes_estR_%s' % (data_dir, d), arrT_R_array)
+                num.save(os.path.join(data_dir, 'ttt', 'ArrivalTimes_estR_%s' % (d)), arrT_R_array)
 
             # Method b) interpolating from fomosto travel time tables
             '''
@@ -558,15 +569,14 @@ def main():
                                              format='%Y-%m-%d %H:%M:%S.OPTFRAC')
                     ev_t_str = ev_t_str.replace(' ', '_')
                     ev_dir = ev_t_str + '/'
-                    dir_make = data_dir + ev_dir
+                    dir_make = os.path.join(data_dir, ev_dir)
                     os.makedirs(dir_make, exist_ok=True)
 
                     for ns_now in ns:
-                        mseed_fn_st = data_dir + ev_dir + ns_now[0] + '_' +\
-                                   ns_now[1] + '_' +\
-                                   ev_t_str
+                        mseed_fn_st = os.path.join(dir_make, '%s_%s_%s' %
+                                                   (ns_now[0], ns_now[1], ev_t_str))
 
-                        if glob.glob(mseed_fn_st+'*'):
+                        if glob.glob(mseed_fn_st + '*'):
                             continue
                         #else:
                         #    print(glob.glob(mseed_fn_st+'*'))
@@ -574,7 +584,7 @@ def main():
                         selection = [(ns_now[0], ns_now[1], '*',
                                       metaDataconf.channels_download,
                                       t_start, t_end)]
-                        print(selection)
+                        logging.info(selection)
 
                         for site in sites:
                             mseed_fn = mseed_fn_st + site + 'tr.mseed'
@@ -596,13 +606,13 @@ def main():
                                     wffile.write(request_waveform.read())
 
                             except fdsn.EmptyResult:
-                                print(ns_now, 'no data', site)
+                                logging.warning('%s no data %s' % (ns_now, site))
 
                             except:
-                                print('exception unknown', ns_now)
+                                logging.error('exception unknown %s' % ns_now)
 
                             else:
-                                print(ns_now, 'data downloaded', site)
+                                logging.info('%s data downloaded %s' % (ns_now, site))
                                 break
                     if not os.listdir(dir_make):
                         os.rmdir(dir_make)
@@ -625,9 +635,12 @@ def main():
             for site in sites:
                 # This sometimes does not work properly, why? Further testing?...
                 print(site)
-                #try:
-                request_response = fdsn.station(
-                        site=site, selection=selection, level='response')
+                try:
+                    request_response = fdsn.station(
+                            site=site, selection=selection, level='response')
+                except EmptyResult:
+                    print('no metadata at all', site, selection[1])
+                    continue
                 request_response.dump_xml(filename=meta_fn + '_' +
                                               str(site) + '.xml')
                 #except:
@@ -636,7 +649,7 @@ def main():
 
         ''' 4. Data preparation: restitution of data '''
         if RestDownconf.rest_data is True:
-            print('Starting restitution of data.')
+            logging.info('Starting restitution of data.')
             responses = []
 
             if metaDataconf.local_metadata != []:
@@ -645,21 +658,21 @@ def main():
             
             if metaDataconf.use_downmeta is True:
                 for site in sites:
-                    stations_fn = data_dir + 'Resp_all_' + str(site) + '.xml'
+                    stations_fn = os.path.join(data_dir, 'Resp_all_' + str(site) + '.xml')
                     responses.append(stationxml.load_xml(filename=stations_fn))
 
             i_resp = len(responses)
-            print(i_resp)
+            logging.info(i_resp)
 
             if metaDataconf.local_data and not metaDataconf.sds_structure:
-                print('Accessing local data.')
+                logging.info('Accessing local data.')
                 p_local = pile.make_pile(paths=metaDataconf.local_data,
                                          show_progress=True)
 
             for key, subset_catalog in subsets_events.items(): 
 
                 for ev in subset_catalog:
-                    print(util.time_to_str(ev.time))
+                    logging.info(util.time_to_str(ev.time))
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
 
                     tmin = ev.time+metaDataconf.dt_start*3600
@@ -669,9 +682,9 @@ def main():
                     #response = stationxml.load_xml(filename=stations_fn)
                     #print(data_dir+ev_t_str)
                     if metaDataconf.local_waveforms_only is False:
-                        p = pile.make_pile(paths=data_dir+ev_t_str, show_progress=True)
+                        p = pile.make_pile(paths=os.path.join(data_dir, ev_t_str), show_progress=True)
                     
-                    dir_make = data_dir + 'rest/' + ev_t_str
+                    dir_make = os.path.join(data_dir, 'rest', ev_t_str)
                     os.makedirs(dir_make, exist_ok=True)
                     transf_taper = 1/min(RestDownconf.freqlim)
 
@@ -696,14 +709,10 @@ def main():
                                 jul_day = util.julian_day_of_year(ev.time)
                                 local_data_dirs = metaDataconf.local_data
                                 for i_ldd, ldd in enumerate(local_data_dirs):
-                                    path_str = '%s%s/%s/%s' % (ldd, year, st.network, st.station)                                  
+                                    path_str = os.path.join(ldd, year, st.network, st.station)
                                     p = pile.make_pile(paths=path_str, regex='.%s' % jul_day, show_progress=True)
                                     trs.extend(p.all(tmin=tmin, tmax=tmax,
                                                      trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2]))
-                                    #if jul_day == 117 and st.station == 'A111A':
-                                    #    print('---------------------')
-                                    #    print(year, jul_day, path_str)
-                                    #    trace.snuffle(trs)                                    
                             # trace.snuffle(trs)
 
                         if trs:
@@ -799,23 +808,28 @@ def main():
                                                 transfer_function=polezero_resp,
                                                 invert=True)
 
-                                            rest_fn = dir_make + '/' + str(tr.nslc_id[0]) + '_' +\
-                                                      str(tr.nslc_id[1])\
-                                                      + '_' + str(tr.nslc_id[2]) + '_' +\
-                                                      '_' + str(tr.nslc_id[3]) + '_' +\
-                                                      ev_t_str + 'rest2.mseed'
+                                            fname = '%s_%s_%s__%s_%srest2.mseed' \
+                                                    % (tr.nslc_id[0], tr.nslc_id[1],
+                                                       tr.nslc_id[2], tr.nslc_id[3],
+                                                       ev_t_str)
+                                            rest_fn = os.path.join(dir_make, fname)
+                                            # rest_fn = dir_make + '/' + str(tr.nslc_id[0]) + '_' + \
+                                            #                     str(tr.nslc_id[1])\
+                                            #           + '_' + str(tr.nslc_id[2]) + '_' +\
+                                            #           '_' + str(tr.nslc_id[3]) + '_' +\
+                                            #           ev_t_str + 'rest2.mseed'
                                             io.save(restituted, rest_fn)
 
                                         except stationxml.NoResponseInformation:
                                             cnt_resp += 1
                                             if cnt_resp == i_resp:
-                                                print('no resp found:', tr.nslc_id)
+                                                logging.warning('no resp found:', tr.nslc_id)
 
                                         except trace.TraceTooShort:
-                                            print('trace too short', tr.nslc_id)
+                                            logging.error('trace too short', tr.nslc_id)
 
                                         except ValueError:
-                                            print('downsampling does not work', tr.nslc_id)
+                                            logging.error('downsampling does not work', tr.nslc_id)
 
                                         else:
                                             break
@@ -844,23 +858,28 @@ def main():
                                                     transfer_function=polezero_resp,
                                                     invert=True)
 
-                                                rest_fn = dir_make + '/' + str(tr.nslc_id[0]) + '_' +\
-                                                          str(tr.nslc_id[1])\
-                                                          + '_' + str(tr.nslc_id[2]) + '_' +\
-                                                          '_' + str(tr.nslc_id[3]) + '_' +\
-                                                          ev_t_str + 'rest2.mseed'
+                                                fname = '%s_%s_%s__%s_%srest2.mseed' % \
+                                                        (tr.nslc_id[0], tr.nslc_id[1],
+                                                         tr.nslc_id[2], tr.nslc_id[3],
+                                                         ev_t_str)
+                                                rest_fn = os.path.join(dir_make, fname)
+                                                # rest_fn = dir_make + '/' + str(tr.nslc_id[0]) + '_' +\
+                                                #           str(tr.nslc_id[1])\
+                                                #           + '_' + str(tr.nslc_id[2]) + '_' +\
+                                                #           '_' + str(tr.nslc_id[3]) + '_' +\
+                                                #           ev_t_str + 'rest2.mseed'
                                                 io.save(restituted, rest_fn)
 
                                             except stationxml.NoResponseInformation:
                                                 cnt_resp += 1
                                                 if cnt_resp == i_resp:
-                                                    print('no resp found:', tr.nslc_id)
+                                                    logging.error('no resp found: %s' % tr.nslc_id)
 
                                             except trace.TraceTooShort:
-                                                print('trace too short', tr.nslc_id)
+                                                logging.error('trace too short: %s' % tr.nslc_id)
 
                                             except ValueError:
-                                                print('downsampling does not work', tr.nslc_id)
+                                                logging.error('downsampling does not work: %s' % tr.nslc_id)
 
                                             else:
                                                 break
@@ -869,16 +888,20 @@ def main():
 
         ''' 5. Rotation NE --> RT '''
         if RestDownconf.rotate_data is True:
-            print('Starting downsampling and rotation')
+            logging.info('Starting downsampling and rotation')
 
             def save_rot_down_tr(tr, dir_rot, ev_t_str):
-                rot_fn = dir_rot + '/' + str(tr.nslc_id[0]) + '_' +\
-                         str(tr.nslc_id[1])\
-                         + '_' + str(tr.nslc_id[2]) + '_' +\
-                         '_' + str(tr.nslc_id[3]) + '_' +\
-                         ev_t_str + 'rrd2.mseed'
+                fname = '%s_%s_%s__%s_%srrd2.mseed' % \
+                        (tr.nslc_id[0], tr.nslc_id[1],
+                         tr.nslc_id[2], tr.nslc_id[3],
+                         ev_t_str)
+                rot_fn = os.path.join(dir_rot, fname)
+                # rot_fn = dir_rot + '/' + str(tr.nslc_id[0]) + '_' +\
+                #          str(tr.nslc_id[1])\
+                #          + '_' + str(tr.nslc_id[2]) + '_' +\
+                #          '_' + str(tr.nslc_id[3]) + '_' +\
+                #          ev_t_str + 'rrd2.mseed'
                 io.save(tr, rot_fn)
-
 
             def downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, deltat_down):
 
@@ -964,13 +987,13 @@ def main():
                                                         save_rot_down_tr(tr1, dir_rot, ev_t_str)
 
                                                     except trace.NoData:
-                                                        print('N/2 comp no data in twd', nsl)
+                                                        logging.error('N/2 comp no data in twd %s' % nsl)
                                                         tr1 = None
                                                     except ValueError:
                                                         tr1 = None
-                                                        print('N/2 downsampling not successfull')
+                                                        logging.error('N/2 downsampling not successfull')
                                                     except util.UnavailableDecimation:
-                                                        print('unavailable decimation ', tr1.station)
+                                                        logging.error('unavailable decimation %s' % tr1.station)
                                                         tr1 = None
 
                                         if tr.channel.endswith('E') or\
@@ -989,13 +1012,13 @@ def main():
                                                         save_rot_down_tr(tr2, dir_rot, ev_t_str)
 
                                                     except trace.NoData:
-                                                        print('E/3 comp no data in twd', nsl)
+                                                        logging.error('E/3 comp no data in twd %s' % nsl)
                                                         tr2 = None
                                                     except ValueError:
                                                         tr2 = None
-                                                        print('E/3 downsampling not successfull')
+                                                        logging.error('E/3 downsampling not successful')
                                                     except util.UnavailableDecimation:
-                                                        print('unavailable decimation ', tr2.station)
+                                                        logging.error('unavailable decimation %s' % tr2.station)
                                                         tr2 = None
 
                                         if tr.channel.endswith('Z')\
@@ -1010,13 +1033,13 @@ def main():
                                                 save_rot_down_tr(trZ, dir_rot, ev_t_str)
 
                                             except trace.NoData:
-                                                print('E/3 comp no data in twd', nsl)
+                                                logging.error('E/3 comp no data in twd %s' % nsl)
                                             except ValueError:
                                                 trZ = None
-                                                print('Z downsampling not successfull')
+                                                logging.error('Z downsampling not successful')
                                             except util.UnavailableDecimation:
-                                                print('unavailable decimation ', trZ.station)
-                                                trZ = None                                        
+                                                logging.error('unavailable decimation %s' % trZ.station)
+                                                trZ = None
 
                                 if az1 is not None and tr1 is not None\
                                   and tr2 is not None:
@@ -1049,14 +1072,12 @@ def main():
                                      or str(tr2.channel).endswith('1') is True and naming == '1,2,3':
                                         tr2_ch = tr2.channel
 
-
                                     if tr1_ch != '0' and tr2_ch != '0':
                                         rots = trace.rotate(traces=[tr1,tr2], azimuth=az_r, 
                                                             in_channels=[tr1_ch, tr2_ch],
                                                             out_channels=['R', 'T'])
                                         for tr in rots:
                                             save_rot_down_tr(tr, dir_rot, ev_t_str)
-
 
             st_xml = []
             if metaDataconf.local_metadata != []:
@@ -1065,7 +1086,7 @@ def main():
             
             if metaDataconf.use_downmeta is True:            
                 for site in sites:
-                    stations_fn = data_dir + 'Resp_all_' + str(site) + '.xml'
+                    stations_fn = os.path.join(data_dir, 'Resp_all_' + str(site) + '.xml')
                     st_xml.append(stationxml.load_xml(filename=stations_fn))
 
             i_st_xml = len(st_xml)
@@ -1075,35 +1096,34 @@ def main():
                     gc.collect()
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
                     # print(ev_t_str)
-                    os.makedirs(data_dir+'rrd/', exist_ok=True)
-                    dir_rot = data_dir + 'rrd/' + ev_t_str
-                    dir_rest = data_dir + 'rest/' + ev_t_str
+                    os.makedirs(os.path.join(data_dir, 'rrd'), exist_ok=True)
+                    dir_rot = os.path.join(data_dir, 'rrd', ev_t_str)
+                    dir_rest = os.path.join(data_dir, 'rest', ev_t_str)
                     downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, RestDownconf.deltat_down)
-                    print('saved ev ', util.time_to_str(ev.time))
+                    logging.info('saved ev ', util.time_to_str(ev.time))
 
-                    if not os.listdir(data_dir+'rrd/'):
-                        os.rmdir(data_dir+'rrd/')
-
+                    if not os.listdir(os.path.join(data_dir, 'rrd')):
+                        os.rmdir(os.path.join(data_dir, 'rrd'))
 
         ''' 6. Synthetic data '''
         if synthsconf.make_syn_data is True:
-            print('Starting to generate synthetic data')
+            logging.info('Starting to generate synthetic data')
 
             freqlim = RestDownconf.freqlim
             transf_taper = 1/min(freqlim)
             store_id = synthsconf.store_id
             engine = gf.LocalEngine(store_superdirs=
                                    [synthsconf.engine_path])
-            os.makedirs(data_dir+'synthetics/', exist_ok=True)
+            os.makedirs(os.path.join(data_dir, 'synthetics'), exist_ok=True)
             loc = '0'
             for key, subset_catalog in subsets_events.items(): 
 
                 for ev in subset_catalog:
 
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
-                    print(ev_t_str)
+                    logging.info(ev_t_str)
 
-                    dir_syn_ev = data_dir + 'synthetics/' + ev_t_str
+                    dir_syn_ev = os.path.join(data_dir, 'synthetics', ev_t_str)
                     os.makedirs(dir_syn_ev, exist_ok=True)
                     # ev.duration = ev.
                     # ev.duration
@@ -1111,7 +1131,7 @@ def main():
                     # source.stf = gf.BoxcarSTF(duration=)
                     # scaling mit magnitude
                     if ev.duration < 1:
-                        print('warning ev.duratiom')
+                        logging.warning('warning ev.duration: %s' % ev.duration)
                     #ev.duration = None
                     ev.time = ev.time + ev.duration/2
                     source = gf.MTSource.from_pyrocko_event(ev)
@@ -1148,7 +1168,7 @@ def main():
                                 response = engine.process(source, targets)
                                 trs_syn = response.pyrocko_traces()
 
-                            except:
+                            except Exception:
                                 continue
 
                             else:
