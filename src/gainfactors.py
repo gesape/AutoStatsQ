@@ -4,7 +4,7 @@ import os
 import logging
 import gc
 import numpy as num
-from collections import defaultdict
+# from collections import defaultdict
 from pyrocko import cake, util, trace
 from pyrocko.gui import marker as pm
 from pyrocko.orthodrome import distance_accurate50m
@@ -25,7 +25,6 @@ class Gains(Object):
     ref_stats = String.T(optional=True)
 
 
-
 def guess_nsl_template(code):
     if len(code) == 1 or isinstance(code, str):
         return '*.%s.*.*' % (code)
@@ -36,10 +35,13 @@ def guess_nsl_template(code):
 
 
 class Section():
-    ''' Related to one event.
+    """ Related to one event.
     All traces scale relative to average median abs
-    max, to one reference station or to 1.0'''
+    max, to one reference station or to 1.0"""
     def __init__(self, event, stations):
+        # Set Logger name
+        self.logs = logging.getLogger('Section')
+
         self.stations = stations
         self.event = event
         self.reference_scale = None
@@ -49,8 +51,9 @@ class Section():
         self.max_tr_syn = {}
 
     def finish(self, method, fband, taper, ev_counter):
-        print('METHOD', method)
-        print(len(method))
+        self.logs.info('METHOD %s' % method)
+        self.logs.debug(len(method))
+
         if len(method) == 2:
             reference_nsl = method[1][1]
             reference_nslc = list(filter(
@@ -60,8 +63,8 @@ class Section():
             self.____reference_nslc = reference_nslc
 
             if not len(reference_nslc) == 1:
-                logging.info('no reference trace available. ' +
-                             'remains unfinished: %s' % self.event)
+                self.logs.info('no reference trace available. ' +
+                               'remains unfinished: %s' % self.event)
                 self.finished = False
             else:
                 self.reference_scale = self.max_tr[reference_nslc[0]]
@@ -81,7 +84,7 @@ class Section():
                     #print(nslc_id[0:2])
                     self.relative_scalings[nslc_id] = maxA / self.max_tr_syn[nslc_id[0:2]]
                 except:
-                    print('syn data missing:', nslc_id[0:2])
+                    self.logs.warning('syn data missing: %s' % nslc_id[0:2])
             #print(self.relative_scalings)
             self.finished = True
 
@@ -111,7 +114,7 @@ class AutoGain():
     def __init__(self, data_pile, stations, events, arrT, snr_thresh,
                  component='Z', gain_rel_to='scale_one',
                  syn_data_pile=None):
-        '''
+        """
        :param phase_selection: follows the logic of
                                fomosto's Store phase definitions
        :param gain_rel_to: gain relative to options:
@@ -129,7 +132,10 @@ class AutoGain():
 
        :param data_pile: Pyrocko data pile 
 
-        '''
+        """
+        # Set Logger name
+        self.logs = logging.getLogger('AutoGain')
+
         self.method = gain_rel_to
         self.snr_thresh = snr_thresh
         self.component = component
@@ -148,13 +154,12 @@ class AutoGain():
         self.arrT = arrT
         self.syn_data_pile = syn_data_pile
 
-
     def process(self, fband, taper, twd, debug):
         no_events = len(self.events)
 
         for i_ev, event in enumerate(self.events):
             tr_nslc_ids = []
-            print('Processing event %s of %s' % (i_ev, no_events))
+            self.logs.info('Processing event %s of %s' % (i_ev, no_events))
             section = Section(event, self.stations)
             skipped = 0
             unskipped = 0
@@ -163,7 +168,7 @@ class AutoGain():
                 arrival = self.arrT[i_ev, i_s]
                 if num.isnan(arrival):
                     skipped += 1
-                    print('skipped', s.network, s.station, event.time)
+                    self.logs.warning('skipped %s.%s %s' % (s.network, s.station, event.time))
                     continue
                 else:
                     unskipped += 1
@@ -201,9 +206,9 @@ class AutoGain():
                             tr.taper(taper, chop=False)
                             tr.lowpass(fband['order'], fband['corner_lp'])
                             
-                            if debug == True:
-                                print('SNR', snr)
-                                print('arrival time', util.time_to_str(arrival))
+                            if debug is True:
+                                self.logs.debug('SNR %s' % snr)
+                                self.logs.debug('arrival time %s' % util.time_to_str(arrival))
                                 trace.snuffle(tr, markers=[pm.Marker(nslc_ids=[tr.nslc_id], tmin=arrival, tmax=arrival+3)])
 
                             if num.max(num.abs(tr.get_ydata())) != 0:
@@ -216,7 +221,7 @@ class AutoGain():
                             tt = t#[0]
                             if len(tt.ydata) > 0 and num.max(num.abs(tt.get_ydata())) != 0:
                                 dtype = type(tt.ydata[0])
-                                #print(tr.ydata, type(tr.ydata))
+                                # print(tr.ydata, type(tr.ydata))
                                 tt.ydata -= dtype(tt.get_ydata().mean())
                                 st_s = num.argmax(num.abs(tt.ydata))-10
                                 snr = num.mean([y*y for y in tt.ydata[st_s:st_s+60]])/\
@@ -229,9 +234,9 @@ class AutoGain():
                                 tt.taper(taper, chop=False)
                                 tt.lowpass(fband['order'], fband['corner_lp'])
 
-                                if debug == True:
-                                    print('SNR', snr)
-                                    print('arrival time', util.time_to_str(arrival))
+                                if debug is True:
+                                    self.logs.debug('SNR %s' % snr)
+                                    self.logs.debug('arrival time %s' % util.time_to_str(arrival))
                                     trace.snuffle(tt, markers=[pm.Marker(nslc_ids=[tt.nslc_id], tmin=arrival, tmax=arrival+3)])
 
                                 if num.max(num.abs(tt.get_ydata())) != 0:
@@ -252,22 +257,22 @@ class AutoGain():
                                 tr.taper(taper, chop=False)
                                 tr.lowpass(fband['order'], fband['corner_lp'])
                                 
-                                if debug == True:
-                                    print('SNR', snr)
-                                    print('arrival time', util.time_to_str(arrival))
+                                if debug is True:
+                                    self.logs.debug('SNR %s' % snr)
+                                    self.logs.debug('arrival time %s' % util.time_to_str(arrival))
                                     trace.snuffle(tr, markers=[pm.Marker(nslc_ids=[tr.nslc_id], tmin=arrival, tmax=arrival+3)])
 
                                 if num.max(num.abs(tr.get_ydata())) != 0:
                                     section.max_tr_syn[tr.nslc_id[0:2]] = num.max(num.abs(tr.get_ydata()))
-                                    #tr_nslc_ids_syn.append(tr.nslc_id)                            
+                                    # tr_nslc_ids_syn.append(tr.nslc_id)
 
 
                         else:
                             for t in tr:
-                                tt = t#[0]
+                                tt = t #[0]
                                 if len(tt.ydata) > 0 and num.max(num.abs(tt.get_ydata())) != 0:
                                     dtype = type(tt.ydata[0])
-                                    #print(tr.ydata, type(tr.ydata))
+                                    # print(tr.ydata, type(tr.ydata))
                                     tt.ydata -= dtype(tt.get_ydata().mean())
                                     st_s = num.argmax(num.abs(tt.ydata))-10
                                     snr = num.mean([y*y for y in tt.ydata[st_s:st_s+60]])/\
@@ -280,9 +285,9 @@ class AutoGain():
                                     tt.taper(taper, chop=False)
                                     tt.lowpass(fband['order'], fband['corner_lp'])
 
-                                    if debug == True:
-                                        print('SNR', snr)
-                                        print('arrival time', util.time_to_str(arrival))
+                                    if debug is True:
+                                        self.logs.debug('SNR %s' % snr)
+                                        self.logs.debug('arrival time %s' % util.time_to_str(arrival))
                                         trace.snuffle(tt, markers=[pm.Marker(nslc_ids=[tt.nslc_id], tmin=arrival, tmax=arrival+3)])
 
                                     if num.max(num.abs(tt.get_ydata())) != 0:
@@ -295,7 +300,7 @@ class AutoGain():
                     #    print('no trace', s.network, s.station, tr, util.time_to_str(event.time))
                 #break
                 # print(i_s)
-            logging.debug('skipped %s/%s' % (skipped, unskipped))
+            self.logs.debug('skipped %s/%s' % (skipped, unskipped))
 
             section.finish(self.method, fband, taper, i_ev)
 
@@ -307,7 +312,6 @@ class AutoGain():
             if self.method == 'median_all_avail' and i_ev == no_events-1:
                 self.handle_median_stats_option()
 
-
     def congregate(self):
         indx = dict(zip(self.all_nslc_ids, num.arange(len(self.all_nslc_ids))))
         self.results = num.empty((len(self.sections), len(self.all_nslc_ids)))
@@ -315,7 +319,6 @@ class AutoGain():
         for i_sec, section in enumerate(self.sections):
             for nslc_id, scaling in section.iter_scalings():
                 self.results[i_sec, indx[nslc_id]] = scaling
-
 
     def handle_median_stats_option(self):
         indx = dict(zip(self.all_nslc_ids, num.arange(len(self.all_nslc_ids))))
@@ -385,7 +388,6 @@ class AutoGain():
                                   num.nanmean(self.results, axis=0)))
         return self._mean
 
-
     @property
     def median(self):
         if self.results is None:
@@ -433,7 +435,6 @@ class AutoGain():
                                       self.all_nslc_ids),
                                       nev_used))    
         return self._n_ev
-           
 
     def save_mean(self, fn, directory):
         g = Gains()
@@ -466,8 +467,8 @@ class AutoGain():
         g.dump(filename=os.path.join(directory, fn))
 
     def save_single_events(self, fn, directory, plot=False):
-        ''' Save table with all gains (for all events + stations)
-        '''
+        """ Save table with all gains (for all events + stations)
+        """
         if not self.method[0] == 'reference_nsl_med' and not self.method == 'syn':
             indx = dict(zip(self.all_nslc_ids,
                             num.arange(len(self.all_nslc_ids))))
