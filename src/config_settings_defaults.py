@@ -1,3 +1,4 @@
+import os
 from .config import GeneralSettings, CatalogConfig, ArrTConfig,\
 MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
 GainfactorsConfig, PSDConfig, OrientConfig, AutoStatsQConfig,\
@@ -23,7 +24,7 @@ def generate_default_config():
                                 min_mag=6.5,
                                 max_mag=8.5,
                                 tmin_str='2000-01-01 00:00:00',
-                                tmax_str='2018-10-01 00:00:00',
+                                tmax_str='2019-10-01 00:00:00',
                                 # backazimuthal distribution
                                 wedges_width=15,  # deg
                                 # enter a midpoint of array for global event maps
@@ -56,7 +57,7 @@ def generate_default_config():
         channels_download='HH*',
         #local_metadata=[],
         use_downmeta=False,
-        token={'geofon': '/path/to/token.asc'},
+        token={'geofon': os.path.join(os.path.expanduser('~'), '.eidatoken')},
         sites=['geofon', 'orfeus', 'iris'],
         dt_start=0.1,
         dt_end=1.5)
