@@ -606,19 +606,19 @@ def main():
                                     wffile.write(request_waveform.read())
 
                             except fdsn.EmptyResult:
-                                logging.warning('%s no data %s' % (ns_now, site))
+                                logging.warning('%s no data from %s' % (ns_now, site))
 
                             except:
                                 logging.error('exception unknown %s' % ns_now)
 
                             else:
-                                logging.info('%s data downloaded %s' % (ns_now, site))
+                                logging.debug('%s data downloaded from %s' % (ns_now, site))
                                 break
                     if not os.listdir(dir_make):
                         os.rmdir(dir_make)
 
         if metaDataconf.download_metadata is True:
-            print('Downloading metadata')
+            logging.info('Downloading metadata')
 
             cat_tmin = min([ev.time for ev in subset_catalog for k, subset_catalog in subsets_events.items()])
             cat_tmax = max([ev.time for ev in subset_catalog for k, subset_catalog in subsets_events.items()])
@@ -630,19 +630,18 @@ def main():
                                   metaDataconf.channels_download,
                                   cat_tmin, cat_tmax))
 
-            meta_fn = data_dir + 'Resp_all'
+            meta_fn = os.path.join(data_dir, 'Resp_all')
 
             for site in sites:
                 # This sometimes does not work properly, why? Further testing?...
-                print(site)
+                logging.info(site)
                 try:
                     request_response = fdsn.station(
                             site=site, selection=selection, level='response')
                 except EmptyResult:
-                    print('no metadata at all', site, selection[1])
+                    logging.warning('no metadata for %s from %s' % (selection[1], site))
                     continue
-                request_response.dump_xml(filename=meta_fn + '_' +
-                                              str(site) + '.xml')
+                request_response.dump_xml(filename='%s_%s.xml' % (meta_fn, site))
                 #except:
                 #    print('no metadata at all', site, selection[1])
 
