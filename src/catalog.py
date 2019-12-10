@@ -4,7 +4,7 @@ from pyrocko import model, util, orthodrome
 def subset_events_dist_cat(catalog, mag_min, mag_max,
                        tmin, tmax, st_lat, st_lon,
                        dist_min=None, dist_max=None):
-    '''
+    """
     Extract a subset of events from event catalog
 
     :param catalog: Event catalog in pyrocko format
@@ -20,7 +20,7 @@ def subset_events_dist_cat(catalog, mag_min, mag_max,
     :param depth_max
 
     :returns: list of events
-    '''
+    """
 
     use_events = []
     events = model.load_events(catalog)
@@ -50,7 +50,7 @@ def subset_events_dist_evlist(ev_list, mag_min, mag_max,
                        tmin, tmax, st_lat, st_lon,
                        depth_min, depth_max,
                        dist_min=None, dist_max=None):
-    '''
+    """
     Extract a subset of events from event catalog
 
     :param ev_list: list of pyrocko events
@@ -66,7 +66,7 @@ def subset_events_dist_evlist(ev_list, mag_min, mag_max,
     :param depth_max
 
     :returns: list of events
-    '''
+    """
 
     use_events = []
     for ev in ev_list:
