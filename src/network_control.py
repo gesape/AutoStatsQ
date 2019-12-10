@@ -2,20 +2,20 @@ import os, sys, glob
 import numpy as num
 import datetime
 import logging
-import linecache
+# import linecache
 import gc
 import math
 import argparse
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from pyrocko import util, model, orthodrome, pile, trace, io
 from pyrocko import cake, gf
 from pyrocko.client import catalog, fdsn
 from pyrocko.client.fdsn import EmptyResult
 from pyrocko.io import stationxml
-from pyrocko.fdsn import station as fs
+# from pyrocko.fdsn import station as fs
 
-#from .gainfactors import *
+# from .gainfactors import *
 from . import gainfactors as gainf 
 from .catalog import subset_events_dist_cat, subset_events_dist_evlist 
 from .catalogplots import *
@@ -110,7 +110,7 @@ def main():
         config = generate_default_config()
 
         config.dump(filename=fn_config)
-        logs.info('created a fresh config file "%s"' % fn_config)
+        logs.info('created a fresh config file %s' % fn_config)
 
     # run AutoStatsQ
     if args.run:
@@ -239,7 +239,7 @@ def main():
             for ev_name in event_names:
                 ev_catalog.append(geofon.get_event(ev_name))
 
-            logs.info('%s events found.' % (str(len(ev_catalog))))
+            # logs.info('%d events found.' % (len(ev_catalog)))
             catfilename = os.path.join(data_dir, 'results/catalog', 'catalog_Mgr%s.txt' % (catalogconf.min_mag))
             model.dump_events(ev_catalog, catfilename)
             logs.info('length catalog: %d' % len(ev_catalog))
@@ -351,7 +351,6 @@ def main():
                 if catalogconf.plot_dist_vs_magn is True:
                     plot_distmagn(dist_array, ev_cat, data_dir, d)
 
-
                 # find 'best' subset of catalog events
                 subset_catalog = []
 
@@ -361,8 +360,8 @@ def main():
 
                     if len(bin_ev_ind) == 0:
                         logs.warning('no event for %d - %d deg' % \
-                                        (bin_nr*catalogconf.wedges_width,
-                                         (bin_nr+1)*catalogconf.wedges_width))
+                                     (bin_nr*catalogconf.wedges_width,
+                                     (bin_nr+1)*catalogconf.wedges_width))
 
                     if len(bin_ev_ind) == 1:
                         subset_catalog.append(ev_cat[int(bin_ev_ind[0])])
@@ -441,7 +440,7 @@ def main():
                             '''
               
                 logs.info('Subset of %d events was generated for %s.' % \
-                             (len(subset_catalog), d))
+                          (len(subset_catalog), d))
                 
                 # sort subset catalog by time:
                 subset_catalog.sort(key=lambda x: x.time)
@@ -503,7 +502,7 @@ def main():
 
                 for i_ev, ev in enumerate(subset_catalog):
                     ds = depths[i_ev]
-                    logs.info(' calculating arr times for: %s' % (util.time_to_str(ev.time)))
+                    logs.info('calculating arr times for: %s' % (util.time_to_str(ev.time)))
 
                     for i_st in range(len(ns)):
                         dist = dist_array_sub[i_ev, i_st]
@@ -1140,7 +1139,7 @@ def main():
                     dir_rot = os.path.join(data_dir, 'rrd', ev_t_str)
                     dir_rest = os.path.join(data_dir, 'rest', ev_t_str)
                     downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, RestDownconf.deltat_down)
-                    logs.info('saved ev ', util.time_to_str(ev.time))
+                    logs.info('saved ev %s' % util.time_to_str(ev.time))
 
                     if not os.listdir(os.path.join(data_dir, 'rrd')):
                         os.rmdir(os.path.join(data_dir, 'rrd'))
@@ -1151,7 +1150,7 @@ def main():
             logs = logging.getLogger('Synthetics')
             logs.setLevel(verbo)
 
-            logs.info('Starting to generate synthetic data')
+            logs.info('Generating synthetic data')
 
             freqlim = RestDownconf.freqlim
             transf_taper = 1/min(freqlim)
@@ -1238,7 +1237,7 @@ def main():
             logs = logging.getLogger('Gain factors')
             logs.setLevel(verbo)
 
-            logs.info('Starting evaluation of gain factors.')
+            logs.info('Evaluation of gain factors.')
             dir_gains = os.path.join(data_dir, 'results', 'gains')
             os.makedirs(dir_gains, exist_ok=True)
             twd = (gainfconf.wdw_st_arr, gainfconf.wdw_sp_arr)
@@ -1404,7 +1403,7 @@ def main():
             logs = logging.getLogger('Orientation')
             logs.setLevel(verbo)
 
-            logs.info('starting rayleigh wave orientation section')
+            logs.info('Rayleigh wave orientation section')
             dir_ro = os.path.join(data_dir, 'results', 'orient')
             os.makedirs(dir_ro, exist_ok=True)
             datapath = os.path.join(data_dir, 'rrd')
