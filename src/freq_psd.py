@@ -1,5 +1,7 @@
 import numpy as num
 import math
+import os
+import logging
 
 import matplotlib.pyplot as plt
 from pyrocko import util, pile, trace
@@ -12,7 +14,7 @@ deg = 1
 def flat_by_neighbor_comp(mean_rat, cha, st, f_syn_keep,
                           dir_f, n, fac_norm, f_ign,
                           plot_psd_neighbcomp):
-    '''
+    """
     input: mean psd ratio
     ...currently not used!...
     ...testing different methods to get flat f range...
@@ -20,7 +22,7 @@ def flat_by_neighbor_comp(mean_rat, cha, st, f_syn_keep,
     calc difference of each point to next point (or to prev and next?)
     plot that!
     --> then get flat range (look at data, maybe obvious, maybe line fit?)
-    '''
+    """
 
     diff_next = [abs(mean_rat[i+1] - mean_rat[i])
                  for i in range(len(mean_rat[0:-1]))]
@@ -112,15 +114,14 @@ def flat_by_neighbor_comp(mean_rat, cha, st, f_syn_keep,
 
         ax[0].set_title(str(st.station)+cha)
         plt.tight_layout()
-        fig.savefig('%s/%s_%s_%s_flattests.png'
-                    % (dir_f, st.network, st.station, cha))
+        fig.savefig(os.path.join(dir_f, '%s_%s_%s_flattests.png' % (st.network, st.station, cha)))
         plt.close(fig)
 
     return flat_by_sumdiff, flat_by_sumdiff_y
 
 
 def calc_reg_prepplot(npoints, i, f, r, deg=1, plot=False):
-    '''
+    """
     Calculate regression of degree deg over n points and
     return data vectors for plotting.
 
@@ -129,7 +130,7 @@ def calc_reg_prepplot(npoints, i, f, r, deg=1, plot=False):
     :param deg: polynomial degree, default is 1
     :param f: frequencies (1-D np array or list)
     :param r: amplitude data (1-D np array or list)
-    '''
+    """
     n = npoints
     startp = int(i-n/2)
     stopp = int(i+n/2)
@@ -149,12 +150,12 @@ def calc_reg_prepplot(npoints, i, f, r, deg=1, plot=False):
 
 
 def get_flat_freq_ranges(r, f, n, fac_norm, f_ign, flat_areas):
-    '''
+    """
     get flat frequency ranges from indexes provided in flat_areas list
     called by get_flat_freqs
 
     for single nslc spec ratio
-    '''
+    """
     _flat_f_ranges = []
     flat_ranges_all = []
     y_flat_f_ranges = []
@@ -197,7 +198,7 @@ def get_flat_freq_ranges(r, f, n, fac_norm, f_ign, flat_areas):
 
 def get_flat_freqs(n, freqs, rat_a, fac_norm, f_ign,
                    deg=1, plot_flat_range=False):
-    '''
+    """
     get frequency ranges at which the ratio of syn and obs spect are flat
     for single nslc spec ratio
 
@@ -207,7 +208,7 @@ def get_flat_freqs(n, freqs, rat_a, fac_norm, f_ign,
     :param fac_norm: normalization factor for slope
     :param deg: polynomial degree, default is 1
 
-    '''
+    """
 
     r = rat_a
     f = freqs
@@ -251,20 +252,22 @@ def get_flat_freqs(n, freqs, rat_a, fac_norm, f_ign,
 
 
 class dict_stats(Object):
-    '''
+    """
     Dict for all stations + their flat freq ranges
-    '''
+    """
     FlatFreqRanges = Dict.T(String.T(), List.T(Tuple.T(2, Float.T())))
     MeanMedianR_FlatRanges = Dict.T(String.T(), List.T(Float.T()))
 
 
 def dump_flat_ranges(flat_f_ranges_stlist, freq_rat_list_y,
                      nslc_list, dir_f, fname_ext, only_first=True):
-    '''
+    """
     writing flat areas of all stations to file
 
-    '''
-    print('start writing to file')
+    """
+    logs = logging.getLogger('dump_flat_ranges')
+    logs.info('start writing to file')
+
     f_r = []
     f_y = []
     if only_first is True:
@@ -283,20 +286,19 @@ def dump_flat_ranges(flat_f_ranges_stlist, freq_rat_list_y,
     flfr.regularize()
     flfr.validate()
 
-    flfr.dump(filename='%spsd_flat_ratio_%s.yaml'
-              % (dir_f, fname_ext))
+    flfr.dump(filename=os.path.join(dir_f, 'psd_flat_ratio_%s.yaml' % fname_ext))
 
 
 def const_psd_rat(mean_rat, cha, st, l, f_syn_keep,
                   n, fac_norm, f_ign,
                   dir_f=False, plot_flat_range=False):
-    '''
+    """
     Find frequency range of roughly constant relative gain factor
     (optimal is no needed gain factor) in mean psd ratio of syn and
     obs data.
 
     :param mean_rat: Mean of PSD ratios for current nslc over all events
-    '''
+    """
 
     net = st.network
     stat = st.station
@@ -332,8 +334,7 @@ def const_psd_rat(mean_rat, cha, st, l, f_syn_keep,
             ax4[1].yaxis.set_ticks([])
             ax4[1].set_xlabel('Frequency [Hz]')
 
-        fig4.savefig('%s/%s_%s_%s_%s_flatrange%s_%s.png'
-                     % (dir_f, net, stat, l, cha, str(n), str(fac_norm)))
+        fig4.savefig(os.path.join(dir_f, '%s_%s_%s_%s_flatrange%s_%s.png' % (net, stat, l, cha, n, fac_norm)))
 
         fig4.tight_layout()
         plt.close(fig4)
@@ -342,11 +343,11 @@ def const_psd_rat(mean_rat, cha, st, l, f_syn_keep,
 
 
 def plot_m_ratio(median_rat, f_syn_Z_nonan, nsl, l, dir_f, cha):
-    '''
+    """
     Plotting of mean ratio of syn and obs PSD over all events
     (for current channel).
 
-    '''
+    """
     fig3, ax3 = plt.subplots(nrows=1, ncols=1, figsize=(6, 5))
 
     if not median_rat == []:
@@ -361,8 +362,7 @@ def plot_m_ratio(median_rat, f_syn_Z_nonan, nsl, l, dir_f, cha):
 
         # ax3.set_yscale('log')
         fig3.tight_layout()
-        fig3.savefig('%s/%s_%s_%s_%s_mratio.png'
-                     % (dir_f, str(nsl[0]), str(nsl[1]), l, cha))
+        fig3.savefig(os.path.join(dir_f, '%s_%s_%s_%s_mratio.png' % (nsl[0], nsl[1], l, cha)))
         plt.close(fig3)
 
 
@@ -423,9 +423,9 @@ def plot_psdratio_from_dict(ratpsd_by_event, st, l, cha, catalog, dir_f):
             if i_ev == 0 or not fmax:
                 fmax = max(f_syn)
         except ValueError:
-            print('ValueError obs')
+            logging.error('ValueError obs')
         except KeyError:
-            print('no data key obs')
+            logging.error('no data key obs')
 
         ax[i_x, i_y].set_xlim(fmin, fmax)
         ax[i_x, i_y].set_ylim(0, 10)
@@ -436,13 +436,12 @@ def plot_psdratio_from_dict(ratpsd_by_event, st, l, cha, catalog, dir_f):
             ax[i_x, i_y+i+1].set_xlabel('Frequency [Hz]')
     try:
         plt.tight_layout()
-    except:
+    except Exception:
         pass
     try:
         #print('here')
-        fig.savefig('%s/%s_%s_%s_%s_ratio.png'
-                    % (dir_f, st.network, st.station, l, cha))
-    except:
+        fig.savefig(os.path.join(dir_f, '%s_%s_%s_%s_ratio.png' % (st.network, st.station, l, cha)))
+    except Exception:
         pass
     # plt.show()
     plt.close(fig)
@@ -492,18 +491,18 @@ def plot_psd_from_dict(obspsd_by_event, synpsd_by_event,
             if i_ev == 0 or not fmax:
                 fmax = max(f_obs_Z)
         except ValueError:
-            print('ValueError obs')
+            logging.error('ValueError obs')
         except KeyError:
-            print('no data key obs: %s' % (ev_time_str))
+            logging.error('no data key obs: %s' % ev_time_str)
         try:
             f_syn_Z, a_syn_Z = synpsd_by_event[ev_time_str]
             ax[i_x, i_y].plot(f_syn_Z[1:], a_syn_Z[1:], 'r')
             if i_ev == 0 or not fmax:
                 fmax = max(f_syn_Z)
         except ValueError:
-            print('ValueError syn')
+            logging.error('ValueError syn')
         except KeyError:
-            print('no data key syn: %s' % (ev_time_str))
+            logging.error('no data key syn: %s' % ev_time_str)
 
         ax[i_x, i_y].set_xlim(fmin, fmax)
         ax[i_x, i_y].set_ylim(a_min, a_max)
@@ -514,17 +513,16 @@ def plot_psd_from_dict(obspsd_by_event, synpsd_by_event,
             ax[i_x, i_y+i+1].set_xlabel('Frequency [Hz]')
 
     plt.tight_layout()
-    fig.savefig('%s/%s_%s_%s_%s.png'
-                % (dir_f, st.network, st.station, l, cha))
+    fig.savefig(os.path.join(dir_f, '%s_%s_%s_%s.png' % (st.network, st.station, l, cha)))
     plt.close(fig)
 
 
 def get_a_f(traces, cha):
-    '''
+    """
     Calculation of actual PSD (freqs and ampls).
 
     :returns: 1-D numpy arrays f and a with frequencies and amplitudes.
-    '''
+    """
 
     a_list = []
 
@@ -571,7 +569,7 @@ def calc_plot_psds(catalog, data_pile, syn_data_pile,
                    plot_psds, plot_ratio_extra,
                    plot_m_rat, plot_flat_ranges,
                    plot_neighb_ranges):
-    '''
+    """
     Next level function, called by ```prep_psd_fct``` to procede with current
     synthetic and observed datapiles.
 
@@ -580,7 +578,7 @@ def calc_plot_psds(catalog, data_pile, syn_data_pile,
 
     For parameters see ```prep_psd_fct```.
 
-    '''
+    """
 
     n_ev = len(catalog)
     ratio_npar = num.empty((1,))
@@ -658,7 +656,7 @@ def calc_plot_psds(catalog, data_pile, syn_data_pile,
                     cnt += 1
                     f_syn_keep = f_syn_Z
                 except ValueError:
-                    print('not same length')
+                    logging.error('not same length')
     #if plot_psds is True and plot_ratio_extra is True and f_syn_keep != 0:
     return obspsd_by_event, synpsd_by_event, ratpsd_by_event,\
                f_syn_keep, ratio_npar
@@ -680,7 +678,7 @@ def prep_psd_fct(i_st, st, l, subset_catalog, dir_f, arrT_array, arrT_R_array,
                  plot_psds=False, plot_ratio_extra=False,
                  plot_m_rat=False, plot_flat_ranges=False,
                  plot_neighb_ranges=False):
-    '''
+    """
     Preparing the PSD calculations and plotting, e.g. making data-piles
     and calling next function if both, synthetic and recorded data is
     in piles.
@@ -700,7 +698,7 @@ def prep_psd_fct(i_st, st, l, subset_catalog, dir_f, arrT_array, arrT_R_array,
                             ratio between synthetic and observed psd is
                             constant
     :returns nslc_list: nslc list for current station
-    '''
+    """
 
     st_name = st.station
     st_data_pile = pile.make_pile(datapath, regex='%s_%s_' % (st.network, st_name),
