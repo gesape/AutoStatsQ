@@ -1,6 +1,8 @@
 from pyrocko import pile, trace, util
 import numpy as num
 import math
+import os
+import logging
 import matplotlib.pyplot as plt
 import matplotlib
 from pyrocko.guts import Object, Dict, String, Float, Int
@@ -13,11 +15,11 @@ def ccs_allstats_one_event(i_ev, ev, stat_list, all_stations,
                            p_obs, p_syn,
                            out_dir, bp, arrT_array, cc_thresh,
                            debug_mode=False):
-    '''
+    """
     for one event: call cc_single_stat_single_event for each station,
     collect optimal time shifts
     return list with timeshift, fixed order of stations!
-    '''
+    """
 
     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
     #p_obs = pile.make_pile(datapath+ev_t_str, show_progress=False)
@@ -41,7 +43,7 @@ def ccs_allstats_one_event(i_ev, ev, stat_list, all_stations,
                 tmin = arrT_array[i_ev, ii_ast]-30
 
             elif len(i_ast) == 0:
-                print('station %s.%s not in all station list' % (n, s))
+                logging.warning('station %s.%s not in all station list' % (n, s))
                 continue
 
             if l != 'not_set':
@@ -80,7 +82,7 @@ def ccs_allstats_one_event(i_ev, ev, stat_list, all_stations,
                 t, coef = c.max()
 
                 if debug_mode is True:
-                    print(t, coef)
+                    logging.debug('%s %s' % (t, coef))
                     trace.snuffle([tr_syn, tr_obs])
                     trace.snuffle([c])
 
@@ -95,11 +97,11 @@ def ccs_allstats_one_event(i_ev, ev, stat_list, all_stations,
 
 
 def correct_for_med_tshifts(tshift_array):
-    '''
+    """
     get median time shift of each event
     subtract median of each single value
     return corrected array
-    '''
+    """
     tshift_medians = num.nanmedian(tshift_array, axis=0)
     tshift_corr = num.empty((tshift_array.shape))
 
@@ -143,7 +145,7 @@ def plot_matrix(tshifts, tshifts_cor, stations, dir_time):
     cbar = plt.colorbar(b, ax=ax[1], extend='both')
     cbar.set_label('Timing error [s]', rotation=90)
     plt.tight_layout()
-    fig.savefig(dir_time + 'timing_arrays.png')
+    fig.savefig(os.path.join(dir_time, 'timing_arrays.png'))
     plt.close()
 
 
@@ -225,4 +227,4 @@ def save_mms(medians, means, stdevs, stations, out_dir, n_evs):
 
     results_.regularize()
     results_.validate()
-    results_.dump(filename='%s/timings.yaml' % out_dir)
+    results_.dump(filename=os.path.join(out_dir, 'timings.yaml'))
