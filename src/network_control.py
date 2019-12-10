@@ -1190,26 +1190,26 @@ def main():
 
         ''' 7. Gain factors '''
         if gainfconf.calc_gainfactors is True:
-            print('Starting evaluation of gainfactors.')
-            os.makedirs(data_dir+'results/gains/', exist_ok=True)
-            dir_gains = data_dir + 'results/gains/'
+            logging.info('Starting evaluation of gainfactors.')
+            dir_gains = os.path.join(data_dir, 'results', 'gains')
+            os.makedirs(dir_gains, exist_ok=True)
             twd = (gainfconf.wdw_st_arr, gainfconf.wdw_sp_arr)
 
             # arrival times
             if arrT_array is None:
                 try:
                     data_dir = gensettings.work_dir
-                    arrT_array = num.load(data_dir+'ttt/ArrivalTimes_deep.npy')
-                except:
-                    print('Please calculate arrival times first!')
-                    sys.exit()
-
+                    atfile = os.path.join(data_dir, 'ttt', 'ArrivalTimes_deep.npy')
+                    arrT_array = num.load(atfile)
+                except Exception:
+                    logging.error('Please calculate arrival times first!')
+                    raise Exception('Arrival times not calculated!')
 
             def run_autogain(data_dir, all_stations, subset_catalog,
                              gain_factor_method, dir_gains, 
                              twd, arrT_array, comp):
                 
-                datapath = data_dir + 'rrd/'
+                datapath = os.path.join(data_dir, 'rrd')
 
                 if len(gain_factor_method) == 1:
                     gain_factor_method = gain_factor_method[0]
@@ -1218,7 +1218,7 @@ def main():
                 
                 syn_data_pile = None
                 if gain_factor_method == 'syn_comp':
-                    syn_data_pile = pile.make_pile(data_dir+'synthetics')
+                    syn_data_pile = pile.make_pile(os.path.join(data_dir, 'synthetics'))
                 
                 fband = gainfconf.fband
                 taper = trace.CosFader(xfrac=gainfconf.taper_xfrac)
@@ -1231,28 +1231,26 @@ def main():
                                           gain_rel_to=gain_factor_method,
                                           syn_data_pile=syn_data_pile)
 
-  
                 ag.process(fband, taper, twd, gainfconf.debug_mode)
 
                 # Store mean results in YAML format:
-                print('saving mean gains: gains_median_and_mean%s.txt' % c, dir_gains)
+                logging.info('saving mean gains: gains_median_and_mean%s.txt %s' % (c, dir_gains))
                 ag.save_median_and_mean_and_stdev('gains_median_and_mean%s.txt' % c, directory=dir_gains)
                 # Store all results in comma-spread text file:
                 ag.save_single_events('gains_all_events%s.txt' % c,
                                       directory=dir_gains, plot=gainfconf.plot_allgains)
                 ag = None
-
             
             for c in gainfconf.components:
-                print(c)
+                logging.info(c)
                 run_autogain(data_dir, all_stations, subsets_events['deep'],
                              gainfconf.gain_factor_method,
                              dir_gains, twd, arrT_array, c)
-                  
+
             gc.collect()
 
         if gainfconf.plot_median_gain_on_map is True:
-            dir_gains = data_dir + 'results/gains/'
+            dir_gains = os.path.join(data_dir, 'results', 'gains')
             for c in gainfconf.components:
                 plot_median_gain_map_from_file(ns, st_lats, st_lons, maps.pl_opt, maps.pl_topo,
                                                'gains_median_and_mean%s.txt' % c, dir_gains, c,
@@ -1266,32 +1264,32 @@ def main():
         # output flat-ratio-ranges as yaml file
 
         if psdsconf.calc_psd is True:
-            print('starting calc_psd')
-            dir_f = data_dir + 'results/freq/'
+            logging.info('starting calc_psd')
+            dir_f = os.path.join(data_dir, 'results', 'freq')
             os.makedirs(dir_f, exist_ok=True)
 
-            datapath = data_dir + 'rrd/'
-            syndatapath = data_dir + 'synthetics/'
+            datapath = os.path.join(data_dir, 'rrd')
+            syndatapath = os.path.join(data_dir, 'synthetics')
 
-            print(datapath, syndatapath)
+            logging.info('Data path: %s\nSynthetic data path: %s' % (datapath, syndatapath))
 
             if arrT_array is None:
                 try:
                     data_dir = gensettings.work_dir
-                    arrT_array = num.load(data_dir+
-                                          'ttt/ArrivalTimes_deep.npy')
+                    atfile = os.path.join(data_dir, 'ttt', 'ArrivalTimes_deep.npy')
+                    arrT_array = num.load(atfile)
                 except:
-                    print('Please calculate arrival times first!')
-                    sys.exit()
+                    logging.error('Please calculate arrival times first!')
+                    raise Exception('Arrival times not calculated!')
 
             if arrT_R_array is None:
                 try:
                     data_dir = gensettings.work_dir
-                    arrT_R_array = num.load(data_dir+
-                                            'ttt/ArrivalTimes_estR_deep.npy')
-                except:
-                    print('Please calculate R arrival times first!')
-                    sys.exit()
+                    atrfile = os.path.join(data_dir, 'ttt', 'ArrivalTimes_estR_deep.npy')
+                    arrT_R_array = num.load(atrfile)
+                except Exception:
+                    logging.error('Please calculate R arrival times first!')
+                    raise Exception('R arrival times not calculated!')
 
             st_numbers = [i_st for i_st in range(len(all_stations))]
             flat_f_ranges_ll = []
@@ -1304,7 +1302,7 @@ def main():
             # freq_neigh_list_y_ll = []
 
             for i_st, st in zip(st_numbers, all_stations):
-                print(i_st, st.station)
+                logging.info('%s %s' % (i_st, st.station))
             # for i_st, st in enumerate(all_stations):
                 st_data_pile = pile.make_pile(datapath,
                                               regex='%s_%s_' % (st.network, st.station),
