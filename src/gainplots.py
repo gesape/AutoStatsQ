@@ -1,5 +1,6 @@
 import math
 import os
+import logging
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as num
@@ -108,10 +109,10 @@ def plot_median_gain_map_from_file(ns,
                                    directory,
                                    comp,
                                    mapsize):
-    '''
+    """
     Plot map with mean relative gain factors
 
-    '''
+    """
     gmtconf = dict(
                    MAP_TICK_PEN_PRIMARY='1.25p',
                    MAP_TICK_PEN_SECONDARY='1.25p',
@@ -130,7 +131,7 @@ def plot_median_gain_map_from_file(ns,
     try:
         ns_rel = gains_fromfile.ref_stats
         # print(ns_rel)
-    except:
+    except Exception:
         ns_rel = None
 
     gains_no_nan = []
@@ -156,11 +157,11 @@ def plot_median_gain_map_from_file(ns,
 
     miny = min(gains_no_nan)
     maxy = max(gains_no_nan)
-    #print(gains_no_nan)
+    # print(gains_no_nan)
     gains_fromfile = None
     gc.collect()
     gains_no_nan = list(num.log10(gains_no_nan))
-    #print(gains_no_nan)
+    # print(gains_no_nan)
     m = Map(
         lat=pl_options[0],
         lon=pl_options[1],
@@ -219,4 +220,4 @@ def plot_median_gain_map_from_file(ns,
     #    m.add_label(lat_no_nan[i], lon_no_nan[i], stats_no_nan[i])
     fn = os.path.join(directory, '%s%s_map_log.png' % (gains_file[0:12], comp))
     m.save(fn)
-    print('saved file', fn)
+    logging.info('saved file', fn)
