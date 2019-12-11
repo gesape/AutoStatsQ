@@ -409,7 +409,7 @@ def prep_orient(datapath, st, loc, catalog, dir_ro, v_rayleigh,
                 continue
 
             for i_r, r in enumerate(rot_angles):
-                logs.info('rotation angle [deg]: %5d' % r, end='\r')
+                print('rotation angle [deg]: %5d' % r, end='\r')
                 rot_2, rot_3 = trace.rotate(traces=[trR, trT], azimuth=r,
                                             in_channels=['R', 'T'],
                                             out_channels=['2', '3'])
