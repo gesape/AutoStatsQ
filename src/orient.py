@@ -564,7 +564,7 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     cptfile = 'tempfile2.cpt'
     abs_angs = list(num.abs(angle_no_nan))
     m.gmt.makecpt(
-                C='/jet',
+                C='jet',
                 T='%g/%g' % (0.1, 180.),
                 out_filename=cptfile)#, suppress_defaults=True)
     # m.gmt.makecpt(
