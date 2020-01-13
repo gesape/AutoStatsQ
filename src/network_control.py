@@ -246,7 +246,7 @@ def main():
 
         if catalogconf.use_local_catalog is True:
 
-            if not hasattr(catalogconf, 'catalog_fn'):
+            if not hasattr(catalogconf, 'catalog_fn') or catalogconf.catalog_fn is None:
                 catalogconf.catalog_fn = os.path.join(data_dir, 'results/catalog',
                                                       'catalog_Mgr%s.txt' % (catalogconf.min_mag))
             if catalogconf.subset_of_local_catalog is False:
