@@ -258,6 +258,9 @@ def main():
                 else: 
                     mid_point = catalogconf.mid_point
 
+                if not hasattr(catalogconf, 'catalog_fn'):
+                    catalogconf.catalog_fn = os.path.join(data_dir, 'results/catalog',
+                                                          'catalog_Mgr%s.txt' % (catalogconf.min_mag))
                 ev_catalog = subset_events_dist_cat(catalogconf.catalog_fn,
                                              catalogconf.min_mag,
                                              catalogconf.max_mag,
