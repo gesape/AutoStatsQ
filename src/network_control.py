@@ -637,7 +637,7 @@ def main():
                                 logs.warning('%s no data from %s' % (ns_now, site))
 
                             except:
-                                logs.error('exception unknown %s' % ns_now)
+                                logs.error('exception unknown %s' % (ns_now,))
 
                             else:
                                 logs.debug('%s data downloaded from %s' % (ns_now, site))
@@ -858,13 +858,13 @@ def main():
                                         except stationxml.NoResponseInformation:
                                             cnt_resp += 1
                                             if cnt_resp == i_resp:
-                                                logs.warning('no resp found: %s' % tr.nslc_id)
+                                                logs.warning('no resp found: %s' % (tr.nslc_id,))
 
                                         except trace.TraceTooShort:
-                                            logs.error('trace too short: %s' % tr.nslc_id)
+                                            logs.error('trace too short: %s' % (tr.nslc_id,))
 
                                         except ValueError:
-                                            logs.error('downsampling does not work: %s' % tr.nslc_id)
+                                            logs.error('downsampling does not work: %s' % (tr.nslc_id,))
 
                                         else:
                                             break
