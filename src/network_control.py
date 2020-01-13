@@ -458,6 +458,11 @@ def main():
 
             else:
                 try:
+                    if not hasattr(catalogconf, 'subset_fns') or (d not in catalogconf.subset_fns):
+                        catalogconf.subset_fns[d] = os.path.join(data_dir,
+                                                                 'results/catalog',
+                                                                 'catalog_Mgr%s_%s.txt' % (catalogconf.min_mag, d))
+
                     subset_catalog = model.load_events(catalogconf.subset_fns[d])
                 except Exception:
                     subset_catalog = []
