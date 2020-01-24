@@ -307,28 +307,71 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
     """
     n_ev = len(catalog)
     nrows = math.ceil(n_ev / 5)
-    ncols = 5
+    if not n_ev < 5:
+        ncols = 5
+    else:
+        ncols = n_ev
+
     y_lim = (-1., 1.)
     x_lim = (-180, 180)
-    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15, nrows*3))
+
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(ncols*2, nrows*2))
+
     for (i_row, row), ev in zip(enumerate(cc_i_ev_vs_rota), catalog):
         i_x = int(i_row/ncols)
         i_y = int(i_row % ncols)
         ev_time_str = util.time_to_str(ev.time)[0:10]
-        ax[i_x, i_y].set_title(ev_time_str)
-        if i_x == nrows-1:
-            ax[i_x, i_y].set_xlabel('Correction angle [deg]')
-        if i_y == 0:
-            ax[i_x, i_y].set_ylabel('C-c coef.')
-        ax[i_x, i_y].plot(rot_angles, row, 'k')
-        ax[i_x, i_y].set_xlim(x_lim)
-        ax[i_x, i_y].set_ylim(y_lim)
-        ax[i_x, i_y].set_xticks([-180, 0, 180])
+
+        if nrows != 1:
+            ax[i_x, i_y].set_title(ev_time_str, fontsize=10)
+            if i_x == nrows-1:
+                ax[i_x, i_y].set_xlabel('Correction angle [deg]', fontsize=8)
+            if i_y == 0:
+                ax[i_x, i_y].set_ylabel('C-c coef.', fontsize=8)
+            ax[i_x, i_y].plot(rot_angles, row, 'k')
+            ax[i_x, i_y].set_xlim(x_lim)
+            ax[i_x, i_y].set_ylim(y_lim)
+            ax[i_x, i_y].set_xticks([-180, 0, 180])
+            ax[i_x, i_y].tick_params(labelsize=6)
+
+        elif nrows == 1 and ncols != 1:
+            print('here', nrows, ncols)
+            ax[i_y].set_title(ev_time_str, fontsize=10)
+            if i_x == nrows-1:
+                ax[i_y].set_xlabel('Correction angle [deg]', fontsize=8)
+            if i_y == 0:
+                ax[i_y].set_ylabel('C-c coef.', fontsize=8)
+            ax[i_y].plot(rot_angles, row, 'k')
+            ax[i_y].set_xlim(x_lim)
+            ax[i_y].set_ylim(y_lim)
+            ax[i_y].set_xticks([-180, 0, 180])
+            ax[i_y].tick_params(labelsize=6)
+
+        elif nrows == 1 and ncols == 1:
+            print('here', nrows, ncols)
+            ax.set_title(ev_time_str, fontsize=10)
+            ax.set_xlabel('Correction angle [deg]', fontsize=8)
+            ax.set_ylabel('C-c coef.', fontsize=8)
+            ax.plot(rot_angles, row, 'k')
+            ax.set_xlim(x_lim)
+            ax.set_ylim(y_lim)
+            ax.set_xticks([-180, 0, 180])
+            ax.tick_params(labelsize=6)
+
 
     if nrows*ncols > n_ev:
         dif = nrows*ncols - n_ev
         for i in range(dif):
-            ax[i_x, i_y+i+1].set_xlabel('Correction angle [deg]')
+            if nrows != 1:
+                ax[i_x, i_y+i+1].set_xlabel('Correction angle [deg]', fontsize=8)
+                ax[i_x, i_y+i+1].set_xticks([])
+                ax[i_x, i_y+i+1].set_yticks([])
+                ax[i_x, i_y+i+1].axis('off')
+            else:
+                ax[i_x].set_xlabel('Correction angle [deg]', fontsize=8)
+                ax[i_x].set_xticks([])
+                ax[i_x].set_yticks([])
+                ax[i_x].axis('off')
     plt.tight_layout()
     # plt.show()
     fig.savefig(os.path.join(dir_ro, '%s_%s_%s_distr.pdf' % (st.network, st.station, loc)))
