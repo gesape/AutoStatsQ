@@ -1,4 +1,5 @@
 import grond
+import logging
 import numpy as num
 from pyrocko.guts import Object, List, Int, Float, String, dump_all
 
@@ -6,7 +7,6 @@ from pyrocko.guts import Object, List, Int, Float, String, dump_all
 #codes: [CH, FUORN, '', Z]                                                       
 #delay: 0.0                                                                      
 #factor: 0.6542812498507474
-
 
 
 class Correction_Statistics(Object):
@@ -54,11 +54,11 @@ def get_correction_statistcs(station_list, filename_list):
 
     corrstats_list = []
     for m, i_m in mapping_stations_index.items():
-        print('m ', m)
-        print('median ', median_correction_st[i_m])
-        print('mean ', mean_correction_st[i_m])
-        print('std ', stdev_correction_st[i_m])
-        print('len ', len(filename_list)-is_nan[i_m])
+        logging.info('m %s' % m)
+        logging.info('median %s' % median_correction_st[i_m])
+        logging.info('mean %s' % mean_correction_st[i_m])
+        logging.info('std %s' % stdev_correction_st[i_m])
+        logging.info('len %s' % (len(filename_list)-is_nan[i_m]))
 
         corrstats_list.append(Correction_Statistics(code=m,
                                                     median_factor=median_correction_st[i_m],

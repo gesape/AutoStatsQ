@@ -1,16 +1,18 @@
 import numpy as num
+import logging
+import os
 from pyrocko import gmtpy, util
 import matplotlib.pyplot as plt
 
 
 def gmtplot_catalog_azimuthal(catalog, mid_point, dist, outfile, bin_width):
-    '''
+    """
     Plot events of catalog on map
 
     :param catalog: event catalog in pyrocko format
     :param mid_point: centre of map
     :param dist: max. distance in degrees
-    '''
+    """
     gmt = gmtpy.GMT(config={'MAP_GRID_PEN_PRIMARY': '0.1p',
                             'MAP_GRID_PEN_SECONDARY': '0.1p',
                             #'MAP_GRID_PEN_TERTIARY': '0.001p',
@@ -26,38 +28,34 @@ def gmtplot_catalog_azimuthal(catalog, mid_point, dist, outfile, bin_width):
                   B='xa%sf%s' % (bin_width*2, bin_width))
     gmt.pscoast(
                 R='g',
-                J='E%s/%s/%s/6i' % (str(mid_point[1]),
-                                    str(mid_point[0]),
-                                    str(dist)),
+                J='E%s/%s/%s/6i' % (mid_point[1], mid_point[0], dist),
                 D='c',
                 G='darkgrey')
     gmt.psbasemap(
                   R='g',
-                  J='E0/-90/%s/6i' % (str(dist)),
-                  B='xg%s' % (bin_width))
+                  J='E0/-90/%s/6i' % dist,
+                  B='xg%s' % bin_width)
     gmt.psbasemap(
                   R='g',
-                  J='E0/-90/%s/6i' % (str(dist)),
+                  J='E0/-90/%s/6i' % dist,
                   B='yg%s' % bin_width)
     gmt.psxy(R='0/360/-90/0',
-             J='E%s/%s/%s/6i' % (str(mid_point[1]),
-                                 str(mid_point[0]),
-                                 str(dist)),
+             J='E%s/%s/%s/6i' % (mid_point[1], mid_point[0], dist),
              in_columns=([ev.lon for ev in catalog],
                          [ev.lat for ev in catalog]),
              G='red',
              S='a12p')    
     gmt.save(outfile)
-    print('saved ', outfile)
+    logging.info('saved %s' % outfile)
 
 
 def plot_catalog_hist(catalog, dist_array, mean_wedges_mp, bins_hist, data_dir,
                       min_mag, d, bin_width, no_bins,
                       plot_wedges_vs_dist=True,
                       plot_wedges_vs_magn=True):
-    '''
+    """
     Plot histogram showing number of earthquakes in each 15deg wedge
-    '''
+    """
     mean_dists = num.mean(dist_array, axis=1)
     fig, ax1 = plt.subplots()
     ax1.hist(mean_wedges_mp, normed=False, bins=bins_hist, color='lightgrey')
@@ -89,7 +87,7 @@ def plot_catalog_hist(catalog, dist_array, mean_wedges_mp, bins_hist, data_dir,
         ax3.set_ylim(min_mag-0.2, 10)
         ax3.set_ylabel('Magnitude '+r'$(M_W)$', color='b')
     fig.tight_layout()
-    plt.savefig('%sresults/catalog/cat_hist_magn_dist_%s.png' % (data_dir, d))
+    plt.savefig(os.path.join(data_dir, 'results/catalog/cat_hist_magn_dist_%s.png' % d))
 
 
 def plot_distmagn(dist_array, catalog, data_dir, d):
@@ -99,4 +97,4 @@ def plot_distmagn(dist_array, catalog, data_dir, d):
     ax.set_xlabel('Distance '+r'$(km)$')
     ax.set_ylabel('Magnitude '+r'$(M_W)$')
     fig.tight_layout()
-    plt.savefig('%sresults/catalog/cat_dist_vs_magn_%s.png' % (data_dir, d))
+    plt.savefig(os.path.join(data_dir, 'results/catalog/cat_dist_vs_magn_%s.png' % d))

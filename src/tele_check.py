@@ -77,9 +77,6 @@ def invert_relative_amplitudes(pair_corrs):
 
 class TeleCheck(Snuffling):
 
-    '''
-    '''
-
     def setup(self):
         self.set_name('Tele-Check')
         self.add_parameter(
