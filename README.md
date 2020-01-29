@@ -18,6 +18,7 @@ Petersen, G. M., Cesca, S., Kriegerowski, M. (2019): Automated Quality Control f
 
 Latest changes
 -------------
+- data is downsampled to 10 Hz prior to restitution. This is necessary in case of high sampling rates to not introduce filtering errors.
 - new independent and interactive test for amplitude corrections based on waveform correlations of teleseismic P phases --> please contact me for detailed instructions, I didn't have time to document the work-flow yet, but it is a great new test ;-)
 - new simple test for large timing errors (not yet sufficiently tested...)
 - gain test: additional method comparing max A to synthetics
@@ -65,6 +66,14 @@ generate an example config file:
 run 
 
 	autostatsq --config name_of_config_file --run RUN
+
+
+To get detailed error/ info logging, use the -l option:
+
+
+```
+  autostatsq --config name_of_config_file --run RUN -l INFO
+```
 
 
 Config file settings

@@ -335,7 +335,6 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
             ax[i_x, i_y].tick_params(labelsize=6)
 
         elif nrows == 1 and ncols != 1:
-            print('here', nrows, ncols)
             ax[i_y].set_title(ev_time_str, fontsize=10)
             if i_x == nrows-1:
                 ax[i_y].set_xlabel('Correction angle [deg]', fontsize=8)
@@ -348,7 +347,6 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
             ax[i_y].tick_params(labelsize=6)
 
         elif nrows == 1 and ncols == 1:
-            print('here', nrows, ncols)
             ax.set_title(ev_time_str, fontsize=10)
             ax.set_xlabel('Correction angle [deg]', fontsize=8)
             ax.set_ylabel('C-c coef.', fontsize=8)

@@ -162,7 +162,7 @@ def main():
                             if not len(elev):
                                 elev = '0'
                             n_s = '%s.%s' % (n, s)
-                            if n_s in gensettings.st_white_list or gensettings.st_white_list == []:                            
+                            if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
                                 all_stations.append(model.Station(network=n, station=s,
                                                                   lat=float(lat), lon=float(lon),
                                                                   elevation=float(elev)))                            
@@ -203,6 +203,7 @@ def main():
                 msg = 'Station file extension not known: %s. Please use .xml, .csv or .yaml.' % stat_list
                 logs.error(msg)
                 raise Exception('Unknown file extension')
+
 
         logs.info('stations: %d' % len(ns))
 
@@ -710,7 +711,7 @@ def main():
             if metaDataconf.local_data and not metaDataconf.sds_structure:
                 logs.info('Accessing local data.')
                 p_local = pile.make_pile(paths=metaDataconf.local_data,
-                                         show_progress=True)
+                                         show_progress=False)
 
             for key, subset_catalog in subsets_events.items(): 
 
@@ -725,7 +726,7 @@ def main():
                     #response = stationxml.load_xml(filename=stations_fn)
                     #print(data_dir+ev_t_str)
                     if metaDataconf.local_waveforms_only is False:
-                        p = pile.make_pile(paths=os.path.join(data_dir, ev_t_str), show_progress=True)
+                        p = pile.make_pile(paths=os.path.join(data_dir, ev_t_str), show_progress=False)
                     
                     dir_make = os.path.join(data_dir, 'rest', ev_t_str)
                     os.makedirs(dir_make, exist_ok=True)
@@ -753,7 +754,7 @@ def main():
                                 local_data_dirs = metaDataconf.local_data
                                 for i_ldd, ldd in enumerate(local_data_dirs):
                                     path_str = os.path.join(ldd, year, st.network, st.station)
-                                    p = pile.make_pile(paths=path_str, regex='.%s' % jul_day, show_progress=True)
+                                    p = pile.make_pile(paths=path_str, regex='.%s' % jul_day, show_progress=False)
                                     trs.extend(p.all(tmin=tmin, tmax=tmax,
                                                      trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2]))
                             # trace.snuffle(trs)
@@ -837,6 +838,7 @@ def main():
 
                                 for tr in trs:
                                     cnt_resp = 0
+                                    tr.downsample_to(0.1)
                                     for resp_now in responses:
                                         try:
                                             polezero_resp = resp_now.get_pyrocko_response(
@@ -886,6 +888,7 @@ def main():
                                       continue
 
                                     for tr in trs:
+                                        tr.downsample_to(0.1)
                                         cnt_resp = 0
                                         for resp_now in responses:
                                             try:
