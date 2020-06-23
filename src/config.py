@@ -7,7 +7,7 @@ class GeneralSettings(Object):
         help='Upper data directory')
     list_station_lists = List.T(
         help='List of station list names, either txt or xml files')
-    st_white_list = List.T(default=[])
+    st_use_list = List.T(default=[])
 
 class CatalogConfig(Object):
     search_events = Bool.T()

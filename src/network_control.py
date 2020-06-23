@@ -148,7 +148,7 @@ def main():
                             if not len(d):
                                 d = '0'
                             n_s = '%s.%s' % (n, s)
-                            if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
+                            if n_s in gensettings.st_use_list or gensettings.st_use_list == []:
                                 all_stations.append(model.Station(network=n, station=s,
                                                                   lat=float(lat), lon=float(lon),
                                                                   elevation=float(elev), depth=d))
@@ -162,7 +162,7 @@ def main():
                             if not len(elev):
                                 elev = '0'
                             n_s = '%s.%s' % (n, s)
-                            if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
+                            if n_s in gensettings.st_use_list or gensettings.st_use_list == []:
                                 all_stations.append(model.Station(network=n, station=s,
                                                                   lat=float(lat), lon=float(lon),
                                                                   elevation=float(elev)))                            
@@ -175,7 +175,7 @@ def main():
                 for net in zs.network_list:
                     for stat in net.station_list:
                         n_s = '%s.%s' % (net.code, stat.code)
-                        if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
+                        if n_s in gensettings.st_use_list or gensettings.st_use_list == []:
 
                             st_lats.append(float(stat.latitude.value))
                             st_lons.append(float(stat.longitude.value))
@@ -190,7 +190,7 @@ def main():
                 zs = model.station.load_stations(filename=stat_list)
                 for stat in zs:
                     n_s = '%s.%s' % (stat.network, stat.station)
-                    if n_s in gensettings.st_white_list or gensettings.st_white_list == []:
+                    if n_s in gensettings.st_use_list or gensettings.st_use_list == []:
                         st_lats.append(float(stat.lat))
                         st_lons.append(float(stat.lon))
                         ns.append((stat.network, stat.station))

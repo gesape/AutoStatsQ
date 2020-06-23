@@ -87,7 +87,7 @@ Settings:
 - !autostatsq.config.GeneralSettings
   work_dir: /some/data/directory/
   list_station_lists: [/path/to/station-file/file.csv, /path/to/station-file/file.xml]
-  st_white_list: [STATION] 
+  st_use_list: [STATION] 
   # if set, only stations in this list are considered. remove or set to [] to use all stations
   # in station files.
 
