@@ -1,4 +1,7 @@
 # AutoStatsQ
+
+### Take care, default branch is not master but main!
+
 Toolbox for automated station quality control for MT inversion.
 Please contact me for further description, help or when something does not behave as expected ;-) : gesap@gfz-potsdam.de
 
