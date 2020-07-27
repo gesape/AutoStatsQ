@@ -80,8 +80,8 @@ def main():
     desc = 'AutoStatsQ - Automated station quality control for MT inversion'
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--config')
-    parser.add_argument('--run')
-    parser.add_argument('--generate_config')
+    parser.add_argument('--run', action='store_true')
+    parser.add_argument('--generate_config', action='store_true')
     parser.add_argument('-l', '--loglevel',
                         help='Verbosity in the output.', default='WARNING',
                         choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO',
@@ -105,12 +105,17 @@ def main():
 
         fn_config = 'AutoStatsQ_settings.config'
         if os.path.exists('AutoStatsQ_settings.config'):
-            logs.warning('file exists: %s' % fn_config)
+            logs.error('file exists: %s' % fn_config)
 
         config = generate_default_config()
 
         config.dump(filename=fn_config)
         logs.info('created a fresh config file %s' % fn_config)
+
+    if not args.generate_config and not args.config:
+        logging.error('Clusty needs a config file.')
+        print(parser.print_help())
+
 
     # run AutoStatsQ
     if args.run:
