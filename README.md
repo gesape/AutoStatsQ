@@ -64,18 +64,18 @@ show basic commands/ help:
 
 generate an example config file:
 
-	autostatsq --generate_config GENERATE_CONFIG
+	autostatsq --generate_config
 
 run 
 
-	autostatsq --config name_of_config_file --run RUN
+	autostatsq --config name_of_config_file --run
 
 
 To get detailed error/ info logging, use the -l option:
 
 
 ```
-  autostatsq --config name_of_config_file --run RUN -l INFO
+  autostatsq --config name_of_config_file --run -l INFO
 ```
 
 
