@@ -942,7 +942,6 @@ def main():
             # Set Logger name and verbosity
             logs = logging.getLogger('Rotation')
             logs.setLevel(verbo)
-
             logs.info('Starting downsampling and rotation')
 
             def save_rot_down_tr(tr, dir_rot, ev_t_str):
@@ -981,7 +980,6 @@ def main():
                         for ch_ in ch_list:
                             lens_trs = [len(tr.ydata) for tr in trs if tr.channel[0:2] == ch_ and tr.location == l]
                             trs_ch = [tr for tr in trs if tr.channel[0:2] == ch_ and tr.location == l]
-
                             if not lens_trs or 0 in lens_trs or len(lens_trs) != 3:
                                 continue
 
@@ -995,7 +993,6 @@ def main():
                                 tmax = min([tr.tmax for tr in trs_ch])
                                 trmin = math.ceil(tmin)
                                 trmax = int(tmax)
-
                                 for st_now in st_xml:
                                     stat = st_now.get_pyrocko_stations(nslcs=nslcs,
                                            timespan=(trmin, trmax))
@@ -1128,11 +1125,18 @@ def main():
                                         tr2_ch = tr2.channel
 
                                     if tr1_ch != '0' and tr2_ch != '0':
-                                        rots = trace.rotate(traces=[tr1,tr2], azimuth=az_r, 
+                                        tracescopy=[tr1,tr2]
+                                        tracestouse=[]
+                                        tracestouse=[tr for tr in tracescopy if num.any(num.diff(tr.ydata))]
+                                        lens_trsuse = [len(tr.ydata) for tr in tracestouse ]
+                                        if not lens_trsuse or 0 in lens_trsuse or len(lens_trsuse) != 2:
+                                            continue
+                                        if len(lens_trsuse)==2:
+                                            rots = trace.rotate(tracestouse, azimuth=az_r, 
                                                             in_channels=[tr1_ch, tr2_ch],
                                                             out_channels=['R', 'T'])
-                                        for tr in rots:
-                                            save_rot_down_tr(tr, dir_rot, ev_t_str)
+                                            for tr in rots:
+                                                save_rot_down_tr(tr, dir_rot, ev_t_str)
 
             st_xml = []
             if metaDataconf.local_metadata != []:
@@ -1506,7 +1510,7 @@ def main():
 
             if timingconf.search_locations is True:
                 nslc_list = []
-                for t in p_obs.iter_traces(trace_selector=lambda tr: tr.channel=='Z'):
+                for t in p_obs.iter_traces(trace_selector=lambda tr: tr.channel=='R'):
                     nslc_list.append(t.nslc_id)
                 nslc_list = list(set(nslc_list))
                 stations = nslc_list
