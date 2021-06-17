@@ -255,6 +255,7 @@ def main():
             if not hasattr(catalogconf, 'catalog_fn') or catalogconf.catalog_fn is None:
                 catalogconf.catalog_fn = os.path.join(data_dir, 'results/catalog',
                                                       'catalog_Mgr%s.txt' % (catalogconf.min_mag))
+
             if catalogconf.subset_of_local_catalog is False:
                 ev_catalog = model.load_events(catalogconf.catalog_fn)
 
@@ -337,6 +338,7 @@ def main():
                                    catalogconf.tmax_str[0:10], d)
                     fn = os.path.join(auxdir, pltfilename)
 
+                    logs.info(' Plotting catalog azimuthal for full catalog: %s.' % d)
                     gmtplot_catalog_azimuthal(ev_cat, mid_point,
                                               catalogconf.dist, fn,
                                               catalogconf.wedges_width)
@@ -353,11 +355,13 @@ def main():
 
 
                 if catalogconf.plot_hist_wedges is True:
+                    logs.info(' Plotting catalog histogram for full catalog: %s.' % d)
                     plot_catalog_hist(ev_cat, dist_array, mean_wedges_mp,
                                       bins_hist, data_dir, catalogconf.min_mag, d,
                                       catalogconf.wedges_width, no_bins)
 
                 if catalogconf.plot_dist_vs_magn is True:
+                    logs.info(' Plotting catalog distance vs. magnitude for full catalog: %s.' % d)
                     plot_distmagn(dist_array, ev_cat, data_dir, d)
 
                 # find 'best' subset of catalog events
@@ -472,7 +476,55 @@ def main():
                     subset_catalog = model.load_events(catalogconf.subset_fns[d])
                 except Exception:
                     subset_catalog = []
+
+                if subset_catalog == []:
+                    logs.error('Catalog empty, %s' % d)
+                    sys.exit()
+
                 subsets_events[d] = subset_catalog
+
+            if catalogconf.plot_hist_wedges is True:
+                dist_array_subset = num.empty((len(subset_catalog), len(ns)))
+                bazi_array_subset = num.empty((len(subset_catalog), len(ns)))
+                bazi_mp_array_subset = num.empty((len(subset_catalog)))
+
+                for i_ev, ev in enumerate(subset_catalog):
+                    dist_array_subset[i_ev, :] = [float(orthodrome.distance_accurate50m_numpy(
+                                          ev.lat, ev.lon, lat, lon))
+                                          for (lat, lon) in zip(st_lats, st_lons)]
+
+                    bazi_array_subset[i_ev, :] = [orthodrome.azibazi(ev.lat, ev.lon, lat, lon)[1]
+                                           for (lat, lon) in zip(st_lats, st_lons)]
+
+                    bazi_mp_array_subset[i_ev] = orthodrome.azibazi(ev.lat, ev.lon,
+                                                             mid_point[0],
+                                                             mid_point[1])[1]
+
+                wedges_array_subset = num.floor(bazi_array_subset / catalogconf.wedges_width)
+
+                # hist based on chosen mid_point of array
+                wedges_array_mp_subset = num.floor(bazi_mp_array_subset / catalogconf.wedges_width)
+                mean_wedges_mp_subset = num.where(wedges_array_mp_subset < 0,
+                                           no_bins+wedges_array_mp_subset,
+                                           wedges_array_mp_subset)
+                bins_hist_subset = [a for a in range(no_bins+1)]
+                hist_subset, bin_edges_subset = num.histogram(mean_wedges_mp_subset, bins=bins_hist_subset)
+
+                logs.info(' Plotting catalog histogram for subset: %s.' % d)
+                plot_catalog_hist(subset_catalog, dist_array_subset, mean_wedges_mp_subset,
+                                  bins_hist_subset, data_dir, catalogconf.min_mag, d,
+                                  catalogconf.wedges_width, no_bins, full_cat=False)
+
+            if catalogconf.plot_dist_vs_magn is True:
+                dist_array_subset = num.empty((len(subset_catalog), len(ns)))
+
+                for i_ev, ev in enumerate(subset_catalog):
+                    dist_array_subset[i_ev, :] = [float(orthodrome.distance_accurate50m_numpy(
+                                          ev.lat, ev.lon, lat, lon))
+                                          for (lat, lon) in zip(st_lats, st_lons)]
+
+                logs.info(' Plotting catalog distance vs. magnitude for subset: %s.' % d)
+                plot_distmagn(dist_array_subset, subset_catalog, data_dir, d, full_cat=False)
 
             if catalogconf.plot_catalog_subset is True:
                 '''
@@ -485,6 +537,7 @@ def main():
                               (catalogconf.min_mag, _tmin[0:10], _tmax[0:10], d)
                 fn = os.path.join(data_dir, 'results/catalog', catfilename)
 
+                logs.info(' Plotting catalog azimuthal for subset: %s.' % d)
                 gmtplot_catalog_azimuthal(subset_catalog, mid_point, 
                                                catalogconf.dist, fn, catalogconf.wedges_width)
 
