@@ -671,6 +671,8 @@ def main():
         # token = open(metaDataconf.token, 'rb').read()
 
         if metaDataconf.download_data is True:   ### clean up!
+            
+            logs.info(' Starting data downloading section.')
 
             for subset_catalog in subsets_events.values():
                 for ev in subset_catalog:
@@ -729,15 +731,19 @@ def main():
                             else:
                                 logs.debug('%s data downloaded from %s' % (ns_now, site))
                                 break
+
                     if not os.listdir(dir_make):
                         os.rmdir(dir_make)
+
+            logs.info(' Finished data downloading section.')
+
 
         if metaDataconf.download_metadata is True:
             # Set Logger name and verbosity
             logs = logging.getLogger('Download metadata')
             logs.setLevel(verbo)
 
-            logs.info('Downloading metadata')
+            logs.info(' Starting to download station metadata.')
 
             cat_tmin = min([ev.time for ev in subset_catalog for k, subset_catalog in subsets_events.items()])
             cat_tmax = max([ev.time for ev in subset_catalog for k, subset_catalog in subsets_events.items()])
@@ -764,6 +770,8 @@ def main():
                 #except:
                 #    print('no metadata at all', site, selection[1])
 
+            logs.info(' Finished to download station metadata.')
+
 
         ''' 4. Data preparation: restitution of data '''
         if RestDownconf.rest_data is True:
@@ -771,7 +779,7 @@ def main():
             logs = logging.getLogger('Restitution')
             logs.setLevel(verbo)
 
-            logs.info('Starting restitution of data.')
+            logs.info(' Starting restitution of data.')
             responses = []
 
             if metaDataconf.local_metadata != []:
