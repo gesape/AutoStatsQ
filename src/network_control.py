@@ -113,7 +113,7 @@ def main():
         logs.info('created a fresh config file %s' % fn_config)
 
     if not args.generate_config and not args.config:
-        logging.error('Clusty needs a config file.')
+        logging.error('AutoStatsQ needs a config file.')
         print(parser.print_help())
 
 
