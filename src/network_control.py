@@ -711,12 +711,12 @@ def main():
                     responses.append(stationxml.load_xml(filename=stations_fn))
 
             i_resp = len(responses)
-            logs.info(i_resp)
+            logs.info('len responses: %s' % i_resp)
 
             if metaDataconf.local_data and not metaDataconf.sds_structure:
                 logs.info('Accessing local data.')
                 p_local = pile.make_pile(paths=metaDataconf.local_data,
-                                         show_progress=False)
+                                         show_progress=True)
 
             for key, subset_catalog in subsets_events.items(): 
 
