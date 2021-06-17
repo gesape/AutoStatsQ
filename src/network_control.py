@@ -488,7 +488,7 @@ def main():
                     logs.error('Catalog empty, %s' % d)
                     sys.exit()
 
-                logs.info(' Subset of catalog for %s: %s events' % (d, len(subset_catalog)))
+                logs.info(' Subset of catalog for %s: %s events.' % (d, len(subset_catalog)))
 
                 subsets_events[d] = subset_catalog
 
@@ -557,11 +557,14 @@ def main():
                         new_subset_catalog.append(ev)
                 subset_catalog = new_subset_catalog
 
+
             ''' 2.1 Calculate arrival times for all event/station pairs '''
             # Method a) using cake
             arrT_array = None
             arrT_R_array = None
             if arrTconf.calc_first_arr_t is True:
+                logs.info(' Calculating arrival times of first phase, %s subset.'
+                          % d)
                 data_dir = gensettings.work_dir
                 os.makedirs(os.path.join(data_dir, 'ttt'), exist_ok=True)
                 dist_array_sub = num.empty((len(subset_catalog), len(ns)))
@@ -575,11 +578,10 @@ def main():
                 depths = [ev.depth for ev in subset_catalog]
                 vmodel = cake.load_model('prem-no-ocean.f')
                 phases = [cake.PhaseDef(pid) for pid in arrTconf.phase_select.split('|')]
-
+                nev = len(subset_catalog)
                 for i_ev, ev in enumerate(subset_catalog):
                     ds = depths[i_ev]
-                    logs.info('calculating arr times for: %s' % (util.time_to_str(ev.time)))
-
+                    print('Event: %5d/%s' % (i_ev,nev), end='\r')
                     for i_st in range(len(ns)):
                         dist = dist_array_sub[i_ev, i_st]
                         arrivals = vmodel.arrivals(distances=[dist*cake.m2d],
@@ -592,13 +594,19 @@ def main():
 
                 num.save(os.path.join(data_dir, 'ttt', 'ArrivalTimes_%s' % (d)), arrT_array)
 
+                logs.info(' Arrival times of first phase ready, %s subset.'
+                          % d)
+
             if arrTconf.calc_est_R is True:
-                logs.info('computing R arrival times')
+                logs.info(' Calculating arrival times of Rayleigh waves, %s subset.'
+                          % d)
                 data_dir = gensettings.work_dir
                 os.makedirs(os.path.join(data_dir, 'ttt'), exist_ok=True)
                 dist_array_sub = num.empty((len(subset_catalog), len(ns)))
+                nev = len(subset_catalog)
 
                 for i_ev, ev in enumerate(subset_catalog):
+                    print('Event: %5d/%s' % (i_ev,nev), end='\r')
                     dist_array_sub[i_ev, :] = [float(orthodrome.distance_accurate50m_numpy(
                                           ev.lat, ev.lon, lat, lon))
                                           for (lat, lon) in zip(st_lats, st_lons)]
@@ -616,6 +624,9 @@ def main():
                         arrT_R_array[i_ev, i_st] = ev.time + dist/(arrTconf.v_rayleigh*1000.)
 
                 num.save(os.path.join(data_dir, 'ttt', 'ArrivalTimes_estR_%s' % (d)), arrT_R_array)
+
+                logs.info(' Arrival times of Rayleigh waves ready, %s subset.'
+                          % d)
 
             # Method b) interpolating from fomosto travel time tables
             '''
