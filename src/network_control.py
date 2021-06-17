@@ -83,7 +83,7 @@ def main():
     parser.add_argument('--run', action='store_true')
     parser.add_argument('--generate_config', action='store_true')
     parser.add_argument('-l', '--loglevel',
-                        help='Verbosity in the output.', default='WARNING',
+                        help='Verbosity in the output.', default='INFO',
                         choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO',
                                  'DEBUG'])
     parser.add_argument('--logoutput', '-o', default=None,
@@ -99,6 +99,7 @@ def main():
 
     # Generate a (template) config file:
     if args.generate_config:
+        logging.info('Welcome to AutoStatsQ - a station quality control checking tool.\n')
         # Set Logger name and verbosity
         logs = logging.getLogger('Generate config')
         logs.setLevel(verbo)
@@ -113,6 +114,7 @@ def main():
         logs.info('created a fresh config file %s' % fn_config)
 
     if not args.generate_config and not args.config:
+        logging.info('Welcome to AutoStatsQ - a station quality control checking tool.\n')
         logging.error('AutoStatsQ needs a config file.')
         print(parser.print_help())
 
@@ -122,6 +124,8 @@ def main():
         # Set Logger name and verbosity
         logs = logging.getLogger('Run')
         logs.setLevel(verbo)
+
+        logging.info('Welcome to AutoStatsQ - a station quality control checking tool.\n')
 
         # read existing config file:
 
@@ -210,7 +214,10 @@ def main():
                 raise Exception('Unknown file extension')
 
 
-        logs.info('stations: %d' % len(ns))
+        logs.info(' Number of stations: %d' % len(ns))
+        if len(ns) == 0:
+            logs.error('No stations found.')
+            sys.exit()
 
         ##### FOR SHORT TESTING
         '''
@@ -454,7 +461,7 @@ def main():
               
                 logs.info('Subset of %d events was generated for %s.' % \
                           (len(subset_catalog), d))
-                
+
                 # sort subset catalog by time:
                 subset_catalog.sort(key=lambda x: x.time)
 
@@ -480,6 +487,8 @@ def main():
                 if subset_catalog == []:
                     logs.error('Catalog empty, %s' % d)
                     sys.exit()
+
+                logs.info(' Subset of catalog for %s: %s events' % (d, len(subset_catalog)))
 
                 subsets_events[d] = subset_catalog
 
