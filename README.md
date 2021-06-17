@@ -51,7 +51,7 @@ Update
 ... AutoStatsQ is updated whenever new ideas are implemented or bugs found...
 
 - cd into your AutoStatsQ installation directory
-- git pull origin master
+- git pull origin main
 - (sudo) python3 setup.py install
 
 Basic commands
