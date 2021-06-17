@@ -783,42 +783,56 @@ def main():
             responses = []
 
             if metaDataconf.local_metadata != []:
+                logs.debug(' Looking for local metadata.')
                 for file in metaDataconf.local_metadata:
                     responses.append(stationxml.load_xml(filename=file))
             
             if metaDataconf.use_downmeta is True:
+                logs.debug(' Looking for downloaded metadata.')
                 for site in sites:
                     stations_fn = os.path.join(data_dir, 'Resp_all_' + str(site) + '.xml')
                     responses.append(stationxml.load_xml(filename=stations_fn))
 
+            if not metaDataconf.use_downmeta and not metaDataconf.local_metadata:
+                logs.error(' No response files found. Set *use_downmeta* to True '
+                           + 'or provide other local metadata using option'
+                           + ' *local_metadata*.')
+                sys.exit()
+
             i_resp = len(responses)
-            logs.info('len responses: %s' % i_resp)
+            logs.info(' Number of responses found: %s.' % i_resp)
 
             if metaDataconf.local_data and not metaDataconf.sds_structure:
                 logs.info('Accessing local data.')
                 p_local = pile.make_pile(paths=metaDataconf.local_data,
                                          show_progress=True)
 
+            nst = len(all_stations)
             for key, subset_catalog in subsets_events.items(): 
+                logs.info(' Starting restitution of data, %s subset.' % d)
+                nev = len(subset_catalog)
 
-                for ev in subset_catalog:
-                    logs.info(util.time_to_str(ev.time))
+                for i_ev, ev in enumerate(subset_catalog):
+                    logs.debug(util.time_to_str(ev.time))
+
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
-
                     tmin = ev.time+metaDataconf.dt_start*3600
                     tmax = ev.time+metaDataconf.dt_end*3600
 
-                    #stations_fn = data_dir + ev_t_str + '_resp_geofon.xml'
-                    #response = stationxml.load_xml(filename=stations_fn)
-                    #print(data_dir+ev_t_str)
+                    # stations_fn = data_dir + ev_t_str + '_resp_geofon.xml'
+                    # response = stationxml.load_xml(filename=stations_fn)
+                    # print(data_dir+ev_t_str)
                     if metaDataconf.local_waveforms_only is False:
-                        p = pile.make_pile(paths=os.path.join(data_dir, ev_t_str), show_progress=False)
+                        p = pile.make_pile(paths=os.path.join(data_dir, ev_t_str), 
+                                           show_progress=False)
                     
                     dir_make = os.path.join(data_dir, 'rest', ev_t_str)
                     os.makedirs(dir_make, exist_ok=True)
                     transf_taper = 1/min(RestDownconf.freqlim)
 
-                    for st in all_stations:
+                    for i_st, st in enumerate(all_stations):
+                        print('Event: %5d/%s, Station: %5d/%s' % (i_ev, nev, i_st, nst),
+                              end='\r')
                         #if st.network not in net_check:
                         #    continue                        
                         nsl = st.nsl()
@@ -1017,6 +1031,10 @@ def main():
                                                 break
                     if not os.listdir(dir_make):
                         os.rmdir(dir_make)
+
+            logs.info(' Finished restitution of data, %s subset.' % d)
+            logs.info(' Saved restituted data in directory %s.\n' % os.path.join(data_dir, 'rest'))
+
 
         ''' 5. Rotation NE --> RT '''
         if RestDownconf.rotate_data is True:
