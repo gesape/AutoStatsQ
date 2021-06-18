@@ -488,7 +488,7 @@ def main():
                     logs.error('Catalog empty, %s' % d)
                     sys.exit()
 
-                logs.info(' Subset of catalog for %s: %s events.' % (d, len(subset_catalog)))
+                logs.info(' Subset of catalog for %s: %s events.\n' % (d, len(subset_catalog)))
 
                 subsets_events[d] = subset_catalog
 
@@ -594,7 +594,7 @@ def main():
 
                 num.save(os.path.join(data_dir, 'ttt', 'ArrivalTimes_%s' % (d)), arrT_array)
 
-                logs.info(' Arrival times of first phase ready, %s subset.'
+                logs.info(' Arrival times of first phase ready, %s subset.\n'
                           % d)
 
             if arrTconf.calc_est_R is True:
@@ -625,7 +625,7 @@ def main():
 
                 num.save(os.path.join(data_dir, 'ttt', 'ArrivalTimes_estR_%s' % (d)), arrT_R_array)
 
-                logs.info(' Arrival times of Rayleigh waves ready, %s subset.'
+                logs.info(' Arrival times of Rayleigh waves ready, %s subset.\n'
                           % d)
 
             # Method b) interpolating from fomosto travel time tables
@@ -735,7 +735,7 @@ def main():
                     if not os.listdir(dir_make):
                         os.rmdir(dir_make)
 
-            logs.info(' Finished data downloading section.')
+            logs.info(' Finished data downloading section.\n')
 
 
         if metaDataconf.download_metadata is True:
@@ -770,7 +770,7 @@ def main():
                 #except:
                 #    print('no metadata at all', site, selection[1])
 
-            logs.info(' Finished to download station metadata.')
+            logs.info(' Finished to download station metadata.\n')
 
 
         ''' 4. Data preparation: restitution of data '''
@@ -1041,7 +1041,6 @@ def main():
             # Set Logger name and verbosity
             logs = logging.getLogger('Rotation')
             logs.setLevel(verbo)
-            logs.info('Starting downsampling and rotation')
 
             def save_rot_down_tr(tr, dir_rot, ev_t_str):
                 fname = '%s_%s_%s__%s_%srrd2.mseed' % \
@@ -1058,7 +1057,8 @@ def main():
 
             def downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, deltat_down):
 
-                ev_data_pile = pile.make_pile(dir_rest, regex='rest2')
+                ev_data_pile = pile.make_pile(dir_rest, regex='rest2',
+                                              show_progress=False)
                 for st in all_stations:
 
                     #if st.network not in net_check:
@@ -1244,24 +1244,34 @@ def main():
             
             if metaDataconf.use_downmeta is True:            
                 for site in sites:
-                    stations_fn = os.path.join(data_dir, 'Resp_all_' + str(site) + '.xml')
+                    stations_fn = os.path.join(data_dir, 'Resp_all_' + str(site) 
+                                               + '.xml')
                     st_xml.append(stationxml.load_xml(filename=stations_fn))
 
             i_st_xml = len(st_xml)
-            for key, subset_catalog in subsets_events.items(): 
+            for key, subset_catalog in subsets_events.items():
+                logs.info(' Starting downsampling and rotation, subset %s' % key)
+                nev = len(subset_catalog)
 
-                for ev in subset_catalog:
+                for i_ev, ev in enumerate(subset_catalog):
+                    logs.debug(' Event %s' % util.time_to_str(ev.time))
+                    print('Event: %5d/%s' % (i_ev,nev), end='\r')
                     gc.collect()
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
-                    # print(ev_t_str)
                     os.makedirs(os.path.join(data_dir, 'rrd'), exist_ok=True)
                     dir_rot = os.path.join(data_dir, 'rrd', ev_t_str)
                     dir_rest = os.path.join(data_dir, 'rest', ev_t_str)
-                    downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, RestDownconf.deltat_down)
-                    logs.info('saved ev %s' % util.time_to_str(ev.time))
+                    downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, 
+                                      RestDownconf.deltat_down)
+                    logs.debug(' Saved ev %s' % util.time_to_str(ev.time))
 
                     if not os.listdir(os.path.join(data_dir, 'rrd')):
                         os.rmdir(os.path.join(data_dir, 'rrd'))
+
+            logs.info(' Done with rotation to ZRT. Saved rotated and'
+                      + ' downsampled data in directory %s.\n' % 
+                      os.path.join(data_dir, 'rrd'))
+
 
         ''' 6. Synthetic data '''
         if synthsconf.make_syn_data is True:
@@ -1269,7 +1279,18 @@ def main():
             logs = logging.getLogger('Synthetics')
             logs.setLevel(verbo)
 
-            logs.info('Generating synthetic data')
+            logs.info(' Starting synthetic data generation section.')
+
+            if not os.path.exists(synthsconf.engine_path):
+                logs.error('ERROR: Engine path not found: %s.' % synthsconf.engine_path
+                           + ' Please add a valid path to *engine_path* to compute synthetic data.' )
+                sys.exit()
+
+            if not os.path.exists(os.path.join(synthsconf.engine_path, synthsconf.store_id)):
+                logs.error('ERROR: GF store not found: %s.' % os.path.join(synthsconf.engine_path, synthsconf.store_id))
+                sys.exit()
+
+            logs.info(' GF store found: %s.' % os.path.join(synthsconf.engine_path, synthsconf.store_id))
 
             freqlim = RestDownconf.freqlim
             transf_taper = 1/min(freqlim)
@@ -1278,10 +1299,13 @@ def main():
                                    [synthsconf.engine_path])
             os.makedirs(os.path.join(data_dir, 'synthetics'), exist_ok=True)
             loc = '0'
-            for key, subset_catalog in subsets_events.items(): 
 
-                for ev in subset_catalog:
+            for key, subset_catalog in subsets_events.items():
+                logs.info(' Generating synthetic data for %s subset.' % key)
+                nev = len(subset_catalog)
 
+                for i_ev, ev in enumerate(subset_catalog):
+                    print('Event: %5d/%s' % (i_ev,nev), end='\r')
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
                     logs.info(ev_t_str)
 
@@ -1293,7 +1317,7 @@ def main():
                     # source.stf = gf.BoxcarSTF(duration=)
                     # scaling mit magnitude
                     if ev.duration < 1:
-                        logs.warning('warning ev.duration: %s' % ev.duration)
+                        logs.warning(' Warning ev.duration: %s' % ev.duration)
                     #ev.duration = None
                     ev.time = ev.time + ev.duration/2
                     source = gf.MTSource.from_pyrocko_event(ev)
@@ -1349,6 +1373,10 @@ def main():
                                              % (dir_syn_ev, net, sta, cha, ev_t_str)
                                     io.save(tr, filename, format='mseed')
 
+            logs.info(' Done with computation of synth. waveforms.'
+                      + ' Saved in directory %s. \n' % 
+                      os.path.join(data_dir, 'synthetics'))
+
 
         ''' 7. Gain factors '''
         if gainfconf.calc_gainfactors is True:
@@ -1356,7 +1384,9 @@ def main():
             logs = logging.getLogger('Gain factors')
             logs.setLevel(verbo)
 
-            logs.info('Evaluation of gain factors.')
+            logs.info(' Starting evaluation of gain factors.')
+            logs.info(' Method: %s' % gainfconf.gain_factor_method)
+
             dir_gains = os.path.join(data_dir, 'results', 'gains')
             os.makedirs(dir_gains, exist_ok=True)
             twd = (gainfconf.wdw_st_arr, gainfconf.wdw_sp_arr)
@@ -1370,6 +1400,7 @@ def main():
                 except Exception:
                     logs.error('Please calculate arrival times first!')
                     raise Exception('Arrival times not calculated!')
+                    sys.exit()
 
             def run_autogain(data_dir, all_stations, subset_catalog,
                              gain_factor_method, dir_gains, 
@@ -1379,12 +1410,21 @@ def main():
 
                 if len(gain_factor_method) == 1:
                     gain_factor_method = gain_factor_method[0]
-                data_pile = pile.make_pile(datapath)
-                #print(data_pile)
+                data_pile = pile.make_pile(datapath, show_progress=False)
+
+                if data_pile.is_empty():
+                    logs.error(' No data found in %s. Gain test failed.' % datapath)
+                    sys.exit()
                 
                 syn_data_pile = None
                 if gain_factor_method == 'syn_comp':
-                    syn_data_pile = pile.make_pile(os.path.join(data_dir, 'synthetics'))
+                    syn_data_pile = pile.make_pile(os.path.join(data_dir, 
+                                                   'synthetics'))
+
+                    if syn_data_pile.is_empty():
+                        logs.error(' No synthetic data found in %s. Gain test failed.' 
+                                    % os.path.join(data_dir, 'synthetics'))
+                        sys.exit()
                 
                 fband = gainfconf.fband
                 taper = trace.CosFader(xfrac=gainfconf.taper_xfrac)
@@ -1400,7 +1440,7 @@ def main():
                 ag.process(fband, taper, twd, gainfconf.debug_mode)
 
                 # Store mean results in YAML format:
-                logs.info('saving mean gains: gains_median_and_mean%s.txt %s' % (c, dir_gains))
+                logs.debug(' Saving mean gains: gains_median_and_mean%s.txt %s' % (c, dir_gains))
                 ag.save_median_and_mean_and_stdev('gains_median_and_mean%s.txt' % c, directory=dir_gains)
                 # Store all results in comma-spread text file:
                 ag.save_single_events('gains_all_events%s.txt' % c,
@@ -1408,19 +1448,40 @@ def main():
                 ag = None
             
             for c in gainfconf.components:
-                logs.info(c)
+                logs.info(' Gain test component %s.' % c)
                 run_autogain(data_dir, all_stations, subsets_events['deep'],
                              gainfconf.gain_factor_method,
                              dir_gains, twd, arrT_array, c)
 
             gc.collect()
+            logs.info(' Finished evaluation of gain factors.'
+                      + ' Results saved in directory %s.\n'
+                      % dir_gains)
 
         if gainfconf.plot_median_gain_on_map is True:
+            logs = logging.getLogger('Gain plot')
+            logs.setLevel(verbo)
+
             dir_gains = os.path.join(data_dir, 'results', 'gains')
-            for c in gainfconf.components:
-                plot_median_gain_map_from_file(ns, st_lats, st_lons, maps.pl_opt, maps.pl_topo,
-                                               'gains_median_and_mean%s.txt' % c, dir_gains, c,
-                                               maps.map_size)
+
+            not_set = False
+            for o in maps.pl_opt[0:2]:
+                if isinstance(o,str):
+                    logs.warning(' Please make sure the %s in the map plotting option in the confic files is set.' % o)
+                    not_set = True
+
+            if not_set:
+                logs.warning(' Skipping map plot.')
+
+            else:
+                for c in gainfconf.components:
+                    logs.info(' Plotting gain factors on map, component %s.' % c)
+                    plot_median_gain_map_from_file(ns, st_lats, st_lons, maps.pl_opt, maps.pl_topo,
+                                                   'gains_median_and_mean%s.txt' % c, dir_gains, c,
+                                                   maps.map_size)
+
+                logs.info(' Map plot(s) saved in directory %s.\n' % dir_gains)
+
 
         ''' 8. Frequency spectra'''
         # psd plot for each station, syn + obs
