@@ -95,6 +95,7 @@ def plot_corr_time(nsl, filename, dir_ro):
 
 def write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
                  n_ev, used_stats, dir_ro, ccmin):
+
     if list_switched:
         # write to yaml
         l_sw = [Event_sw(station=(s[0], s[1], s[2]), name=s[3],
@@ -376,7 +377,7 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
     plt.close(fig)
 
 
-def prep_orient(datapath, st, loc, catalog, dir_ro, v_rayleigh,
+def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
                 bp, dt_start, dt_stop, ccmin=0.80,
                 plot_heatmap=False,  plot_distr=False,
                 debug=False):
@@ -397,6 +398,7 @@ def prep_orient(datapath, st, loc, catalog, dir_ro, v_rayleigh,
     :param plot_distr: bool, optional
     """
     logs = logging.getLogger('prep_orient')
+    #logs.setLevel('DEBUG')
     st_data_pile = pile.make_pile(datapath, regex='%s_%s_' % (st.network, st.station),
                                   show_progress=False)
     n_ev = len(catalog)
@@ -450,7 +452,8 @@ def prep_orient(datapath, st, loc, catalog, dir_ro, v_rayleigh,
                 continue
 
             for i_r, r in enumerate(rot_angles):
-                print('rotation angle [deg]: %5d' % r, end='\r')
+                print('Station: %5d/%s, Event: %5d/%s, rotation angle [deg]: %5d' 
+                       % (i_st, nst, i_ev, n_ev, r), end='\r')
                 rot_2, rot_3 = trace.rotate(traces=[trR, trT], azimuth=r,
                                             in_channels=['R', 'T'],
                                             out_channels=['2', '3'])
@@ -492,6 +495,7 @@ def prep_orient(datapath, st, loc, catalog, dir_ro, v_rayleigh,
         '''
 
         if plot_heatmap is True:
+            logs.debug('Plotting heatmap for station %s.%s' % (st.network, st.station))
             fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 2))
 
             cax = ax.imshow(cc_i_ev_vs_rota, interpolation='nearest',
@@ -511,6 +515,7 @@ def prep_orient(datapath, st, loc, catalog, dir_ro, v_rayleigh,
             plt.close()
 
         if plot_distr is True:
+            logs.debug('Plotting distributions for station %s.%s' % (st.network, st.station))
             plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog,
                                     rot_angles, st, loc, dir_ro)
 
@@ -605,7 +610,7 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     cptfile = 'tempfile2.cpt'
     abs_angs = list(num.abs(angle_no_nan))
     m.gmt.makecpt(
-                C='jet',
+                C=pl_options[3],
                 T='%g/%g' % (0.1, 180.),
                 out_filename=cptfile)#, suppress_defaults=True)
     # m.gmt.makecpt(
@@ -672,4 +677,3 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
             has_label.append(stats_no_nan_u[i])
 
     m.save(os.path.join(dir_orient, 'map_orient.png'))
-    logs.info('Saved map with corr. angles for sensor orientations')
