@@ -563,7 +563,7 @@ def get_a_f(traces, cha):
 
 def calc_plot_psds(catalog, data_pile, syn_data_pile,
                    cha, l, dir_f, arrT_array, arrT_R_array, 
-                   nsl, i_st,
+                   nsl, i_st, nst,
                    tinc, tpad, dt_s, dt_e,
                    n, fac_norm, f_ign,
                    plot_psds, plot_ratio_extra,
@@ -594,6 +594,7 @@ def calc_plot_psds(catalog, data_pile, syn_data_pile,
     cnt = 0
 
     for i_ev, ev in enumerate(catalog):
+        print('Station: %5d/%s, Event: %5d/%s' % (i_st, nst, i_ev,n_ev), end='\r')
         ev_time_str = util.time_to_str(ev.time)[0:10]
         # print(ev_time_str)
         # abs. arrival times: arrT_array,
@@ -671,7 +672,7 @@ def calc_plot_psds(catalog, data_pile, syn_data_pile,
     #     return f_syn_keep, ratio_npar
 
 
-def prep_psd_fct(i_st, st, l, subset_catalog, dir_f, arrT_array, arrT_R_array,
+def prep_psd_fct(i_st, st, nst, l, subset_catalog, dir_f, arrT_array, arrT_R_array,
                  datapath,
                  syndatapath, tinc, tpad, dt_s, dt_e,
                  n, fac_norm, f_ign,
@@ -725,7 +726,7 @@ def prep_psd_fct(i_st, st, l, subset_catalog, dir_f, arrT_array, arrT_R_array,
                 st_syn_data_pile,
                 cha, l, dir_f,
                 arrT_array, arrT_R_array,
-                nsl, i_st,
+                nsl, i_st, nst,
                 tinc, tpad,
                 dt_s, dt_e,
                 n, fac_norm, f_ign,

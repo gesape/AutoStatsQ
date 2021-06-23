@@ -1318,15 +1318,16 @@ def main():
                                    [synthsconf.engine_path])
             os.makedirs(os.path.join(data_dir, 'synthetics'), exist_ok=True)
             loc = '0'
+            nst = len(all_stations)
 
             for key, subset_catalog in subsets_events.items():
                 logs.info(' Generating synthetic data for %s subset.' % key)
                 nev = len(subset_catalog)
 
                 for i_ev, ev in enumerate(subset_catalog):
-                    print('Event: %5d/%s' % (i_ev,nev), end='\r')
+                    
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
-                    logs.info(ev_t_str)
+                    #logs.info(ev_t_str)
 
                     dir_syn_ev = os.path.join(data_dir, 'synthetics', ev_t_str)
                     os.makedirs(dir_syn_ev, exist_ok=True)
@@ -1341,7 +1342,9 @@ def main():
                     ev.time = ev.time + ev.duration/2
                     source = gf.MTSource.from_pyrocko_event(ev)
 
-                    for st in all_stations:                      
+                    for ist, st in enumerate(all_stations):
+                        print('Event: %5d/%s, Station %5d/%s' 
+                              % (i_ev,nev, ist,nst), end='\r')
                         targets = []
                         sta = st.station
                         net = st.network
@@ -1522,7 +1525,7 @@ def main():
             logs = logging.getLogger('PSD')
             logs.setLevel(verbo)
 
-            logs.info('starting calc_psd')
+            logs.info(' Starting PSD test section.')
             dir_f = os.path.join(data_dir, 'results', 'freq')
             os.makedirs(dir_f, exist_ok=True)
 
@@ -1530,6 +1533,8 @@ def main():
             syndatapath = os.path.join(data_dir, 'synthetics')
 
             logs.info('Data path: %s\nSynthetic data path: %s' % (datapath, syndatapath))
+
+            nst = len(all_stations)
 
             if arrT_array is None:
                 try:
@@ -1568,7 +1573,7 @@ def main():
                 locs = list(set(list(st_data_pile.locations.keys())))
                 for l in locs:
                     freq_rat_list_st, freq_rat_list_y, nslc_list_st = fp.prep_psd_fct(
-                      i_st, st, l, subsets_events['deep'],
+                      i_st, st, nst, l, subsets_events['deep'],
                       dir_f,
                       arrT_array, arrT_R_array,
                       datapath, syndatapath,
@@ -1603,6 +1608,9 @@ def main():
                                 nslc_list2, dir_f,
                                 fname_ext='neighbour2')
             '''
+            logs.info(' Finished PSD test section.')
+            logs.info(' Results saved in directoriy %s.' % dir_f)
+
 
         # 9. Rayleigh wave polarization analysis for orientation
         if orientconf.orient_rayl is True:
@@ -1610,7 +1618,8 @@ def main():
             logs = logging.getLogger('Orientation')
             logs.setLevel(verbo)
 
-            logs.info('Rayleigh wave orientation section')
+            logs.info('Starting Rayleigh wave orientation section.')
+
             dir_ro = os.path.join(data_dir, 'results', 'orient')
             os.makedirs(dir_ro, exist_ok=True)
             datapath = os.path.join(data_dir, 'rrd')
@@ -1621,20 +1630,22 @@ def main():
             used_stats = []
             list_all_angles = []
             n_ev = []
+            nst = len(all_stations)
 
-            st_numbers = [i_st for i_st in range(len(all_stations))]
+            st_numbers = [i_st for i_st in range(nst)]
             for i_st, st in zip(st_numbers, all_stations):
-                logs.info(st.station)
+                logs.debug(st.station)
                 st_data_pile = pile.make_pile(datapath,
                                               regex='%s_%s_' % (st.network, st.station),
                                               show_progress=False)
                 if not st_data_pile:
+                    logs.debug('No data found for station %s' % st.station)
                     continue
                 locs = list(set(list(st_data_pile.locations.keys())))
                 for loc in locs:
                     out = orient.prep_orient(
                                             datapath,
-                                            st,
+                                            st, i_st, nst,
                                             loc,
                                             subsets_events['shallow'],
                                             dir_ro,
@@ -1659,9 +1670,14 @@ def main():
             orient.write_output(list_median_a, list_mean_a, list_stdd_a,
                                 list_switched,
                                 n_ev, used_stats, dir_ro, orientconf.ccmin)
+
             orient.write_all_output_csv(list_all_angles, used_stats, dir_ro)
+            logs.info(' Saved output of orient test in directory %s.' % dir_ro)
 
         if orientconf.plot_orient_map_fromfile is True:
+            logs = logging.getLogger('Orientation')
+            logs.setLevel(verbo)
+            logs.info(' Plotting output of orient test: Map plot.')
             dir_ro = os.path.join(data_dir, 'results', 'orient')
 
             skip_plot = False
@@ -1687,10 +1703,15 @@ def main():
                                         pl_opt, maps.pl_topo,
                                         maps.map_size,
                                         orientconf.orient_map_label)
+            logs.info(' Saved map plot of orient test in directory %s.' % dir_ro)
 
         if orientconf.plot_angles_vs_events is True:
+            logs = logging.getLogger('Orientation')
+            logs.setLevel(verbo)
+            logs.info(' Plotting output of orient test: Correction angles vs. events.')
             dir_ro = os.path.join(data_dir, 'results', 'orient')
             orient.plot_corr_time(ns, 'AllCorrectionAngles.yaml', dir_ro)
+            logs.info(' Saved plot in directory %s.' % dir_ro)
 
         if timingconf.timing_test is True:
             # Set Logger name and verbosity
