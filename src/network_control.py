@@ -13,6 +13,7 @@ from pyrocko import cake, gf
 from pyrocko.client import catalog, fdsn
 from pyrocko.client.fdsn import EmptyResult
 from pyrocko.io import stationxml
+from pyrocko import orthodrome as od
 # from pyrocko.fdsn import station as fs
 
 # from .gainfactors import *
@@ -69,6 +70,24 @@ Quality control of array stations
 
 9. Rayleigh wave polarization analysis for orientation
 '''
+
+
+def get_pl_opt(lats_all, lons_all):
+    ''' compute automated map dimensions'''
+
+    lat_m = num.mean(lats_all)
+    lon_m = num.mean(lons_all)
+
+    corners = [od.Loc(num.min(lats_all), num.min(lons_all)),
+               od.Loc(num.max(lats_all), num.max(lons_all))]
+
+    dist1 = od.distance_accurate50m(od.Loc(lat_m, lon_m), corners[0])
+    dist2 = od.distance_accurate50m(od.Loc(lat_m, lon_m), corners[1])
+    radius = max(dist1, dist2)*1.2
+
+    print(lat_m, lon_m, radius)
+
+    return [lat_m, lon_m, radius, 'split']
 
 
 def main(): 
@@ -1464,23 +1483,31 @@ def main():
 
             dir_gains = os.path.join(data_dir, 'results', 'gains')
 
-            not_set = False
-            for o in maps.pl_opt[0:2]:
-                if isinstance(o,str):
-                    logs.warning(' Please make sure the %s in the map plotting option in the confic files is set.' % o)
-                    not_set = True
+            skip_plot = False
 
-            if not_set:
-                logs.warning(' Skipping map plot.')
+            if maps.pl_opt == ['automatic']:
+                pl_opt = get_pl_opt(st_lats, st_lons)
+
+            elif len(maps.pl_opt) == 4:
+                for o in maps.pl_opt[0:2]:
+                    if isinstance(o,str):
+                        logs.warning(' Please make sure the %s in the map plotting option in the confic files is set.' % o)
+                        skip_plot = True
+                if not skip_plot:
+                    pl_opt = maps.pl_opt
 
             else:
+                logs.warning(' Set pl_opt to *automatic* or provide [lat, lon, radius, cscale].')
+                skip_plot = True
+
+            if not skip_plot:
                 for c in gainfconf.components:
                     logs.info(' Plotting gain factors on map, component %s.' % c)
-                    plot_median_gain_map_from_file(ns, st_lats, st_lons, maps.pl_opt, maps.pl_topo,
+                    plot_median_gain_map_from_file(ns, st_lats, st_lons, pl_opt, maps.pl_topo,
                                                    'gains_median_and_mean%s.txt' % c, dir_gains, c,
                                                    maps.map_size)
 
-                logs.info(' Map plot(s) saved in directory %s.\n' % dir_gains)
+                    logs.info(' Map plot(s) saved in directory %s.\n' % dir_gains)
 
 
         ''' 8. Frequency spectra'''
@@ -1636,11 +1663,30 @@ def main():
 
         if orientconf.plot_orient_map_fromfile is True:
             dir_ro = os.path.join(data_dir, 'results', 'orient')
-            orient.plot_corr_angles(ns, st_lats, st_lons,
-                                    'CorrectionAngles.yaml', dir_ro,
-                                    maps.pl_opt, maps.pl_topo,
-                                    maps.map_size,
-                                    orientconf.orient_map_label)
+
+            skip_plot = False
+            if maps.pl_opt == ['automatic']:
+                pl_opt = get_pl_opt(st_lats, st_lons)
+
+            elif len(maps.pl_opt) == 4:
+                for o in maps.pl_opt[0:2]:
+                    if isinstance(o,str):
+                        logs.warning(' Please make sure the %s in the map plotting option in the confic files is set.' % o)
+                        skip_plot = True
+
+                if not skip_plot:
+                    pl_opt = maps.pl_opt
+
+            else:
+                logs.warning(' Set pl_opt to *automatic* or provide [lat, lon, radius, cscale].')
+                skip_plot = True
+
+            if not skip_plot:
+                orient.plot_corr_angles(ns, st_lats, st_lons,
+                                        'CorrectionAngles.yaml', dir_ro,
+                                        pl_opt, maps.pl_topo,
+                                        maps.map_size,
+                                        orientconf.orient_map_label)
 
         if orientconf.plot_angles_vs_events is True:
             dir_ro = os.path.join(data_dir, 'results', 'orient')

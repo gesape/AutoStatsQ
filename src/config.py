@@ -179,7 +179,7 @@ class TeleCheckConfig(Object):
     tele_check = Bool.T()
 
 class maps(Object):
-    map_size = List.T()
+    map_size = List.T(default=[30,30])
     pl_opt = List.T()
     pl_topo = Bool.T(default=False)
 
