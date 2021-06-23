@@ -1,6 +1,7 @@
 from pyrocko import pile, trace, util
 import numpy as num
 import math
+import logging
 import os
 import logging
 import matplotlib.pyplot as plt
@@ -21,23 +22,34 @@ def ccs_allstats_one_event(i_ev, ev, stat_list, all_stations,
     return list with timeshift, fixed order of stations!
     """
 
+    logs = logging.getLogger('Timing')
+    logs.setLevel('INFO')
+
     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
     #p_obs = pile.make_pile(datapath+ev_t_str, show_progress=False)
     #p_syn = pile.make_pile(syndatapath+ev_t_str, show_progress=False)
 
     tshift_list = []
 
+    nst = len(stat_list)
+
     if p_obs and p_syn:
         for i_st, st in enumerate(stat_list):
+            print('Station: %5d/%s' % (i_st,nst), end='\r')
             try:
+                logs.debug('Checking timing, station: %s.%s' 
+                          % (st.network, st.station))
                 s = st.station
                 n = st.network
                 l = 'not_set'
             except:
                 n, s, l, c = st
+                logs.debug('Checking timing, station: %s.%s' 
+                          % (n, s))
 
             i_ast = [i_ast for i_ast, ast in enumerate(all_stations)
                      if ast.network == n and ast.station == s]
+
             if len(i_ast) >= 1:
                 ii_ast = i_ast[0]
                 tmin = arrT_array[i_ev, ii_ast]-30
@@ -63,6 +75,7 @@ def ccs_allstats_one_event(i_ev, ev, stat_list, all_stations,
                                 tmin=tmin,
                                 tmax=tmin+300,
                                 want_incomplete=True)
+
             tr_syn = p_syn.all(
                             trace_selector=lambda tr: tr.network == n and
                             tr.station == s and
@@ -72,6 +85,7 @@ def ccs_allstats_one_event(i_ev, ev, stat_list, all_stations,
                             want_incomplete=True)
 
             if len(tr_obs) != 0 and len(tr_syn) != 0:
+                logs.debug('tr obs and tr syn found')
                 tr_syn = tr_syn[0]
                 tr_obs = tr_obs[0]
                 tr_obs.bandpass(bp[0], bp[1], bp[2])
@@ -80,6 +94,7 @@ def ccs_allstats_one_event(i_ev, ev, stat_list, all_stations,
                 c = trace.correlate(tr_syn, tr_obs, mode='same',
                                     normalization='normal')
                 t, coef = c.max()
+                logs.debug('t shift: %s, cc: %s' % (t, coef))
 
                 if debug_mode is True:
                     logging.debug('%s %s' % (t, coef))
@@ -218,10 +233,18 @@ def save_mms(medians, means, stdevs, stations, out_dir, n_evs):
     means = list(num.round(means, decimals=1))
     stdevs = list(num.round(stdevs, decimals=1))
 
-    meds = dict(zip(['%s.%s.%s' % (s[0], s[1], s[2]) for s in stations], medians))
-    ms = dict(zip(['%s.%s.%s' % (s[0], s[1], s[2]) for s in stations], means))
-    sts = dict(zip(['%s.%s.%s' % (s[0], s[1], s[2]) for s in stations], stdevs))
-    ns = dict(zip(['%s.%s.%s' % (s[0], s[1], s[2]) for s in stations], n_evs))
+    try:
+        meds = dict(zip(['%s.%s.%s' % (s[0], s[1], s[2]) for s in stations], medians))
+        ms = dict(zip(['%s.%s.%s' % (s[0], s[1], s[2]) for s in stations], means))
+        sts = dict(zip(['%s.%s.%s' % (s[0], s[1], s[2]) for s in stations], stdevs))
+        ns = dict(zip(['%s.%s.%s' % (s[0], s[1], s[2]) for s in stations], n_evs))
+    
+    except TypeError:
+        meds = dict(zip(['%s.%s.%s' % (s.network, s.station, s.location) for s in stations], medians))
+        ms = dict(zip(['%s.%s.%s' % (s.network, s.station, s.location) for s in stations], means))
+        sts = dict(zip(['%s.%s.%s' % (s.network, s.station, s.location) for s in stations], stdevs))
+        ns = dict(zip(['%s.%s.%s' % (s.network, s.station, s.location) for s in stations], n_evs))
+    
 
     results_ = results_dict(medians=meds, means=ms, st_devs=sts, n_ev=ns)
 

@@ -1718,7 +1718,7 @@ def main():
             logs = logging.getLogger('Timing')
             logs.setLevel(verbo)
 
-            logs.info('Starting timing test')
+            logs.info(' Starting timing test.')
             if arrT_array is None:
                 try:
                     data_dir = gensettings.work_dir
@@ -1734,6 +1734,8 @@ def main():
             os.makedirs(dir_time, exist_ok=True)
             p_obs = pile.make_pile(datapath, show_progress=False)
             p_syn = pile.make_pile(syndatapath, show_progress=False)
+
+            # print(p_obs, p_syn)
 
             if timingconf.search_locations is True:
                 nslc_list = []
@@ -1769,6 +1771,9 @@ def main():
             outfile = os.path.join(dir_time, 'timing_errors_allStats.png')
             tt.plot_tshifts(tshifts_cor, means, stdevs, outfile, stations)
             tt.save_mms(medians, means, stdevs, stations, dir_time, n_evs)
+
+            logs.info(' Finished timing error test.' + 
+                      ' Results saved in directory %s.' % dir_time)
 
         if tc.tele_check is True:
             # Set Logger name and verbosity
