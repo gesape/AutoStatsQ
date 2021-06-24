@@ -110,8 +110,8 @@ def generate_default_config():
 
     timingconf = TimingConfig(timing_test=False,
                               bandpass=(3, 0.01, 0.1),
-                              time_wdw=['firstP', 600],
-                              cc_thresh=0.7,
+                              time_wdw=['firstP', 1200],
+                              cc_thresh=0.6,
                               search_locations=True,
                               debug_mode=False)
 

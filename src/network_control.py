@@ -1728,6 +1728,7 @@ def main():
                     raise Exception('Arrival times must be calculated first!')
 
             subset_catalog = subsets_events['deep']
+            nev = len(subset_catalog)
             datapath = os.path.join(gensettings.work_dir, 'rrd')
             syndatapath = os.path.join(gensettings.work_dir, 'synthetics')
             dir_time = os.path.join(gensettings.work_dir, 'results/timing')
@@ -1751,10 +1752,11 @@ def main():
             tshifts.fill(num.nan)
 
             for i_ev, ev in enumerate(subset_catalog):
-                tshifts[:, i_ev] = tt.ccs_allstats_one_event(i_ev, ev, stations, all_stations,
+                tshifts[:, i_ev] = tt.ccs_allstats_one_event(i_ev, nev, ev, stations, all_stations,
                                                              p_obs, p_syn,
                                                              dir_time, timingconf.bandpass,
                                                              arrT_array, timingconf.cc_thresh,
+                                                             timingconf.time_wdw,
                                                              debug_mode=timingconf.debug_mode)
             tshifts_cor = tt.correct_for_med_tshifts(tshifts)
             tt.plot_matrix(tshifts, tshifts_cor, stations, dir_time)
