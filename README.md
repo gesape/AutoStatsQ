@@ -23,8 +23,7 @@ Latest changes
 -------------
 - data is downsampled to 10 Hz prior to restitution. This is necessary in case of high sampling rates to not introduce filtering errors.
 - new independent and interactive test for amplitude corrections based on waveform correlations of teleseismic P phases --> please contact me for detailed instructions, I didn't have time to document the work-flow yet, but it is a great new test ;-)
-- new simple test for large timing errors (not yet sufficiently tested...)
-- gain test: additional method comparing max A to synthetics
+- new simple test for large timing errors (see below...)
 - added debug mode for a nice to gain and orientation test window selection experience;) can also be used to test filter settings
 
 
@@ -270,13 +269,19 @@ Settings:
   # plot angle vs single events, one plot for each station
 
 - !autostatsq.config.TimingConfig
-  # simple test for large timing errors
+  # simple test for large timing errors (> 2s)
   timing_test: false
   bandpass: [3, 0.01, 0.1]
-  time_wdw: [firstP, 600]
-  cc_thresh: 0.7
-  search_locations: false
-  debug_mode: false
+  time_wdw: [firstP, 1200]  
+  # needs a long time window for correlation
+  cc_thresh: 0.6
+  # test appropriate setting with debug mode, depends on frequency range
+  search_locations: false  
+  # uses all stations in station list if false, otherwise all found 
+  # in traces are used
+  debug_mode: false 
+  # starts in interactive mode in snuffler showing the traces and the obtained
+  # cross correlation function
 
 - !autostatsq.config.TeleCheckConfig
   tele_check: false
@@ -323,7 +328,22 @@ Orientation test:
 PSD test:
 - flat freq ranges in yaml file for each station and component
 - optional: synth. and real PSDs
-- optional: plots showing fit through PSD ratios 
+- optional: plots showing fit through PSD ratios
+
+
+Small intro to the timing error test:
+-------------------------------------
+
+--> The other tests are described in detail here: http://doi.org/10.1785/0220180342
+
+
+The small implemented check for timing errors is based on the cross-correlation between the recorded traces and the synthetic vertical traces: (1) First, for each event and station the two (syn. + obs.) traces are correlated to obtain the time shift for which the correlation is highest. (2) In a second step the median time shift of each event over all stations is determined and the time shift values at the single stations are corrected for this median value. This is done to avoid errors from wrong origin times in the catalog, to take into account large deviations between orgin time and centroid time, and to consider large path effects of the teleseismic test events which effect all stations in a similar manner.
+
+The test is run in low frequency ranges (e.g. 0.01-0.10 Hz) and using synthetics computed from a global GFDB with a sampling of 2s. Therefore this test can only be applied to detect large timing errors in the order of several seconds. This error range is only useful to check prior to other seismological applications which use a similar frequency range as e.g. MT inversions.
+
+The output is returned as a yaml file with mean, median, standard deviations and number of considered events. Additionally one figure shows the correlation matrices, before and after correction with the median of each event, and a second figure shows the obtained timing errors for each station.
+
+For the input parameters please check the exemplary config file above.
 
 
 References:
