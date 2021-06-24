@@ -51,7 +51,7 @@ class Section():
         self.max_tr_syn = {}
 
     def finish(self, method, fband, taper, ev_counter):
-        self.logs.info('METHOD %s' % method)
+        self.logs.debug('METHOD %s' % method)
         self.logs.debug(len(method))
 
         if len(method) == 2:
@@ -63,8 +63,8 @@ class Section():
             self.____reference_nslc = reference_nslc
 
             if not len(reference_nslc) == 1:
-                self.logs.info('no reference trace available. ' +
-                               'remains unfinished: %s' % self.event)
+                self.logs.info(' No reference trace available. ' +
+                               'remains unfinished: %s' % self.event.name)
                 self.finished = False
             else:
                 self.reference_scale = self.max_tr[reference_nslc[0]]
@@ -84,7 +84,8 @@ class Section():
                     #print(nslc_id[0:2])
                     self.relative_scalings[nslc_id] = maxA / self.max_tr_syn[nslc_id[0:2]]
                 except:
-                    self.logs.warning('syn data missing: %s' % nslc_id[0:2])
+                    self.logs.warning(' Synthetic data for comparison missing: %s' 
+                                      % nslc_id[0:2])
             #print(self.relative_scalings)
             self.finished = True
 
@@ -159,7 +160,7 @@ class AutoGain():
 
         for i_ev, event in enumerate(self.events):
             tr_nslc_ids = []
-            self.logs.info('Processing event %s of %s' % (i_ev, no_events))
+            self.logs.info(' Processing event %s of %s' % (i_ev, no_events))
             section = Section(event, self.stations)
             skipped = 0
             unskipped = 0

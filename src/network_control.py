@@ -13,6 +13,7 @@ from pyrocko import cake, gf
 from pyrocko.client import catalog, fdsn
 from pyrocko.client.fdsn import EmptyResult
 from pyrocko.io import stationxml
+from pyrocko import orthodrome as od
 # from pyrocko.fdsn import station as fs
 
 # from .gainfactors import *
@@ -71,6 +72,24 @@ Quality control of array stations
 '''
 
 
+def get_pl_opt(lats_all, lons_all):
+    ''' compute automated map dimensions'''
+
+    lat_m = num.mean(lats_all)
+    lon_m = num.mean(lons_all)
+
+    corners = [od.Loc(num.min(lats_all), num.min(lons_all)),
+               od.Loc(num.max(lats_all), num.max(lons_all))]
+
+    dist1 = od.distance_accurate50m(od.Loc(lat_m, lon_m), corners[0])
+    dist2 = od.distance_accurate50m(od.Loc(lat_m, lon_m), corners[1])
+    radius = max(dist1, dist2)*1.2
+
+    print(lat_m, lon_m, radius)
+
+    return [lat_m, lon_m, radius, 'split']
+
+
 def main(): 
   
     # Any event with "bad" data to be excluded?
@@ -83,7 +102,7 @@ def main():
     parser.add_argument('--run', action='store_true')
     parser.add_argument('--generate_config', action='store_true')
     parser.add_argument('-l', '--loglevel',
-                        help='Verbosity in the output.', default='WARNING',
+                        help='Verbosity in the output.', default='INFO',
                         choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO',
                                  'DEBUG'])
     parser.add_argument('--logoutput', '-o', default=None,
@@ -99,6 +118,7 @@ def main():
 
     # Generate a (template) config file:
     if args.generate_config:
+        logging.info('Welcome to AutoStatsQ - a station quality control checking tool.\n')
         # Set Logger name and verbosity
         logs = logging.getLogger('Generate config')
         logs.setLevel(verbo)
@@ -113,7 +133,8 @@ def main():
         logs.info('created a fresh config file %s' % fn_config)
 
     if not args.generate_config and not args.config:
-        logging.error('Clusty needs a config file.')
+        logging.info('Welcome to AutoStatsQ - a station quality control checking tool.\n')
+        logging.error('AutoStatsQ needs a config file.')
         print(parser.print_help())
 
 
@@ -122,6 +143,8 @@ def main():
         # Set Logger name and verbosity
         logs = logging.getLogger('Run')
         logs.setLevel(verbo)
+
+        logging.info('Welcome to AutoStatsQ - a station quality control checking tool.\n')
 
         # read existing config file:
 
@@ -210,7 +233,10 @@ def main():
                 raise Exception('Unknown file extension')
 
 
-        logs.info('stations: %d' % len(ns))
+        logs.info(' Number of stations: %d' % len(ns))
+        if len(ns) == 0:
+            logs.error('No stations found.')
+            sys.exit()
 
         ##### FOR SHORT TESTING
         '''
@@ -255,6 +281,7 @@ def main():
             if not hasattr(catalogconf, 'catalog_fn') or catalogconf.catalog_fn is None:
                 catalogconf.catalog_fn = os.path.join(data_dir, 'results/catalog',
                                                       'catalog_Mgr%s.txt' % (catalogconf.min_mag))
+
             if catalogconf.subset_of_local_catalog is False:
                 ev_catalog = model.load_events(catalogconf.catalog_fn)
 
@@ -337,6 +364,7 @@ def main():
                                    catalogconf.tmax_str[0:10], d)
                     fn = os.path.join(auxdir, pltfilename)
 
+                    logs.info(' Plotting catalog azimuthal for full catalog: %s.' % d)
                     gmtplot_catalog_azimuthal(ev_cat, mid_point,
                                               catalogconf.dist, fn,
                                               catalogconf.wedges_width)
@@ -353,11 +381,13 @@ def main():
 
 
                 if catalogconf.plot_hist_wedges is True:
+                    logs.info(' Plotting catalog histogram for full catalog: %s.' % d)
                     plot_catalog_hist(ev_cat, dist_array, mean_wedges_mp,
                                       bins_hist, data_dir, catalogconf.min_mag, d,
                                       catalogconf.wedges_width, no_bins)
 
                 if catalogconf.plot_dist_vs_magn is True:
+                    logs.info(' Plotting catalog distance vs. magnitude for full catalog: %s.' % d)
                     plot_distmagn(dist_array, ev_cat, data_dir, d)
 
                 # find 'best' subset of catalog events
@@ -450,7 +480,7 @@ def main():
               
                 logs.info('Subset of %d events was generated for %s.' % \
                           (len(subset_catalog), d))
-                
+
                 # sort subset catalog by time:
                 subset_catalog.sort(key=lambda x: x.time)
 
@@ -472,7 +502,57 @@ def main():
                     subset_catalog = model.load_events(catalogconf.subset_fns[d])
                 except Exception:
                     subset_catalog = []
+
+                if subset_catalog == []:
+                    logs.error('Catalog empty, %s' % d)
+                    sys.exit()
+
+                logs.info(' Subset of catalog for %s: %s events.\n' % (d, len(subset_catalog)))
+
                 subsets_events[d] = subset_catalog
+
+            if catalogconf.plot_hist_wedges is True:
+                dist_array_subset = num.empty((len(subset_catalog), len(ns)))
+                bazi_array_subset = num.empty((len(subset_catalog), len(ns)))
+                bazi_mp_array_subset = num.empty((len(subset_catalog)))
+
+                for i_ev, ev in enumerate(subset_catalog):
+                    dist_array_subset[i_ev, :] = [float(orthodrome.distance_accurate50m_numpy(
+                                          ev.lat, ev.lon, lat, lon))
+                                          for (lat, lon) in zip(st_lats, st_lons)]
+
+                    bazi_array_subset[i_ev, :] = [orthodrome.azibazi(ev.lat, ev.lon, lat, lon)[1]
+                                           for (lat, lon) in zip(st_lats, st_lons)]
+
+                    bazi_mp_array_subset[i_ev] = orthodrome.azibazi(ev.lat, ev.lon,
+                                                             mid_point[0],
+                                                             mid_point[1])[1]
+
+                wedges_array_subset = num.floor(bazi_array_subset / catalogconf.wedges_width)
+
+                # hist based on chosen mid_point of array
+                wedges_array_mp_subset = num.floor(bazi_mp_array_subset / catalogconf.wedges_width)
+                mean_wedges_mp_subset = num.where(wedges_array_mp_subset < 0,
+                                           no_bins+wedges_array_mp_subset,
+                                           wedges_array_mp_subset)
+                bins_hist_subset = [a for a in range(no_bins+1)]
+                hist_subset, bin_edges_subset = num.histogram(mean_wedges_mp_subset, bins=bins_hist_subset)
+
+                logs.info(' Plotting catalog histogram for subset: %s.' % d)
+                plot_catalog_hist(subset_catalog, dist_array_subset, mean_wedges_mp_subset,
+                                  bins_hist_subset, data_dir, catalogconf.min_mag, d,
+                                  catalogconf.wedges_width, no_bins, full_cat=False)
+
+            if catalogconf.plot_dist_vs_magn is True:
+                dist_array_subset = num.empty((len(subset_catalog), len(ns)))
+
+                for i_ev, ev in enumerate(subset_catalog):
+                    dist_array_subset[i_ev, :] = [float(orthodrome.distance_accurate50m_numpy(
+                                          ev.lat, ev.lon, lat, lon))
+                                          for (lat, lon) in zip(st_lats, st_lons)]
+
+                logs.info(' Plotting catalog distance vs. magnitude for subset: %s.' % d)
+                plot_distmagn(dist_array_subset, subset_catalog, data_dir, d, full_cat=False)
 
             if catalogconf.plot_catalog_subset is True:
                 '''
@@ -485,6 +565,7 @@ def main():
                               (catalogconf.min_mag, _tmin[0:10], _tmax[0:10], d)
                 fn = os.path.join(data_dir, 'results/catalog', catfilename)
 
+                logs.info(' Plotting catalog azimuthal for subset: %s.' % d)
                 gmtplot_catalog_azimuthal(subset_catalog, mid_point, 
                                                catalogconf.dist, fn, catalogconf.wedges_width)
 
@@ -495,11 +576,14 @@ def main():
                         new_subset_catalog.append(ev)
                 subset_catalog = new_subset_catalog
 
+
             ''' 2.1 Calculate arrival times for all event/station pairs '''
             # Method a) using cake
             arrT_array = None
             arrT_R_array = None
             if arrTconf.calc_first_arr_t is True:
+                logs.info(' Calculating arrival times of first phase, %s subset.'
+                          % d)
                 data_dir = gensettings.work_dir
                 os.makedirs(os.path.join(data_dir, 'ttt'), exist_ok=True)
                 dist_array_sub = num.empty((len(subset_catalog), len(ns)))
@@ -513,11 +597,10 @@ def main():
                 depths = [ev.depth for ev in subset_catalog]
                 vmodel = cake.load_model('prem-no-ocean.f')
                 phases = [cake.PhaseDef(pid) for pid in arrTconf.phase_select.split('|')]
-
+                nev = len(subset_catalog)
                 for i_ev, ev in enumerate(subset_catalog):
                     ds = depths[i_ev]
-                    logs.info('calculating arr times for: %s' % (util.time_to_str(ev.time)))
-
+                    print('Event: %5d/%s' % (i_ev,nev), end='\r')
                     for i_st in range(len(ns)):
                         dist = dist_array_sub[i_ev, i_st]
                         arrivals = vmodel.arrivals(distances=[dist*cake.m2d],
@@ -530,13 +613,19 @@ def main():
 
                 num.save(os.path.join(data_dir, 'ttt', 'ArrivalTimes_%s' % (d)), arrT_array)
 
+                logs.info(' Arrival times of first phase ready, %s subset.\n'
+                          % d)
+
             if arrTconf.calc_est_R is True:
-                logs.info('computing R arrival times')
+                logs.info(' Calculating arrival times of Rayleigh waves, %s subset.'
+                          % d)
                 data_dir = gensettings.work_dir
                 os.makedirs(os.path.join(data_dir, 'ttt'), exist_ok=True)
                 dist_array_sub = num.empty((len(subset_catalog), len(ns)))
+                nev = len(subset_catalog)
 
                 for i_ev, ev in enumerate(subset_catalog):
+                    print('Event: %5d/%s' % (i_ev,nev), end='\r')
                     dist_array_sub[i_ev, :] = [float(orthodrome.distance_accurate50m_numpy(
                                           ev.lat, ev.lon, lat, lon))
                                           for (lat, lon) in zip(st_lats, st_lons)]
@@ -554,6 +643,9 @@ def main():
                         arrT_R_array[i_ev, i_st] = ev.time + dist/(arrTconf.v_rayleigh*1000.)
 
                 num.save(os.path.join(data_dir, 'ttt', 'ArrivalTimes_estR_%s' % (d)), arrT_R_array)
+
+                logs.info(' Arrival times of Rayleigh waves ready, %s subset.\n'
+                          % d)
 
             # Method b) interpolating from fomosto travel time tables
             '''
@@ -598,6 +690,8 @@ def main():
         # token = open(metaDataconf.token, 'rb').read()
 
         if metaDataconf.download_data is True:   ### clean up!
+            
+            logs.info(' Starting data downloading section.')
 
             for subset_catalog in subsets_events.values():
                 for ev in subset_catalog:
@@ -656,15 +750,19 @@ def main():
                             else:
                                 logs.debug('%s data downloaded from %s' % (ns_now, site))
                                 break
+
                     if not os.listdir(dir_make):
                         os.rmdir(dir_make)
+
+            logs.info(' Finished data downloading section.\n')
+
 
         if metaDataconf.download_metadata is True:
             # Set Logger name and verbosity
             logs = logging.getLogger('Download metadata')
             logs.setLevel(verbo)
 
-            logs.info('Downloading metadata')
+            logs.info(' Starting to download station metadata.')
 
             cat_tmin = min([ev.time for ev in subset_catalog for k, subset_catalog in subsets_events.items()])
             cat_tmax = max([ev.time for ev in subset_catalog for k, subset_catalog in subsets_events.items()])
@@ -691,6 +789,8 @@ def main():
                 #except:
                 #    print('no metadata at all', site, selection[1])
 
+            logs.info(' Finished to download station metadata.\n')
+
 
         ''' 4. Data preparation: restitution of data '''
         if RestDownconf.rest_data is True:
@@ -698,46 +798,60 @@ def main():
             logs = logging.getLogger('Restitution')
             logs.setLevel(verbo)
 
-            logs.info('Starting restitution of data.')
+            logs.info(' Starting restitution of data.')
             responses = []
 
             if metaDataconf.local_metadata != []:
+                logs.debug(' Looking for local metadata.')
                 for file in metaDataconf.local_metadata:
                     responses.append(stationxml.load_xml(filename=file))
             
             if metaDataconf.use_downmeta is True:
+                logs.debug(' Looking for downloaded metadata.')
                 for site in sites:
                     stations_fn = os.path.join(data_dir, 'Resp_all_' + str(site) + '.xml')
                     responses.append(stationxml.load_xml(filename=stations_fn))
 
+            if not metaDataconf.use_downmeta and not metaDataconf.local_metadata:
+                logs.error(' No response files found. Set *use_downmeta* to True '
+                           + 'or provide other local metadata using option'
+                           + ' *local_metadata*.')
+                sys.exit()
+
             i_resp = len(responses)
-            logs.info(i_resp)
+            logs.info(' Number of responses found: %s.' % i_resp)
 
             if metaDataconf.local_data and not metaDataconf.sds_structure:
                 logs.info('Accessing local data.')
                 p_local = pile.make_pile(paths=metaDataconf.local_data,
-                                         show_progress=False)
+                                         show_progress=True)
 
+            nst = len(all_stations)
             for key, subset_catalog in subsets_events.items(): 
+                logs.info(' Starting restitution of data, %s subset.' % d)
+                nev = len(subset_catalog)
 
-                for ev in subset_catalog:
-                    logs.info(util.time_to_str(ev.time))
+                for i_ev, ev in enumerate(subset_catalog):
+                    logs.debug(util.time_to_str(ev.time))
+
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
-
                     tmin = ev.time+metaDataconf.dt_start*3600
                     tmax = ev.time+metaDataconf.dt_end*3600
 
-                    #stations_fn = data_dir + ev_t_str + '_resp_geofon.xml'
-                    #response = stationxml.load_xml(filename=stations_fn)
-                    #print(data_dir+ev_t_str)
+                    # stations_fn = data_dir + ev_t_str + '_resp_geofon.xml'
+                    # response = stationxml.load_xml(filename=stations_fn)
+                    # print(data_dir+ev_t_str)
                     if metaDataconf.local_waveforms_only is False:
-                        p = pile.make_pile(paths=os.path.join(data_dir, ev_t_str), show_progress=False)
+                        p = pile.make_pile(paths=os.path.join(data_dir, ev_t_str), 
+                                           show_progress=False)
                     
                     dir_make = os.path.join(data_dir, 'rest', ev_t_str)
                     os.makedirs(dir_make, exist_ok=True)
                     transf_taper = 1/min(RestDownconf.freqlim)
 
-                    for st in all_stations:
+                    for i_st, st in enumerate(all_stations):
+                        print('Event: %5d/%s, Station: %5d/%s' % (i_ev, nev, i_st, nst),
+                              end='\r')
                         #if st.network not in net_check:
                         #    continue                        
                         nsl = st.nsl()
@@ -937,12 +1051,15 @@ def main():
                     if not os.listdir(dir_make):
                         os.rmdir(dir_make)
 
+            logs.info(' Finished restitution of data, %s subset.' % d)
+            logs.info(' Saved restituted data in directory %s.\n' % os.path.join(data_dir, 'rest'))
+
+
         ''' 5. Rotation NE --> RT '''
         if RestDownconf.rotate_data is True:
             # Set Logger name and verbosity
             logs = logging.getLogger('Rotation')
             logs.setLevel(verbo)
-            logs.info('Starting downsampling and rotation')
 
             def save_rot_down_tr(tr, dir_rot, ev_t_str):
                 fname = '%s_%s_%s__%s_%srrd2.mseed' % \
@@ -959,7 +1076,8 @@ def main():
 
             def downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, deltat_down):
 
-                ev_data_pile = pile.make_pile(dir_rest, regex='rest2')
+                ev_data_pile = pile.make_pile(dir_rest, regex='rest2',
+                                              show_progress=False)
                 for st in all_stations:
 
                     #if st.network not in net_check:
@@ -1145,24 +1263,34 @@ def main():
             
             if metaDataconf.use_downmeta is True:            
                 for site in sites:
-                    stations_fn = os.path.join(data_dir, 'Resp_all_' + str(site) + '.xml')
+                    stations_fn = os.path.join(data_dir, 'Resp_all_' + str(site) 
+                                               + '.xml')
                     st_xml.append(stationxml.load_xml(filename=stations_fn))
 
             i_st_xml = len(st_xml)
-            for key, subset_catalog in subsets_events.items(): 
+            for key, subset_catalog in subsets_events.items():
+                logs.info(' Starting downsampling and rotation, subset %s' % key)
+                nev = len(subset_catalog)
 
-                for ev in subset_catalog:
+                for i_ev, ev in enumerate(subset_catalog):
+                    logs.debug(' Event %s' % util.time_to_str(ev.time))
+                    print('Event: %5d/%s' % (i_ev,nev), end='\r')
                     gc.collect()
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
-                    # print(ev_t_str)
                     os.makedirs(os.path.join(data_dir, 'rrd'), exist_ok=True)
                     dir_rot = os.path.join(data_dir, 'rrd', ev_t_str)
                     dir_rest = os.path.join(data_dir, 'rest', ev_t_str)
-                    downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, RestDownconf.deltat_down)
-                    logs.info('saved ev %s' % util.time_to_str(ev.time))
+                    downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, 
+                                      RestDownconf.deltat_down)
+                    logs.debug(' Saved ev %s' % util.time_to_str(ev.time))
 
                     if not os.listdir(os.path.join(data_dir, 'rrd')):
                         os.rmdir(os.path.join(data_dir, 'rrd'))
+
+            logs.info(' Done with rotation to ZRT. Saved rotated and'
+                      + ' downsampled data in directory %s.\n' % 
+                      os.path.join(data_dir, 'rrd'))
+
 
         ''' 6. Synthetic data '''
         if synthsconf.make_syn_data is True:
@@ -1170,7 +1298,18 @@ def main():
             logs = logging.getLogger('Synthetics')
             logs.setLevel(verbo)
 
-            logs.info('Generating synthetic data')
+            logs.info(' Starting synthetic data generation section.')
+
+            if not os.path.exists(synthsconf.engine_path):
+                logs.error('ERROR: Engine path not found: %s.' % synthsconf.engine_path
+                           + ' Please add a valid path to *engine_path* to compute synthetic data.' )
+                sys.exit()
+
+            if not os.path.exists(os.path.join(synthsconf.engine_path, synthsconf.store_id)):
+                logs.error('ERROR: GF store not found: %s.' % os.path.join(synthsconf.engine_path, synthsconf.store_id))
+                sys.exit()
+
+            logs.info(' GF store found: %s.' % os.path.join(synthsconf.engine_path, synthsconf.store_id))
 
             freqlim = RestDownconf.freqlim
             transf_taper = 1/min(freqlim)
@@ -1179,12 +1318,16 @@ def main():
                                    [synthsconf.engine_path])
             os.makedirs(os.path.join(data_dir, 'synthetics'), exist_ok=True)
             loc = '0'
-            for key, subset_catalog in subsets_events.items(): 
+            nst = len(all_stations)
 
-                for ev in subset_catalog:
+            for key, subset_catalog in subsets_events.items():
+                logs.info(' Generating synthetic data for %s subset.' % key)
+                nev = len(subset_catalog)
 
+                for i_ev, ev in enumerate(subset_catalog):
+                    
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
-                    logs.info(ev_t_str)
+                    #logs.info(ev_t_str)
 
                     dir_syn_ev = os.path.join(data_dir, 'synthetics', ev_t_str)
                     os.makedirs(dir_syn_ev, exist_ok=True)
@@ -1194,12 +1337,14 @@ def main():
                     # source.stf = gf.BoxcarSTF(duration=)
                     # scaling mit magnitude
                     if ev.duration < 1:
-                        logs.warning('warning ev.duration: %s' % ev.duration)
+                        logs.warning(' Warning ev.duration: %s' % ev.duration)
                     #ev.duration = None
                     ev.time = ev.time + ev.duration/2
                     source = gf.MTSource.from_pyrocko_event(ev)
 
-                    for st in all_stations:                      
+                    for ist, st in enumerate(all_stations):
+                        print('Event: %5d/%s, Station %5d/%s' 
+                              % (i_ev,nev, ist,nst), end='\r')
                         targets = []
                         sta = st.station
                         net = st.network
@@ -1250,6 +1395,10 @@ def main():
                                              % (dir_syn_ev, net, sta, cha, ev_t_str)
                                     io.save(tr, filename, format='mseed')
 
+            logs.info(' Done with computation of synth. waveforms.'
+                      + ' Saved in directory %s. \n' % 
+                      os.path.join(data_dir, 'synthetics'))
+
 
         ''' 7. Gain factors '''
         if gainfconf.calc_gainfactors is True:
@@ -1257,7 +1406,9 @@ def main():
             logs = logging.getLogger('Gain factors')
             logs.setLevel(verbo)
 
-            logs.info('Evaluation of gain factors.')
+            logs.info(' Starting evaluation of gain factors.')
+            logs.info(' Method: %s' % gainfconf.gain_factor_method)
+
             dir_gains = os.path.join(data_dir, 'results', 'gains')
             os.makedirs(dir_gains, exist_ok=True)
             twd = (gainfconf.wdw_st_arr, gainfconf.wdw_sp_arr)
@@ -1271,6 +1422,7 @@ def main():
                 except Exception:
                     logs.error('Please calculate arrival times first!')
                     raise Exception('Arrival times not calculated!')
+                    sys.exit()
 
             def run_autogain(data_dir, all_stations, subset_catalog,
                              gain_factor_method, dir_gains, 
@@ -1280,12 +1432,21 @@ def main():
 
                 if len(gain_factor_method) == 1:
                     gain_factor_method = gain_factor_method[0]
-                data_pile = pile.make_pile(datapath)
-                #print(data_pile)
+                data_pile = pile.make_pile(datapath, show_progress=False)
+
+                if data_pile.is_empty():
+                    logs.error(' No data found in %s. Gain test failed.' % datapath)
+                    sys.exit()
                 
                 syn_data_pile = None
                 if gain_factor_method == 'syn_comp':
-                    syn_data_pile = pile.make_pile(os.path.join(data_dir, 'synthetics'))
+                    syn_data_pile = pile.make_pile(os.path.join(data_dir, 
+                                                   'synthetics'))
+
+                    if syn_data_pile.is_empty():
+                        logs.error(' No synthetic data found in %s. Gain test failed.' 
+                                    % os.path.join(data_dir, 'synthetics'))
+                        sys.exit()
                 
                 fband = gainfconf.fband
                 taper = trace.CosFader(xfrac=gainfconf.taper_xfrac)
@@ -1301,7 +1462,7 @@ def main():
                 ag.process(fband, taper, twd, gainfconf.debug_mode)
 
                 # Store mean results in YAML format:
-                logs.info('saving mean gains: gains_median_and_mean%s.txt %s' % (c, dir_gains))
+                logs.debug(' Saving mean gains: gains_median_and_mean%s.txt %s' % (c, dir_gains))
                 ag.save_median_and_mean_and_stdev('gains_median_and_mean%s.txt' % c, directory=dir_gains)
                 # Store all results in comma-spread text file:
                 ag.save_single_events('gains_all_events%s.txt' % c,
@@ -1309,19 +1470,48 @@ def main():
                 ag = None
             
             for c in gainfconf.components:
-                logs.info(c)
+                logs.info(' Gain test component %s.' % c)
                 run_autogain(data_dir, all_stations, subsets_events['deep'],
                              gainfconf.gain_factor_method,
                              dir_gains, twd, arrT_array, c)
 
             gc.collect()
+            logs.info(' Finished evaluation of gain factors.'
+                      + ' Results saved in directory %s.\n'
+                      % dir_gains)
 
         if gainfconf.plot_median_gain_on_map is True:
+            logs = logging.getLogger('Gain plot')
+            logs.setLevel(verbo)
+
             dir_gains = os.path.join(data_dir, 'results', 'gains')
-            for c in gainfconf.components:
-                plot_median_gain_map_from_file(ns, st_lats, st_lons, maps.pl_opt, maps.pl_topo,
-                                               'gains_median_and_mean%s.txt' % c, dir_gains, c,
-                                               maps.map_size)
+
+            skip_plot = False
+
+            if maps.pl_opt == ['automatic']:
+                pl_opt = get_pl_opt(st_lats, st_lons)
+
+            elif len(maps.pl_opt) == 4:
+                for o in maps.pl_opt[0:2]:
+                    if isinstance(o,str):
+                        logs.warning(' Please make sure the %s in the map plotting option in the confic files is set.' % o)
+                        skip_plot = True
+                if not skip_plot:
+                    pl_opt = maps.pl_opt
+
+            else:
+                logs.warning(' Set pl_opt to *automatic* or provide [lat, lon, radius, cscale].')
+                skip_plot = True
+
+            if not skip_plot:
+                for c in gainfconf.components:
+                    logs.info(' Plotting gain factors on map, component %s.' % c)
+                    plot_median_gain_map_from_file(ns, st_lats, st_lons, pl_opt, maps.pl_topo,
+                                                   'gains_median_and_mean%s.txt' % c, dir_gains, c,
+                                                   maps.map_size)
+
+                    logs.info(' Map plot(s) saved in directory %s.\n' % dir_gains)
+
 
         ''' 8. Frequency spectra'''
         # psd plot for each station, syn + obs
@@ -1335,7 +1525,7 @@ def main():
             logs = logging.getLogger('PSD')
             logs.setLevel(verbo)
 
-            logs.info('starting calc_psd')
+            logs.info(' Starting PSD test section.')
             dir_f = os.path.join(data_dir, 'results', 'freq')
             os.makedirs(dir_f, exist_ok=True)
 
@@ -1343,6 +1533,8 @@ def main():
             syndatapath = os.path.join(data_dir, 'synthetics')
 
             logs.info('Data path: %s\nSynthetic data path: %s' % (datapath, syndatapath))
+
+            nst = len(all_stations)
 
             if arrT_array is None:
                 try:
@@ -1381,7 +1573,7 @@ def main():
                 locs = list(set(list(st_data_pile.locations.keys())))
                 for l in locs:
                     freq_rat_list_st, freq_rat_list_y, nslc_list_st = fp.prep_psd_fct(
-                      i_st, st, l, subsets_events['deep'],
+                      i_st, st, nst, l, subsets_events['deep'],
                       dir_f,
                       arrT_array, arrT_R_array,
                       datapath, syndatapath,
@@ -1416,6 +1608,9 @@ def main():
                                 nslc_list2, dir_f,
                                 fname_ext='neighbour2')
             '''
+            logs.info(' Finished PSD test section.')
+            logs.info(' Results saved in directoriy %s.' % dir_f)
+
 
         # 9. Rayleigh wave polarization analysis for orientation
         if orientconf.orient_rayl is True:
@@ -1423,7 +1618,8 @@ def main():
             logs = logging.getLogger('Orientation')
             logs.setLevel(verbo)
 
-            logs.info('Rayleigh wave orientation section')
+            logs.info('Starting Rayleigh wave orientation section.')
+
             dir_ro = os.path.join(data_dir, 'results', 'orient')
             os.makedirs(dir_ro, exist_ok=True)
             datapath = os.path.join(data_dir, 'rrd')
@@ -1434,20 +1630,22 @@ def main():
             used_stats = []
             list_all_angles = []
             n_ev = []
+            nst = len(all_stations)
 
-            st_numbers = [i_st for i_st in range(len(all_stations))]
+            st_numbers = [i_st for i_st in range(nst)]
             for i_st, st in zip(st_numbers, all_stations):
-                logs.info(st.station)
+                logs.debug(st.station)
                 st_data_pile = pile.make_pile(datapath,
                                               regex='%s_%s_' % (st.network, st.station),
                                               show_progress=False)
                 if not st_data_pile:
+                    logs.debug('No data found for station %s' % st.station)
                     continue
                 locs = list(set(list(st_data_pile.locations.keys())))
                 for loc in locs:
                     out = orient.prep_orient(
                                             datapath,
-                                            st,
+                                            st, i_st, nst,
                                             loc,
                                             subsets_events['shallow'],
                                             dir_ro,
@@ -1472,26 +1670,55 @@ def main():
             orient.write_output(list_median_a, list_mean_a, list_stdd_a,
                                 list_switched,
                                 n_ev, used_stats, dir_ro, orientconf.ccmin)
+
             orient.write_all_output_csv(list_all_angles, used_stats, dir_ro)
+            logs.info(' Saved output of orient test in directory %s.' % dir_ro)
 
         if orientconf.plot_orient_map_fromfile is True:
+            logs = logging.getLogger('Orientation')
+            logs.setLevel(verbo)
+            logs.info(' Plotting output of orient test: Map plot.')
             dir_ro = os.path.join(data_dir, 'results', 'orient')
-            orient.plot_corr_angles(ns, st_lats, st_lons,
-                                    'CorrectionAngles.yaml', dir_ro,
-                                    maps.pl_opt, maps.pl_topo,
-                                    maps.map_size,
-                                    orientconf.orient_map_label)
+
+            skip_plot = False
+            if maps.pl_opt == ['automatic']:
+                pl_opt = get_pl_opt(st_lats, st_lons)
+
+            elif len(maps.pl_opt) == 4:
+                for o in maps.pl_opt[0:2]:
+                    if isinstance(o,str):
+                        logs.warning(' Please make sure the %s in the map plotting option in the confic files is set.' % o)
+                        skip_plot = True
+
+                if not skip_plot:
+                    pl_opt = maps.pl_opt
+
+            else:
+                logs.warning(' Set pl_opt to *automatic* or provide [lat, lon, radius, cscale].')
+                skip_plot = True
+
+            if not skip_plot:
+                orient.plot_corr_angles(ns, st_lats, st_lons,
+                                        'CorrectionAngles.yaml', dir_ro,
+                                        pl_opt, maps.pl_topo,
+                                        maps.map_size,
+                                        orientconf.orient_map_label)
+            logs.info(' Saved map plot of orient test in directory %s.' % dir_ro)
 
         if orientconf.plot_angles_vs_events is True:
+            logs = logging.getLogger('Orientation')
+            logs.setLevel(verbo)
+            logs.info(' Plotting output of orient test: Correction angles vs. events.')
             dir_ro = os.path.join(data_dir, 'results', 'orient')
             orient.plot_corr_time(ns, 'AllCorrectionAngles.yaml', dir_ro)
+            logs.info(' Saved plot in directory %s.' % dir_ro)
 
         if timingconf.timing_test is True:
             # Set Logger name and verbosity
             logs = logging.getLogger('Timing')
             logs.setLevel(verbo)
 
-            logs.info('Starting timing test')
+            logs.info(' Starting timing test.')
             if arrT_array is None:
                 try:
                     data_dir = gensettings.work_dir
@@ -1501,12 +1728,15 @@ def main():
                     raise Exception('Arrival times must be calculated first!')
 
             subset_catalog = subsets_events['deep']
+            nev = len(subset_catalog)
             datapath = os.path.join(gensettings.work_dir, 'rrd')
             syndatapath = os.path.join(gensettings.work_dir, 'synthetics')
             dir_time = os.path.join(gensettings.work_dir, 'results/timing')
             os.makedirs(dir_time, exist_ok=True)
             p_obs = pile.make_pile(datapath, show_progress=False)
             p_syn = pile.make_pile(syndatapath, show_progress=False)
+
+            # print(p_obs, p_syn)
 
             if timingconf.search_locations is True:
                 nslc_list = []
@@ -1522,10 +1752,11 @@ def main():
             tshifts.fill(num.nan)
 
             for i_ev, ev in enumerate(subset_catalog):
-                tshifts[:, i_ev] = tt.ccs_allstats_one_event(i_ev, ev, stations, all_stations,
+                tshifts[:, i_ev] = tt.ccs_allstats_one_event(i_ev, nev, ev, stations, all_stations,
                                                              p_obs, p_syn,
                                                              dir_time, timingconf.bandpass,
                                                              arrT_array, timingconf.cc_thresh,
+                                                             timingconf.time_wdw,
                                                              debug_mode=timingconf.debug_mode)
             tshifts_cor = tt.correct_for_med_tshifts(tshifts)
             tt.plot_matrix(tshifts, tshifts_cor, stations, dir_time)
@@ -1542,6 +1773,9 @@ def main():
             outfile = os.path.join(dir_time, 'timing_errors_allStats.png')
             tt.plot_tshifts(tshifts_cor, means, stdevs, outfile, stations)
             tt.save_mms(medians, means, stdevs, stations, dir_time, n_evs)
+
+            logs.info(' Finished timing error test.' + 
+                      ' Results saved in directory %s.' % dir_time)
 
         if tc.tele_check is True:
             # Set Logger name and verbosity
@@ -1572,6 +1806,7 @@ def main():
             filename_list = glob.glob(os.path.join(dir_tc, '*.cor'))
             tele.get_correction_statistcs(all_stations, filename_list)
 
+    logging.info('AutoStatsQ run finished.')
 
 if __name__ == '__main__':
     main()
