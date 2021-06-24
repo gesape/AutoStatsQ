@@ -1806,6 +1806,7 @@ def main():
             filename_list = glob.glob(os.path.join(dir_tc, '*.cor'))
             tele.get_correction_statistcs(all_stations, filename_list)
 
+    logging.info('AutoStatsQ run finished.')
 
 if __name__ == '__main__':
     main()
