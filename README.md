@@ -21,6 +21,8 @@ Petersen, G. M., Cesca, S., Kriegerowski, M. (2019): Automated Quality Control f
 
 Latest changes
 -------------
+- Improved feedback and error logging for easier user support.
+- Option to generate automated maps without setting mid point and radius manuallyby setting ```pl_opt: ['automatic']``` in the config file (see example file below.)
 - data is downsampled to 10 Hz prior to restitution. This is necessary in case of high sampling rates to not introduce filtering errors.
 - new independent and interactive test for amplitude corrections based on waveform correlations of teleseismic P phases --> please contact me for detailed instructions, I didn't have time to document the work-flow yet, but it is a great new test ;-)
 - new simple test for large timing errors (see below...)
@@ -291,6 +293,8 @@ Settings:
   map_size: [30.0, 30.0]
   pl_opt: [46, 11.75, 800000]
   # mid point of map (lat, lon) and radius [m]
+  # to use automated map dimensions:
+  # pl_opt: ['automatic']
   pl_topo: false
   # plotting topography can be very slow,
   # topographic data will be downloaded first
