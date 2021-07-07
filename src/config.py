@@ -105,8 +105,8 @@ class RestDownRotConfig(Object):
 class SynthDataConfig(Object):
     # syn. data
     make_syn_data = Bool.T()
-    engine_path = String.T()
-    store_id = String.T()
+    engine_path = String.T(optional=True)
+    store_id = String.T(optional=True)
 
 
 class GainfactorsConfig(Object):

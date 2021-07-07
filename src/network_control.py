@@ -26,6 +26,7 @@ from . import freq_psd as fp
 from . import orient
 from . import timing as tt
 from . import call_tele_check as tele
+from.configchecks import check_config
 from .config_settings_defaults import generate_default_config
 from .config import GeneralSettings, CatalogConfig, ArrTConfig,\
 MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
@@ -136,6 +137,10 @@ def main():
         logging.info('Welcome to AutoStatsQ - a station quality control checking tool.\n')
         logging.error('AutoStatsQ needs a config file.')
         print(parser.print_help())
+
+    if args.config:
+        logging.info('Checking configuration file.')
+        check_config(args.config)
 
 
     # run AutoStatsQ
