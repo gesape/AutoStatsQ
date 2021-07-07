@@ -1,6 +1,6 @@
 # AutoStatsQ
 
-### Take care, default branch is not master but main!
+### Attention! Default branch is main, not master!
 
 Toolbox for automated station quality control for MT inversion.
 Please contact me for further description, help or when something does not behave as expected ;-) : gesap@gfz-potsdam.de
@@ -34,7 +34,7 @@ Requirements
 
 - python3
 - Seismology toolbox pyrocko: https://pyrocko.org/ (Heimann et al. 2017) (and all requirements needed for pyrocko)
-- To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto`. For instance, `fomosto download kinherd global_2s` from the pyrocko environment. http://kinherd.org:8080/gfws/static/stores/
+- To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto`. For instance, `fomosto download kinherd global_2s` from the pyrocko environment. https://greens-mill.pyrocko.org/
 - for new interactive test: [Grond](https://pyrocko.org/grond/docs/current/) (from the pyrocko suite of applications).
 
 Tested on Ubuntu 16.04 and openSUSE, using matplotlib version 1.5.1 and gmt version 5.4.2 (Wessel et al., 2013).
@@ -78,6 +78,8 @@ To get detailed error/ info logging, use the -l option:
 ```
   autostatsq --config name_of_config_file --run -l INFO
 ```
+
+Helpful for debugging: Forward terminal output into a logging file by using the option ```--logoutput FILENAME```.
 
 
 Config file settings
