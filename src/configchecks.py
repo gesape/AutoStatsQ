@@ -153,11 +153,23 @@ def check_metadata_settings(metaDataconf):
     error = False
 
     if not cf.use_downmeta:
-        logger.warning(' Set use_downmeta to true to use the downloaded metadata.')
+        logger.warning(' Set MetaDataDownloadConfig use_downmeta to true to use the downloaded metadata.')
+    
+    if len(cf.channels_download) !=3:
+        logger.error(' MetaDataDownloadConfig channels_download takes a string with three characters as input. Use * as wildcard, e.g. HH*.')
+        error = True
+
+    if cf.dt_start > 0.5 or cf.dt_start < 0 or cf.dt_end < 0.5:
+        logger.warning( 'MetaDataDownloadConfig dt_start is in hours before and dt_end in hours after origin time. Make sure time windows are long enough to include body waves, surface waves and sufficient time for filtering etc.')
     
     return error
 
+
 def check_restitution_settings(RestDownconf):
+    cf = RestDownconf
+
+    if not cf.freqlim[0] < cf.freqlim[1] < cf.freqlim[2] < cf.freqlim[3]:
+        logging.error(' RestDownRotConfig frelim is defining the frequency range (corner frequencies) for which data is restituted. First entry must be smallest, last largest.')
     pass
 
 def check_synthetics_settings(synthsconf):
@@ -166,34 +178,129 @@ def check_synthetics_settings(synthsconf):
 
     if cf.make_syn_data and cf.engine_path and cf.store_id:
         if os.path.exists(os.path.join(cf.engine_path, cf.store_id)):
-            logger.debug(' Check passed: Engine path and gfdb exists.')
+            logger.debug(' Check passed: synthsconf Engine path and gfdb exists.')
         else:
-            logger.error( 'ERROR:  Engine path and/or gfdb not found.')
+            logger.error( 'ERROR:  SynthDataConfig Engine path and/or gfdb not found.')
             error = True
 
     if cf.make_syn_data and not (cf.engine_path and cf.store_id):
-        logger.error(' ERROR: To compute synthetic data, the engine path amd gfdb must be defined.')
+        logger.error(' ERROR: SynthDataConfig To compute synthetic data, the engine path amd gfdb must be defined.')
         error = True
 
     return error
 
-def check_gain_settings(gainfconf):
-    pass
+
+def check_gain_settings(gainfconf, RestDownconf):
+    cf = gainfconf
+    error = False
+
+    # check methods
+    if len(cf.gain_factor_method) == 1:
+        if cf.gain_factor_method not in ['scale_one', 'median_all_avail', 'syn_comp']:
+            logging.error(' Gain factor method not known. Choose between reference_nsl, syn_comp, median_all_avail, scale_one.')
+            error = True
+
+    elif len(cf.gain_factor_method) == 2:
+        if cf.gain_factor_method[0] != 'reference_nsl':
+            logging.error(' Gain factor method not known. Choose between reference_nsl, syn_comp, median_all_avail, scale_one.')
+            error = True
+    else:
+        logging.error(' Gain factor method not known. Choose between reference_nsl, syn_comp, median_all_avail, scale_one.')
+        error = True
+
+    # check len twd wrt frequency
+    if cf.fband['corner_hp'] > cf.fband['corner_lp']:
+        logging.error(' GainfactorsConfig HP corner of BP filter must be smaller than LP corner.')
+        error = True
+
+    if cf.fband['corner_lp'] > RestDownconf.freqlim[2]:
+        logging.error(' GainfactorsConfig LP corner of BP filter can be at maximum be same as limit of restitution frequency limit (3rd entry of RestDownRotConfig.freqlim.')
+        error = True
+
+    # component Z
+    for x in cf.components:
+        if x not in ['Z', 'N', 'E']:
+            logging.error(' GainfactorsConfig Components must Z, N and/or E, e.g. [Z] or [Z,N,E].')
+            error = True
+
+    return error
+
 
 def check_psd_settings(psdsconf):
+    # twd long enough?
+    # explain tinc and dt_start etc
+
+    # n_poly large enough, not too large
+    # norm factor?
+    # f_ign 
+    # --> all a simple waring if far from default values, but okay to test
+
     pass
 
 def check_orient_settings(orientconf):
-    pass
+    cf = orientconf
+    error = False
+
+    if isinstance(cf.bandpass[0], int):
+        logging.error(' First part of OrientConfig bandpass is steepness of filter (integer).')
+        error = True
+
+    if cf.bandpass[1] > cf.bandpass[2]:
+        logging.error(' OrientConfig bandpass has form [filter_steepness, fmin, fmax]. fmin must be smaller fmax.')
+        error = True
+
+    if cf.bandpass[2] > 0.06:
+        logging.warning(' OrientConfig bandpass should be chosen to emphasize surface waves. Usually fmax is best chosen smaller than 0.05.')
+    
+    if cf.stop_after_ev < 400:
+        logging.warning(' OrientConfig stop_after_ev must enable a long time window to do the test with deep frequencies without filer effects. Please choose 600 s if possible.')
+    
+    if cf.ccmin < 0.7:
+        logging.warning(' OrientConfig Make sure to set a sufficiently large cross-correlation threshold to get meaningful results. Test e.g. using 0.7, 0.75, 0.8 or even higher.')
+    
+    return error
+
 
 def check_timing_settings(timingconf):
-    pass
+    error = False
+    cf = timingconf
+
+    # bandpass
+    # twd
+    # cc thresh large enough
+
+    if isinstance(cf.bandpass[0], int):
+        logging.error(' First part of TimingConfig bandpass is steepness of filter (integer).')
+        error = True
+
+    if cf.bandpass[1] > cf.bandpass[2]:
+        logging.error(' TimingConfig bandpass has form [filter_steepness, fmin, fmax]. fmin must be smaller fmax.')
+        error = True
+
+    return error
+
 
 def check_telecheck_settings(tc):
     pass
 
+
 def check_maps_settings(maps):
-    pass
+    error = False
+
+    # copy test from main script
+    if maps.pl_opt == ['automatic']:
+        logging.debug(' Map plotting settings determined automatically.')
+
+    elif len(maps.pl_opt) == 4:
+        for o in maps.pl_opt[0:2]:
+            if isinstance(o,str):
+                logs.error(' Please make sure the %s in the map plotting option in the confic files is set.' % o)
+                
+    else:
+        logs.error(' Set pl_opt to *automatic* or provide [lat, lon, radius, cscale].')
+        error = True
+
+    return error
 
 
 
@@ -209,7 +316,7 @@ def check_config(configfile):
     error_md = check_metadata_settings(metaDataconf)
     error_rest = check_restitution_settings(RestDownconf)
     error_syn = check_synthetics_settings(synthsconf)
-    error_gain = check_gain_settings(gainfconf)
+    error_gain = check_gain_settings(gainfconf, RestDownconf)
     error_psd = check_psd_settings(psdsconf)
     error_ori = check_orient_settings(orientconf)
     error_tim = check_timing_settings(timingconf)
