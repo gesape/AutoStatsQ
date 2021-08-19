@@ -300,6 +300,10 @@ def check_maps_settings(maps):
         logs.error(' Set pl_opt to *automatic* or provide [lat, lon, radius, cscale].')
         error = True
 
+    if maps.outformat not in ['png', 'pdf']:
+        logs.error(' Outformat for maps must be pdf or png.')
+        error = True
+
     return error
 
 
