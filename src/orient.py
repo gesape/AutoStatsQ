@@ -373,7 +373,7 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
                 ax[i_x].axis('off')
     plt.tight_layout()
     # plt.show()
-    fig.savefig(os.path.join(dir_ro, '%s_%s_%s_distr.pdf' % (st.network, st.station, loc)))
+    fig.savefig(os.path.join(dir_ro, '%s_%s_%s_distr.png' % (st.network, st.station, loc)))
     plt.close(fig)
 
 
@@ -528,7 +528,7 @@ def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
 
 
 def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
-                     pl_options, pl_topo, mapsize, ls=False):
+                     pl_options, pl_topo, mapsize, outformat, ls=False):
     '''
     Plot correction angles of all stations on a map. nans are igored.
     Values for plotting are read from file which was automatically prepared in
@@ -676,4 +676,4 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
             m.add_label(lat_no_nan_u[i], lon_no_nan_u[i], stats_no_nan_u[i])    
             has_label.append(stats_no_nan_u[i])
 
-    m.save(os.path.join(dir_orient, 'map_orient.png'))
+    m.save(os.path.join(dir_orient, 'map_orient.%s' % outformat))

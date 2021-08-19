@@ -21,7 +21,8 @@ def gmtplot_catalog_azimuthal(catalog, mid_point, dist, outfile, bin_width):
                             # 'GRID_PEN_SECONDARY': '0.01p',
                             'FONT_ANNOT_PRIMARY': '14p,Helvetica,black',
                             'FONT_ANNOT_SECONDARY': '14p,Helvetica,black',
-                            'FONT_LABEL': '14p,Helvetica,black'})
+                            'FONT_LABEL': '14p,Helvetica,black',
+                            'PS_MEDIA': 'Custom_%ix%i' % (20*gmtpy.cm, 20*gmtpy.cm)})
     gmt.psbasemap(
                   R='0/360/-90/0',
                   J='S0/-90/90/6i',

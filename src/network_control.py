@@ -363,10 +363,11 @@ def main():
                 if catalogconf.plot_catalog_all is True:
                     auxdir = os.path.join(data_dir, 'results/catalog')
                     os.makedirs(auxdir, exist_ok=True)
-                    pltfilename = 'catalog_global_Mgr%s_%s-%s_%s.png' % \
+                    pltfilename = 'catalog_global_Mgr%s_%s-%s_%s.%s' % \
                                   (catalogconf.min_mag,
                                    catalogconf.tmin_str[0:10],
-                                   catalogconf.tmax_str[0:10], d)
+                                   catalogconf.tmax_str[0:10], d,
+                                   maps.outformat)
                     fn = os.path.join(auxdir, pltfilename)
 
                     logs.info(' Plotting catalog azimuthal for full catalog: %s.' % d)
@@ -566,8 +567,8 @@ def main():
                 os.makedirs(os.path.join(data_dir, 'results/catalog'), exist_ok=True)
                 _tmin = util.time_to_str(min([ev.time for ev in subset_catalog]))
                 _tmax = util.time_to_str(max([ev.time for ev in subset_catalog]))                
-                catfilename = 'catalog_global_Mgr%s_%s-%s_%s_subset.pdf' % \
-                              (catalogconf.min_mag, _tmin[0:10], _tmax[0:10], d)
+                catfilename = 'catalog_global_Mgr%s_%s-%s_%s_subset.%s' % \
+                              (catalogconf.min_mag, _tmin[0:10], _tmax[0:10], d, maps.outformat)
                 fn = os.path.join(data_dir, 'results/catalog', catfilename)
 
                 logs.info(' Plotting catalog azimuthal for subset: %s.' % d)
@@ -1513,7 +1514,7 @@ def main():
                     logs.info(' Plotting gain factors on map, component %s.' % c)
                     plot_median_gain_map_from_file(ns, st_lats, st_lons, pl_opt, maps.pl_topo,
                                                    'gains_median_and_mean%s.txt' % c, dir_gains, c,
-                                                   maps.map_size)
+                                                   maps.map_size, maps.outformat)
 
                     logs.info(' Map plot(s) saved in directory %s.\n' % dir_gains)
 
@@ -1706,7 +1707,7 @@ def main():
                 orient.plot_corr_angles(ns, st_lats, st_lons,
                                         'CorrectionAngles.yaml', dir_ro,
                                         pl_opt, maps.pl_topo,
-                                        maps.map_size,
+                                        maps.map_size, maps.outformat,
                                         orientconf.orient_map_label)
             logs.info(' Saved map plot of orient test in directory %s.' % dir_ro)
 
@@ -1775,7 +1776,7 @@ def main():
                      for i_st in range(tshifts_cor.shape[0])]
 
             # plot
-            outfile = os.path.join(dir_time, 'timing_errors_allStats.png')
+            outfile = os.path.join(dir_time, 'timing_errors_allStats.%s' % maps.outformat)
             tt.plot_tshifts(tshifts_cor, means, stdevs, outfile, stations)
             tt.save_mms(medians, means, stdevs, stations, dir_time, n_evs)
 

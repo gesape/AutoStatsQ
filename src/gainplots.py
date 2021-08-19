@@ -108,7 +108,8 @@ def plot_median_gain_map_from_file(ns,
                                    gains_file,
                                    directory,
                                    comp,
-                                   mapsize):
+                                   mapsize,
+                                   outformat):
     """
     Plot map with mean relative gain factors
 
@@ -218,6 +219,6 @@ def plot_median_gain_map_from_file(ns,
 
     # for i in range(len(stats_no_nan)):
     #    m.add_label(lat_no_nan[i], lon_no_nan[i], stats_no_nan[i])
-    fn = os.path.join(directory, '%s%s_map_log.png' % (gains_file[0:12], comp))
+    fn = os.path.join(directory, '%s%s_map_log.%s' % (gains_file[0:12], comp, outformat))
     m.save(fn)
     logging.info('saved file %s' % fn)
