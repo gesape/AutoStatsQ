@@ -3,11 +3,12 @@ from pyrocko.gf import TPDef
 
 
 class GeneralSettings(Object):
-    work_dir = String.T(
-        help='Upper data directory')
+    work_dir = String.T(help="Upper data directory")
     list_station_lists = List.T(
-        help='List of station list names, either txt or xml files')
+        help="List of station list names, either txt or xml files"
+    )
     st_use_list = List.T(default=[])
+
 
 class CatalogConfig(Object):
     search_events = Bool.T()
@@ -16,19 +17,22 @@ class CatalogConfig(Object):
     use_local_subsets = Bool.T()
     subset_fns = Dict.T()
     # catalog
-    catalog_fn = String.T(optional=True,
-        help='Name of local catalog to save to or to read from')
-    dist = Float.T(default=165.0,
-        help='Max. distance to show on catalog plot (map) [deg]')
+    catalog_fn = String.T(
+        optional=True, help="Name of local catalog to save to or to read from"
+    )
+    dist = Float.T(
+        default=165.0, help="Max. distance to show on catalog plot (map) [deg]"
+    )
     min_mag = Float.T()
     max_mag = Float.T()
     tmin_str = String.T()
     tmax_str = String.T()
-    wedges_width = Int.T(
-        help='Find one event in backazimuthal wedge of this width')
-    mid_point = List.T(optional=True,
-        help='Enter some estimation on centre point of array, needed for\
-             subset based on distances and plotting only.')
+    wedges_width = Int.T(help="Find one event in backazimuthal wedge of this width")
+    mid_point = List.T(
+        optional=True,
+        help="Enter some estimation on centre point of array, needed for\
+             subset based on distances and plotting only.",
+    )
     median_ev_in_bin = Bool.T(default=True)
     # weighted_magn_baz_ev = Bool.T()
 
@@ -47,14 +51,13 @@ class CatalogConfig(Object):
 
 
 class ArrTConfig(Object):
-    calc_first_arr_t = Bool.T(
-        help='calculate first arrival times using cake?')
+    calc_first_arr_t = Bool.T(help="calculate first arrival times using cake?")
     phase_select = String.T()
     calc_est_R = Bool.T(default=False)
     v_rayleigh = Float.T(default=4.0)
 
 
-#class CakeTTTGenerator(Object):
+# class CakeTTTGenerator(Object):
 #    calc_ttt = Bool.T(default=False)
 #    dir_ttt = String.T(optional=True)
 #    earthmodel_id = String.T(optional=True)
@@ -113,7 +116,7 @@ class GainfactorsConfig(Object):
     # Gainfactors
     calc_gainfactors = Bool.T()
     gain_factor_method = List.T()
-    ''' gain relative to options:
+    """ gain relative to options:
        * 'scale_one' for reference amplitude = 1.
        *  tuple ('reference_nsl', refernce_id) - gain
           relative to one specific station,
@@ -121,12 +124,12 @@ class GainfactorsConfig(Object):
        * 'median_all_avail': first assesses all abs. amplitudes,
           in the end chooses a reference station of those that recorded
           most events based on median gain of first event
-    '''
+    """
     fband = Dict.T()
     taper_xfrac = Float.T()
     wdw_st_arr = Int.T()
     wdw_sp_arr = Int.T()
-    snr_thresh = Float.T(default=1.)
+    snr_thresh = Float.T(default=1.0)
     debug_mode = Bool.T(default=False)
     phase_select = String.T()
     components = List.T()
@@ -166,6 +169,7 @@ class OrientConfig(Object):
     orient_map_label = List.T(optional=True)
     debug_mode = Bool.T(default=False)
 
+
 class TimingConfig(Object):
     timing_test = Bool.T()
     bandpass = Tuple.T(3, Float.T())
@@ -178,11 +182,12 @@ class TimingConfig(Object):
 class TeleCheckConfig(Object):
     tele_check = Bool.T()
 
+
 class maps(Object):
-    map_size = List.T(default=[30,30])
+    map_size = List.T(default=[30, 30])
     pl_opt = List.T()
     pl_topo = Bool.T(default=False)
-    outformat = String.T(default='png')
+    outformat = String.T(default="png")
 
 
 class AutoStatsQConfig(Object):

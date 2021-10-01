@@ -51,90 +51,116 @@ def plot_corr_time(nsl, filename, dir_ro):
     # y_lim = (-180., 180.)
 
     for item in angles_fromfile.dict_stats_all:
-        st = item.station        
+        st = item.station
         ev_list = []
         angle_list = []
-        for i_ev, (ev, angle) in enumerate(item.ev_rota.items()): 
+        for i_ev, (ev, angle) in enumerate(item.ev_rota.items()):
             ev_list.append(float(util.str_to_time(ev)))
             angle_list.append(float(angle))
-        
+
         if ev_list and angle_list:
-            ev_list_d = [datetime.datetime.strptime(util.time_to_str(ev), '%Y-%m-%d %H:%M:%S.%f') for ev in ev_list]
+            ev_list_d = [
+                datetime.datetime.strptime(util.time_to_str(ev), "%Y-%m-%d %H:%M:%S.%f")
+                for ev in ev_list
+            ]
             absmax = max(angle_list, key=abs)
             if abs(absmax) < 60:
-                absmax=60
+                absmax = 60
             _median = num.median(angle_list)
             _mean = num.mean(angle_list)
             min_ev = num.min(ev_list)
             max_ev = num.max(ev_list)
-            xvals = num.linspace(min_ev-1000, max_ev+1000, 100)
-            xvals_d = [datetime.datetime.strptime(util.time_to_str(x), '%Y-%m-%d %H:%M:%S.%f') for x in xvals]
+            xvals = num.linspace(min_ev - 1000, max_ev + 1000, 100)
+            xvals_d = [
+                datetime.datetime.strptime(util.time_to_str(x), "%Y-%m-%d %H:%M:%S.%f")
+                for x in xvals
+            ]
 
             fig, ax = plt.subplots(nrows=1, figsize=(10, 3))
 
-            ax.plot(ev_list_d, angle_list, 'bo')
+            ax.plot(ev_list_d, angle_list, "bo")
 
-            ax.plot(xvals_d, [_median for i in range(len(xvals))], 'g--', label='median')
-            ax.plot(xvals_d, [_mean for i in range(len(xvals))], 'r--', label='mean')
-            
-            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-            ax.set_ylim((-abs(absmax)-1,abs(absmax)+1))
-            ax.set_title('%s.%s' % (st[0],st[1]))
-            ax.set_xlabel('Event date')
-            ax.set_ylabel('Correction angle [°]')
+            ax.plot(
+                xvals_d, [_median for i in range(len(xvals))], "g--", label="median"
+            )
+            ax.plot(xvals_d, [_mean for i in range(len(xvals))], "r--", label="mean")
+
+            ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+            ax.set_ylim((-abs(absmax) - 1, abs(absmax) + 1))
+            ax.set_title("%s.%s" % (st[0], st[1]))
+            ax.set_xlabel("Event date")
+            ax.set_ylabel("Correction angle [°]")
             # xticks = ax.get_xticks()
             # print(xticks)
             # ax.set_xticklabels([util.time_to_str(x)[0:16] for x in xticks], rotation=70)
             plt.tick_params(labelsize=12)
-            plt.tight_layout(rect=[0,0,0.8,1])
+            plt.tight_layout(rect=[0, 0, 0.8, 1])
             # plt.show()
-            
-            fig.savefig(os.path.join(dir_ro, '%s_%s_overtime.png' % (st[0], st[1])))
+
+            fig.savefig(os.path.join(dir_ro, "%s_%s_overtime.png" % (st[0], st[1])))
             plt.close(fig)
 
 
-def write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
-                 n_ev, used_stats, dir_ro, ccmin):
+def write_output(
+    list_median_a,
+    list_mean_a,
+    list_stdd_a,
+    list_switched,
+    n_ev,
+    used_stats,
+    dir_ro,
+    ccmin,
+):
 
     if list_switched:
         # write to yaml
-        l_sw = [Event_sw(station=(s[0], s[1], s[2]), name=s[3],
-                         time=s[4], max_cc_angle=s[5], max_cc_coef=s[6])
-                for l in list_switched for s in l if s and s[6] > ccmin]
+        l_sw = [
+            Event_sw(
+                station=(s[0], s[1], s[2]),
+                name=s[3],
+                time=s[4],
+                max_cc_angle=s[5],
+                max_cc_coef=s[6],
+            )
+            for l in list_switched
+            for s in l
+            if s and s[6] > ccmin
+        ]
 
         sw = Polarity_switch(switched_by_stat=l_sw)
         sw.regularize()
         sw.validate()
-        sw.dump(filename=os.path.join(dir_ro, 'Switched_Polarities.yaml'))
+        sw.dump(filename=os.path.join(dir_ro, "Switched_Polarities.yaml"))
 
     if list_median_a and list_mean_a and list_stdd_a and n_ev:
-        ns_list = ['%s %s %s' % (st[0], st[1], st[2]) for st in used_stats]
+        ns_list = ["%s %s %s" % (st[0], st[1], st[2]) for st in used_stats]
         perStat_median = dict(zip(map(lambda x: x, ns_list), list_median_a))
         perStat_mean = dict(zip(map(lambda x: x, ns_list), list_mean_a))
         perStat_std = dict(zip(map(lambda x: x, ns_list), list_stdd_a))
         perStat_nev = dict(zip(map(lambda x: x, ns_list), n_ev))
 
-        dicts_rota = dict_stats_rota(CorrectAngl_perStat_median=perStat_median,
-                                     CorrectAngl_perStat_mean=perStat_mean,
-                                     CorrectAngl_perStat_stdd=perStat_std,
-                                     n_events=perStat_nev)
+        dicts_rota = dict_stats_rota(
+            CorrectAngl_perStat_median=perStat_median,
+            CorrectAngl_perStat_mean=perStat_mean,
+            CorrectAngl_perStat_stdd=perStat_std,
+            n_events=perStat_nev,
+        )
 
         dicts_rota.regularize()
         dicts_rota.validate()
-        dicts_rota.dump(filename=os.path.join(dir_ro, 'CorrectionAngles.yaml'))
+        dicts_rota.dump(filename=os.path.join(dir_ro, "CorrectionAngles.yaml"))
 
 
 def write_all_output_csv(list_all_angles, used_stats, dir_ro):
     list_rrr = []
 
     for st, ev_dict in zip(used_stats, list_all_angles):
-        rrr = rota_ev_by_stat(station=(st[0], st[1], st[2]),
-                              ev_rota=ev_dict)
+        rrr = rota_ev_by_stat(station=(st[0], st[1], st[2]), ev_rota=ev_dict)
         list_rrr.append(rrr)
 
     dict_save_rot_st_ev = dict_stats_all_rota(dict_stats_all=list_rrr)
 
-    dict_save_rot_st_ev.dump(filename=os.path.join(dir_ro, 'AllCorrectionAngles.yaml'))
+    dict_save_rot_st_ev.dump(filename=os.path.join(dir_ro, "AllCorrectionAngles.yaml"))
 
 
 def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
@@ -157,11 +183,18 @@ def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
             angles.append(maxcc_angle)
             values.append(maxcc_value)
 
-            if abs(0. - maxcc_angle) > 90:
-                switched.append((st.network, st.station, st.location,
-                                 ev.name,
-                                 util.time_to_str(ev.time),
-                                 maxcc_angle, maxcc_value))
+            if abs(0.0 - maxcc_angle) > 90:
+                switched.append(
+                    (
+                        st.network,
+                        st.station,
+                        st.location,
+                        ev.name,
+                        util.time_to_str(ev.time),
+                        maxcc_angle,
+                        maxcc_value,
+                    )
+                )
 
     list_v_above_ccmin = [a for (a, v) in zip(angles, values) if v > ccmin]
     median_a = num.median(list_v_above_ccmin)
@@ -175,23 +208,23 @@ def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
             x = num.cos(num.deg2rad(a))
             y = num.sin(num.deg2rad(a))
 
-            sum_v = sum_v + num.asarray((x,y)) #/ num.linalg.norm((x,y))) 
-        
+            sum_v = sum_v + num.asarray((x, y))  # / num.linalg.norm((x,y)))
+
         # normalize
         sum_v = sum_v / len(list_v_above_ccmin)
 
         if sum_v[0] > 0:
-            mean_a = num.rad2deg(num.arctan(sum_v[1]/sum_v[0]))
+            mean_a = num.rad2deg(num.arctan(sum_v[1] / sum_v[0]))
         elif sum_v[0] < 0 and sum_v[1] >= 0:
-            mean_a = num.rad2deg(num.arctan(sum_v[1]/sum_v[0])) + 180.
+            mean_a = num.rad2deg(num.arctan(sum_v[1] / sum_v[0])) + 180.0
         elif sum_v[0] < 0 and sum_v[1] < 0:
-            mean_a = num.rad2deg(num.arctan(sum_v[1]/sum_v[0])) - 180.
+            mean_a = num.rad2deg(num.arctan(sum_v[1] / sum_v[0])) - 180.0
         elif sum_v[0] == 0 and sum_v[1] > 0:
-            mean_a = 90.
+            mean_a = 90.0
         elif sum_v[0] == 0 and sum_v[1] < 0:
-            mean_a = 270.
+            mean_a = 270.0
 
-        # print('mean_a', mean_a)       
+        # print('mean_a', mean_a)
 
         # vector standard deviation
         # std_a = num.std([a for (a, v) in zip(angles, values) if v > ccmin])
@@ -207,8 +240,8 @@ def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
                 x_i_y = num.sin(num.deg2rad(x_i))
                 mean_x = num.cos(num.deg2rad(mean_a))
                 mean_y = num.sin(num.deg2rad(mean_a))
-                len_x_i = num.sqrt(x_i_x*x_i_x + x_i_y*x_i_y)
-                len_mean = num.sqrt(mean_x*mean_x + mean_y*mean_y)
+                len_x_i = num.sqrt(x_i_x * x_i_x + x_i_y * x_i_y)
+                len_mean = num.sqrt(mean_x * mean_x + mean_y * mean_y)
 
                 # print(num.asarray((num.cos(num.deg2rad(x_i)),
                 #                       num.sin(num.deg2rad(x_i)))))
@@ -231,19 +264,23 @@ def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
                 #     phi_d = 270.
                 # elif d_xi_m[0] == 0 and d_xi_m[1] == 0:
                 #     phi_d = 0.
-                
-                phi_d = num.rad2deg(num.arccos(x_i_x/len_x_i * mean_x/len_mean
-                                               + x_i_y/len_x_i * mean_y/len_mean))
+
+                phi_d = num.rad2deg(
+                    num.arccos(
+                        x_i_x / len_x_i * mean_x / len_mean
+                        + x_i_y / len_x_i * mean_y / len_mean
+                    )
+                )
                 # Fallunterscheidungen?
 
                 # print(phi_d)
-                sum_d_xi_xm += phi_d*phi_d
+                sum_d_xi_xm += phi_d * phi_d
                 # print(sum_d_xi_xm)
             std_a = num.sqrt(sum_d_xi_xm / n_ev)
             # print('new std', std_a)
             # print('old std',num.std([a for (a, v) in zip(angles, values) if v > ccmin]))
         else:
-            std_a = num.nan    
+            std_a = num.nan
 
     else:
         median_a = num.nan
@@ -275,7 +312,8 @@ def get_tr_by_cha(pile, start_twd, end_twd, loc, cha):
         tmin=start_twd,
         tmax=end_twd,
         trace_selector=lambda tr: tr.nslc_id[3] == cha and tr.nslc_id[2] == loc,
-        want_incomplete=True)
+        want_incomplete=True,
+    )
 
     return tr
 
@@ -313,23 +351,23 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
     else:
         ncols = n_ev
 
-    y_lim = (-1., 1.)
+    y_lim = (-1.0, 1.0)
     x_lim = (-180, 180)
 
-    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(ncols*2, nrows*2))
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(ncols * 2, nrows * 2))
 
     for (i_row, row), ev in zip(enumerate(cc_i_ev_vs_rota), catalog):
-        i_x = int(i_row/ncols)
+        i_x = int(i_row / ncols)
         i_y = int(i_row % ncols)
         ev_time_str = util.time_to_str(ev.time)[0:10]
 
         if nrows != 1:
             ax[i_x, i_y].set_title(ev_time_str, fontsize=10)
-            if i_x == nrows-1:
-                ax[i_x, i_y].set_xlabel('Correction angle [deg]', fontsize=8)
+            if i_x == nrows - 1:
+                ax[i_x, i_y].set_xlabel("Correction angle [deg]", fontsize=8)
             if i_y == 0:
-                ax[i_x, i_y].set_ylabel('C-c coef.', fontsize=8)
-            ax[i_x, i_y].plot(rot_angles, row, 'k')
+                ax[i_x, i_y].set_ylabel("C-c coef.", fontsize=8)
+            ax[i_x, i_y].plot(rot_angles, row, "k")
             ax[i_x, i_y].set_xlim(x_lim)
             ax[i_x, i_y].set_ylim(y_lim)
             ax[i_x, i_y].set_xticks([-180, 0, 180])
@@ -337,11 +375,11 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
 
         elif nrows == 1 and ncols != 1:
             ax[i_y].set_title(ev_time_str, fontsize=10)
-            if i_x == nrows-1:
-                ax[i_y].set_xlabel('Correction angle [deg]', fontsize=8)
+            if i_x == nrows - 1:
+                ax[i_y].set_xlabel("Correction angle [deg]", fontsize=8)
             if i_y == 0:
-                ax[i_y].set_ylabel('C-c coef.', fontsize=8)
-            ax[i_y].plot(rot_angles, row, 'k')
+                ax[i_y].set_ylabel("C-c coef.", fontsize=8)
+            ax[i_y].plot(rot_angles, row, "k")
             ax[i_y].set_xlim(x_lim)
             ax[i_y].set_ylim(y_lim)
             ax[i_y].set_xticks([-180, 0, 180])
@@ -349,38 +387,52 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
 
         elif nrows == 1 and ncols == 1:
             ax.set_title(ev_time_str, fontsize=10)
-            ax.set_xlabel('Correction angle [deg]', fontsize=8)
-            ax.set_ylabel('C-c coef.', fontsize=8)
-            ax.plot(rot_angles, row, 'k')
+            ax.set_xlabel("Correction angle [deg]", fontsize=8)
+            ax.set_ylabel("C-c coef.", fontsize=8)
+            ax.plot(rot_angles, row, "k")
             ax.set_xlim(x_lim)
             ax.set_ylim(y_lim)
             ax.set_xticks([-180, 0, 180])
             ax.tick_params(labelsize=6)
 
-
-    if nrows*ncols > n_ev:
-        dif = nrows*ncols - n_ev
+    if nrows * ncols > n_ev:
+        dif = nrows * ncols - n_ev
         for i in range(dif):
             if nrows != 1:
-                ax[i_x, i_y+i+1].set_xlabel('Correction angle [deg]', fontsize=8)
-                ax[i_x, i_y+i+1].set_xticks([])
-                ax[i_x, i_y+i+1].set_yticks([])
-                ax[i_x, i_y+i+1].axis('off')
+                ax[i_x, i_y + i + 1].set_xlabel("Correction angle [deg]", fontsize=8)
+                ax[i_x, i_y + i + 1].set_xticks([])
+                ax[i_x, i_y + i + 1].set_yticks([])
+                ax[i_x, i_y + i + 1].axis("off")
             else:
-                ax[i_x].set_xlabel('Correction angle [deg]', fontsize=8)
+                ax[i_x].set_xlabel("Correction angle [deg]", fontsize=8)
                 ax[i_x].set_xticks([])
                 ax[i_x].set_yticks([])
-                ax[i_x].axis('off')
+                ax[i_x].axis("off")
     plt.tight_layout()
     # plt.show()
-    fig.savefig(os.path.join(dir_ro, '%s_%s_%s_distr.png' % (st.network, st.station, loc)))
+    fig.savefig(
+        os.path.join(dir_ro, "%s_%s_%s_distr.png" % (st.network, st.station, loc))
+    )
     plt.close(fig)
 
 
-def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
-                bp, dt_start, dt_stop, ccmin=0.80,
-                plot_heatmap=False,  plot_distr=False,
-                debug=False):
+def prep_orient(
+    datapath,
+    st,
+    i_st,
+    nst,
+    loc,
+    catalog,
+    dir_ro,
+    v_rayleigh,
+    bp,
+    dt_start,
+    dt_stop,
+    ccmin=0.80,
+    plot_heatmap=False,
+    plot_distr=False,
+    debug=False,
+):
     """
     Perform orientation analysis using Rayleigh waves, main function.
 
@@ -397,10 +449,11 @@ def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
     :param plot_heatmap: bool, optional
     :param plot_distr: bool, optional
     """
-    logs = logging.getLogger('prep_orient')
-    #logs.setLevel('DEBUG')
-    st_data_pile = pile.make_pile(datapath, regex='%s_%s_' % (st.network, st.station),
-                                  show_progress=False)
+    logs = logging.getLogger("prep_orient")
+    # logs.setLevel('DEBUG')
+    st_data_pile = pile.make_pile(
+        datapath, regex="%s_%s_" % (st.network, st.station), show_progress=False
+    )
     n_ev = len(catalog)
 
     if st_data_pile.tmin is not None and st_data_pile.tmax is not None:
@@ -409,10 +462,14 @@ def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
         r_arr_by_ev = num.empty(n_ev)
         ev_lats = num.asarray([ev.lat for ev in catalog])
         ev_lons = num.asarray([ev.lon for ev in catalog])
-        dists = distance_accurate50m_numpy(a_lats=ev_lats, a_lons=ev_lons,
-                                           b_lats=st.lat, b_lons=st.lon,
-                                           implementation='c')
-        r_arr_by_ev = (dists/1000.) / v_rayleigh
+        dists = distance_accurate50m_numpy(
+            a_lats=ev_lats,
+            a_lons=ev_lons,
+            b_lats=st.lat,
+            b_lons=st.lon,
+            implementation="c",
+        )
+        r_arr_by_ev = (dists / 1000.0) / v_rayleigh
         cc_i_ev_vs_rota = num.empty((n_ev, 360))
         rot_angles = range(-180, 180, 1)
         for i_ev, ev in enumerate(catalog):
@@ -421,9 +478,9 @@ def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
             start_twd1 = ev.time
             end_twd1 = arrT + 1800
 
-            trZ = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'Z')
-            trR = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'R')
-            trT = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'T')
+            trZ = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, "Z")
+            trR = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, "R")
+            trT = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, "T")
 
             start_twd2 = ev.time + r_arr_by_ev[i_ev] - dt_start
             end_twd2 = arrT + dt_stop
@@ -434,11 +491,21 @@ def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
                 trT = trT[0]
                 # debugging - window selection:
                 if debug is True:
-                    trace.snuffle([trZ,trR,trT], markers=
-                        [pm.Marker(nslc_ids=[trZ.nslc_id, trR.nslc_id, trT.nslc_id],
-                                   tmin=start_twd2, tmax=end_twd2),
-                         pm.Marker(nslc_ids=[trZ.nslc_id, trR.nslc_id, trT.nslc_id],
-                                   tmin=arrT, tmax=arrT+3)])
+                    trace.snuffle(
+                        [trZ, trR, trT],
+                        markers=[
+                            pm.Marker(
+                                nslc_ids=[trZ.nslc_id, trR.nslc_id, trT.nslc_id],
+                                tmin=start_twd2,
+                                tmax=end_twd2,
+                            ),
+                            pm.Marker(
+                                nslc_ids=[trZ.nslc_id, trR.nslc_id, trT.nslc_id],
+                                tmin=arrT,
+                                tmax=arrT + 3,
+                            ),
+                        ],
+                    )
 
             else:
                 cc_i_ev_vs_rota[i_ev, :] = num.nan
@@ -448,20 +515,26 @@ def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
                 trZ.bandpass(bp[0], bp[1], bp[2])
                 trZ.chop(tmin=start_twd2, tmax=end_twd2)
             except trace.NoData:
-                logs.warning('no data %s %s %s' % (trZ, trR, trT))
+                logs.warning("no data %s %s %s" % (trZ, trR, trT))
                 continue
 
             for i_r, r in enumerate(rot_angles):
-                print('Station: %5d/%s, Event: %5d/%s, rotation angle [deg]: %5d' 
-                       % (i_st, nst, i_ev, n_ev, r), end='\r')
-                rot_2, rot_3 = trace.rotate(traces=[trR, trT], azimuth=r,
-                                            in_channels=['R', 'T'],
-                                            out_channels=['2', '3'])
+                print(
+                    "Station: %5d/%s, Event: %5d/%s, rotation angle [deg]: %5d"
+                    % (i_st, nst, i_ev, n_ev, r),
+                    end="\r",
+                )
+                rot_2, rot_3 = trace.rotate(
+                    traces=[trR, trT],
+                    azimuth=r,
+                    in_channels=["R", "T"],
+                    out_channels=["2", "3"],
+                )
                 rot_2_y = rot_2.ydata
                 rot_2_hilb = num.imag(trace.hilbert(rot_2_y, len(rot_2_y)))
-                rot_2_hilb_tr = trace.Trace(deltat=rot_2.deltat,
-                                            ydata=rot_2_hilb,
-                                            tmin=rot_2.tmin)
+                rot_2_hilb_tr = trace.Trace(
+                    deltat=rot_2.deltat, ydata=rot_2_hilb, tmin=rot_2.tmin
+                )
                 # problem: rot_2 and rot_2_hilb look exactly the same!
                 # --> no phase shift. why? should be num.imag!!!
                 # trace.snuffle([rot_2, rot_2_hilb_tr])
@@ -474,84 +547,113 @@ def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
                 trZ.ydata /= abs(max(trZ.ydata))
                 rot_2_hilb_tr.ydata /= abs(max(rot_2_hilb_tr.ydata))
 
-                c = trace.correlate(trZ, rot_2_hilb_tr,
-                                    mode='valid',
-                                    normalization='normal')
+                c = trace.correlate(
+                    trZ, rot_2_hilb_tr, mode="valid", normalization="normal"
+                )
 
                 t, coef = c.max()
                 t2, coef2 = max_or_min(c)
-                '''
+                """
                 if st.station == 'MATE' and r == 0:
                     print(i_ev, ev.name, ev.depth)
                     print(r, t, coef, t2, coef2)
                     trace.snuffle([trZ, trR, rot_2_hilb_tr])
-                '''
+                """
                 cc_i_ev_vs_rota[i_ev, i_r] = coef
-        '''
+        """
         if st.station == 'MATE':
             for i_ev in range(n_ev):
                 print(num.argmax(cc_i_ev_vs_rota[i_ev,:]),
                       num.max(cc_i_ev_vs_rota[i_ev,:]))
-        '''
+        """
 
         if plot_heatmap is True:
-            logs.debug('Plotting heatmap for station %s.%s' % (st.network, st.station))
+            logs.debug("Plotting heatmap for station %s.%s" % (st.network, st.station))
             fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 2))
 
-            cax = ax.imshow(cc_i_ev_vs_rota, interpolation='nearest',
-                            vmin=-1.0, vmax=1.0,
-                            aspect='auto', extent=[-180, 180, n_ev, 0],
-                            cmap='binary')
-            ax.set_ylabel('i_ev')
-            ax.set_xlabel('Correction angle (deg)')
-            ax.set_title('%s %s' % (st.network, st.station))
-            cbar = fig.colorbar(cax, ticks=[0, 0.5, 1.0],
-                                orientation='horizontal',
-                                fraction=0.05, pad=0.5)
-            cbar.ax.set_xticklabels(['0', '0.5', '1.0'])
+            cax = ax.imshow(
+                cc_i_ev_vs_rota,
+                interpolation="nearest",
+                vmin=-1.0,
+                vmax=1.0,
+                aspect="auto",
+                extent=[-180, 180, n_ev, 0],
+                cmap="binary",
+            )
+            ax.set_ylabel("i_ev")
+            ax.set_xlabel("Correction angle (deg)")
+            ax.set_title("%s %s" % (st.network, st.station))
+            cbar = fig.colorbar(
+                cax,
+                ticks=[0, 0.5, 1.0],
+                orientation="horizontal",
+                fraction=0.05,
+                pad=0.5,
+            )
+            cbar.ax.set_xticklabels(["0", "0.5", "1.0"])
             plt.tight_layout()
             # plt.show(fig)
-            fig.savefig(os.path.join(dir_ro, '%s_%s_%s_rot_cc_heatmap.png' % (st.network, st.station, loc)))
+            fig.savefig(
+                os.path.join(
+                    dir_ro,
+                    "%s_%s_%s_rot_cc_heatmap.png" % (st.network, st.station, loc),
+                )
+            )
             plt.close()
 
         if plot_distr is True:
-            logs.debug('Plotting distributions for station %s.%s' % (st.network, st.station))
-            plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog,
-                                    rot_angles, st, loc, dir_ro)
+            logs.debug(
+                "Plotting distributions for station %s.%s" % (st.network, st.station)
+            )
+            plot_ccdistr_each_event(
+                cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_ro
+            )
 
-        median_a, mean_a, std_a, switched, n_ev =\
-            get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin)
+        median_a, mean_a, std_a, switched, n_ev = get_m_angle_switched(
+            cc_i_ev_vs_rota, catalog, st, ccmin
+        )
 
         dict_ev_angle = get_m_angle_all(cc_i_ev_vs_rota, catalog, st, ccmin)
 
         return median_a, mean_a, std_a, switched, dict_ev_angle, n_ev
 
 
-def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
-                     pl_options, pl_topo, mapsize, outformat, ls=False):
-    '''
+def plot_corr_angles(
+    ns,
+    st_lats,
+    st_lons,
+    orientfile,
+    dir_orient,
+    pl_options,
+    pl_topo,
+    mapsize,
+    outformat,
+    ls=False,
+):
+    """
     Plot correction angles of all stations on a map. nans are igored.
     Values for plotting are read from file which was automatically prepared in
     the orient section.
 
     :param ls: label position [lon (symbol), lat (symbol + label), lon (label)]
-    '''
+    """
 
-    logs = logging.getLogger('plot_corr_angles')
+    logs = logging.getLogger("plot_corr_angles")
 
     gmtconf = dict(
-                   MAP_TICK_PEN_PRIMARY='1.25p',
-                   MAP_TICK_PEN_SECONDARY='1.25p',
-                   MAP_TICK_LENGTH_PRIMARY='0.2c',
-                   MAP_TICK_LENGTH_SECONDARY='0.6c',
-                   FONT_ANNOT_PRIMARY='20p,1,black',
-                   FONT_LABEL='20p,1,black',
-                   PS_CHAR_ENCODING='ISOLatin1+',
-                   MAP_FRAME_TYPE='fancy',
-                   FORMAT_GEO_MAP='D',
-                   PS_PAGE_ORIENTATION='portrait',
-                   MAP_GRID_PEN_PRIMARY='thinnest,0/50/0',
-                   MAP_ANNOT_OBLIQUE='6')
+        MAP_TICK_PEN_PRIMARY="1.25p",
+        MAP_TICK_PEN_SECONDARY="1.25p",
+        MAP_TICK_LENGTH_PRIMARY="0.2c",
+        MAP_TICK_LENGTH_SECONDARY="0.6c",
+        FONT_ANNOT_PRIMARY="20p,1,black",
+        FONT_LABEL="20p,1,black",
+        PS_CHAR_ENCODING="ISOLatin1+",
+        MAP_FRAME_TYPE="fancy",
+        FORMAT_GEO_MAP="D",
+        PS_PAGE_ORIENTATION="portrait",
+        MAP_GRID_PEN_PRIMARY="thinnest,0/50/0",
+        MAP_ANNOT_OBLIQUE="6",
+    )
 
     angles_fromfile = load(filename=os.path.join(dir_orient, orientfile))
 
@@ -564,22 +666,21 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     stats_no_nan = []
     stats_no_nan_u = []
 
-
     for i_ns, ns_now in enumerate(ns):
-        for l in ['00', '', '01', '10', '60']:
+        for l in ["00", "", "01", "10", "60"]:
             try:
-                ns_now_ = '%s %s %s' % (ns_now[0], ns_now[1], l)
+                ns_now_ = "%s %s %s" % (ns_now[0], ns_now[1], l)
                 a = angles_fromfile.CorrectAngl_perStat_median[ns_now_]
                 nev = angles_fromfile.n_events[ns_now_]
                 if a > -181.0 and a < 180.0:  # not nan
                     if nev >= 5:
-                        angle_no_nan.append(0.0-a)
+                        angle_no_nan.append(0.0 - a)
                         stats_no_nan.append(ns_now[1])
                         lat_no_nan.append(st_lats[i_ns])
                         lon_no_nan.append(st_lons[i_ns])
                     else:
-                        angle_no_nan_u.append(0.0-a)
-                        stats_no_nan_u.append(ns_now[1])                        
+                        angle_no_nan_u.append(0.0 - a)
+                        stats_no_nan_u.append(ns_now[1])
                         lat_no_nan_u.append(st_lats[i_ns])
                         lon_no_nan_u.append(st_lons[i_ns])
             except KeyError:
@@ -594,30 +695,29 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
         height=mapsize[1],
         show_grid=False,
         show_topo=pl_topo,
-        #color_dry=(143, 188, 143), #(238, 236, 230),
-        topo_cpt_wet='white_sea_land',#'light_sea_uniform',
-        topo_cpt_dry='light_land_uniform',
+        # color_dry=(143, 188, 143), #(238, 236, 230),
+        topo_cpt_wet="white_sea_land",  #'light_sea_uniform',
+        topo_cpt_dry="light_land_uniform",
         illuminate=True,
         illuminate_factor_ocean=0.15,
         show_rivers=True,
         show_plates=False,
-        gmt_config=gmtconf)
+        gmt_config=gmtconf,
+    )
 
     # Draw some larger cities covered by the map area
     # m.draw_cities()
 
     # Draw max. amplitudes at station locations as colored circles
-    cptfile = 'tempfile2.cpt'
+    cptfile = "tempfile2.cpt"
     abs_angs = list(num.abs(angle_no_nan))
     m.gmt.makecpt(
-                C=pl_options[3],
-                T='%g/%g' % (0.1, 180.),
-                out_filename=cptfile)#, suppress_defaults=True)
+        C=pl_options[3], T="%g/%g" % (0.1, 180.0), out_filename=cptfile
+    )  # , suppress_defaults=True)
     # m.gmt.makecpt(
     #             C='/home/gesap/Documents/CETperceptual_GMT/CET-D8.cpt',
     #             T='%g/%g' % (0.1, 180.),
     #             out_filename=cptfile)#, suppress_defaults=True)
-
 
     # same length for every vector:
     length = [1.5 for a in range(len(lat_no_nan))]
@@ -627,53 +727,64 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     # angle_zero_u = [1.5 for a in range(len(lat_no_nan_u))]
 
     # plot obtained rotation vectors:
-    #m.gmt.psxy(in_columns=(lon_no_nan, lat_no_nan, angle_zero, length),
+    # m.gmt.psxy(in_columns=(lon_no_nan, lat_no_nan, angle_zero, length),
     #           S='V0.5c+jc', W='0.07c,black',
     #           *m.jxyr)
-    #m.gmt.psxy(in_columns=(lon_no_nan_u, lat_no_nan_u, angle_zero_u, length_u),
+    # m.gmt.psxy(in_columns=(lon_no_nan_u, lat_no_nan_u, angle_zero_u, length_u),
     #       S='V0.5c+jc', W='0.07c,black',
     #       *m.jxyr)
 
-    m.gmt.psxy(in_columns=(lon_no_nan_u, lat_no_nan_u, angle_no_nan_u, length_u),
-           S='V0.4c+jc+eA', W='0.05c,black',
-           *m.jxyr)
-    
-    m.gmt.psxy(in_columns=(lon_no_nan, lat_no_nan, abs_angs, angle_no_nan, length),
-               C=cptfile, S='V0.7c+jc+eA', W='0.1c+cl',
-               *m.jxyr)
+    m.gmt.psxy(
+        in_columns=(lon_no_nan_u, lat_no_nan_u, angle_no_nan_u, length_u),
+        S="V0.4c+jc+eA",
+        W="0.05c,black",
+        *m.jxyr
+    )
 
+    m.gmt.psxy(
+        in_columns=(lon_no_nan, lat_no_nan, abs_angs, angle_no_nan, length),
+        C=cptfile,
+        S="V0.7c+jc+eA",
+        W="0.1c+cl",
+        *m.jxyr
+    )
 
     # add handmade label
     if ls:
-        m.gmt.psxy(in_columns=([ls[0]], [ls[1]], [ls[3]], [0.9]),
-                   S='V0.5c+eA', W='0.07c,red', *m.jxyr)
-        labels = ['Sensor orientation']
+        m.gmt.psxy(
+            in_columns=([ls[0]], [ls[1]], [ls[3]], [0.9]),
+            S="V0.5c+eA",
+            W="0.07c,red",
+            *m.jxyr
+        )
+        labels = ["Sensor orientation"]
         lat_lab = [ls[1]]
         lon_lab = [ls[2]]
         for i in range(len(labels)):
             m.add_label(lat_lab[i], lon_lab[i], labels[i])
-    
+
     # add a colorbar
-    B_opt_psscale = 'xaf'
+    B_opt_psscale = "xaf"
     m.gmt.psscale(
-                 B=B_opt_psscale+'+l abs. misorientation [deg]',
-                 D='x9c/6c+w12c/0.5c+jTC+h', # 'x9c/17c+w12c/0.5c+jTC+h'
-                 C=cptfile)
-    
+        B=B_opt_psscale + "+l abs. misorientation [deg]",
+        D="x9c/6c+w12c/0.5c+jTC+h",  # 'x9c/17c+w12c/0.5c+jTC+h'
+        C=cptfile,
+    )
+
     # add station labels
 
     has_label = []
 
     for i in range(len(stats_no_nan)):
         if stats_no_nan[i] not in has_label:
-            m.add_label(lat_no_nan[i], lon_no_nan[i], stats_no_nan[i])    
+            m.add_label(lat_no_nan[i], lon_no_nan[i], stats_no_nan[i])
             has_label.append(stats_no_nan[i])
 
     has_label = []
 
     for i in range(len(stats_no_nan_u)):
         if stats_no_nan_u[i] not in has_label:
-            m.add_label(lat_no_nan_u[i], lon_no_nan_u[i], stats_no_nan_u[i])    
+            m.add_label(lat_no_nan_u[i], lon_no_nan_u[i], stats_no_nan_u[i])
             has_label.append(stats_no_nan_u[i])
 
-    m.save(os.path.join(dir_orient, 'map_orient.%s' % outformat))
+    m.save(os.path.join(dir_orient, "map_orient.%s" % outformat))
