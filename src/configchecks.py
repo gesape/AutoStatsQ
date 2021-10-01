@@ -1,8 +1,5 @@
 import sys, logging, os
-from .config import GeneralSettings, CatalogConfig, ArrTConfig,\
-MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
-GainfactorsConfig, PSDConfig, OrientConfig, TimingConfig, TeleCheckConfig,\
-maps, AutoStatsQConfig
+from .config import AutoStatsQConfig
 
 
 logs = logging.getLogger('CONFIG')
@@ -30,7 +27,7 @@ def check_general_settings(gensettings):
                 error = True
     
     if len(gensettings.st_use_list) > 0:                      
-        logger.debug('Using only stations: %s' % st_use_list)
+        logger.debug('Using only stations: %s' % gensettings.st_use_list)
 
     return error
 
