@@ -13,6 +13,11 @@ Please contact me for further description, help or when something does not behav
 - Test for large timing errors (resolution depends on sampling rate of synthetic data)
 - second independent and interactive test for exact and reliable amplitude corrections based on phase picking in snuffler and correlating waveforms
 
+Installation
+------------
+Install dependencies and `AutoStatsQ`:
+
+    pip install .
 
 Citation:
 ---------
