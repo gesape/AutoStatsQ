@@ -1,0 +1,222 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>AutoStatsQ report</title>
+
+    <link rel="stylesheet" href="reveal/dist/reset.css">
+    <link rel="stylesheet" href="reveal/dist/reveal.css">
+    <link rel="stylesheet" href="theme/pyrocko.css" id="theme">
+    <link rel="stylesheet" href="reveal/css/autostatsq.css">
+    <!--<link rel="stylesheet" href="dist/theme/moon.css" id="theme">-->
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="theme/highlight/gruvbox-light.css" id="highlight-theme">
+</head>
+<style>
+    .annot {
+        font-style: italic;
+        color: #ffbbaa;
+        padding-left: 1em;
+    }
+
+    .links {
+        border-top: 1px solid #665544;
+        padding-top: 0.5em;
+        font-size: 70%;
+        color: #aaaa88;
+        margin-top: 2em;
+        width: 100%;
+    }
+
+    .links li {
+        list-style-type: none;
+        display: inline-block;
+        margin-right: 1em;
+    }
+
+    .links a {
+        color: #aaaa88;
+    }
+
+    .editor {
+        margin: 1em;
+        border: 1px solid #665544;
+        border-radius: 0.2em;
+        background-color: #333322;
+    }
+
+    code.inline {
+        font-size: 80%;
+        background-color: #444435;
+        color: #ccccaa;
+    }
+
+    em {
+        color: #ccaa33;
+    }
+
+    .small {
+        font-size: 70%;
+    }
+
+    div.fbox {
+        display: flex;
+        vertical-align: top;
+        justify-content: space-evenly;
+    }
+
+    div.fitem {
+        flex-grow: 1;
+    }
+</style>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <section>
+                    <h2>AutoStatsQ report</h2>
+                    <img src="figures/pyrocko.svg" style="height: 2em;" />
+                    <img src="figures/autostatsq.svg" style="height: 5em;" />
+                    <h4>Automated Station Quality control for large seismic networks.</h4>
+                    <div class="links">
+                        <ul>
+                            <li>★ <a href="https://pyrocko.org" target="_blank" rel="noopener noreferrer">Pyrocko</a>
+                            <li>★ <a href="https://github.com/gesape/AutoStatsQ">AutoStatsQ</a>
+                            <li>★ <a href="https://pubs.geoscienceworld.org/ssa/srl/article/90/3/1177/568857/Automated-Quality-Control-for-Large-Seismic">Petersen et al. (2019)</a>   
+                        </ul>
+                    </div>
+                    <p style="font-size:40%">Report generated based on reveal: Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors.</p>
+                </section>
+            </section>
+
+            <section>
+                <div class="fbox" style="vertical-align: top; width: 100%;">
+                    <div class="fitem">
+                        <h4>AutoStatsQ Test Results</h4>
+                        <ul>
+                            <li><a href="#/catalog">Teleseismic event catalogs</a></li>
+                            <li><a href="#/orient">Sensor Orientations</a></li>
+                            <li><a href="#/gain">Amplitude gains</a></li>
+                            <li><a href="#/psd">Spectra</a></li>
+                            <li><a href="#/timing">Timing</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <section id="catalog">
+                    <h2>Teleseismic event catalogs</h2>
+                </section>
+
+                <section>
+                <h4><p style="font-size:60%">Catalog search information</p></h4>
+                <div class="fitem">
+                    <ul>
+                        <li style="font-size: 40%;">Two catalogs, one with deeper and one with shallower events, are downloaded from GCMT for the time, distance and magnitude ranges defined in the config file.</li>
+                        <li style="font-size: 40%;">The deeper catalog is used for the tests relying on teleseismic body waves: The amplitude test, the PSD test and the timing test. The shallower events are used for the orientation test, which uses Rayleigh waves.</li>
+                        <li style="font-size: 40%;">From the full catalog of available events, earthquakes are selected which provide an optimal azimuthal distribution (see Petersen et al., 2019). The number of resulting events can be adjusted by setting the azimuthal bin in the config file. This defines for how large azimuthal bins an event is selected (default 5 degrees).</li>
+                        <li style="font-size: 40%;">The distance of the events to the stations must be significantly larger than the aperture of the network when using the station-to-station comparison for the gain test. For other tests, such limits are not crucial. For long deployment times, large distances and large events (M 6.5-7.5) provide best results. In case of short deployment times, it might help to consider closer and smaller events. However, azimuthal dependencies should then be considered when checking the results.</li>
+                    </ul>
+                    
+                </div>
+                </section>
+
+                INCLUDE_HERE_CAT
+
+            </section>
+
+
+            <section>
+                <section id="orient">
+                    <h2>Orientation test</h2>
+
+                    <img src="figures/orient.svg" style="height: 2.5em;" />
+                    <p style="font-size:90%">Test of horizontal sensor components using the Rayleigh wave polarization</p>
+                    <p style="font-size:50%">Rayleigh waves have a 90° phase shift between the vertical and the radial component. Waveforms of a set of shallow, teleseismic events are analyzed by rotating the radial traces in steps of 1°. For each step, the cross-correlation of the Hilbert-transformed Z component and the rotated R component is calculated. Correctly oriented sensors would result in a maximum cross-correlation value at 0° rotation. The median angles indicated in the next slide are the correction angles, e.g. a N component pointing towards N20E would result in a correction angle of -20°. We recommend using the median instead of the mean of all events as the correction angle for a station, because the results of single events in one azimuthal direction may be biased by crustal structures. See Petersen et al. 2019 for more information.</p>
+
+                </section>
+
+                INCLUDE_HERE_ORIENT
+
+
+            </section>
+
+
+            <section>
+                <section id="gain">
+                    <h2>Amplitude gain test</h2>
+
+                    <img src="figures/gains.svg" style="height: 2.5em;" />
+                    <p style="font-size:90%">Comparison of P wave amplitudes among a network or to synthetic data</p>
+                    <p style="font-size:50%">Several methods are implemented to check amplitude gains. Most commonly, P wave amplitudes (default is first arriving P phase) are compared either to a reference station, or to amplitudes of synthetic data. In both cases, the median result of all azimuthally distributed events should be considered to avoid bias from single noisy events or travel-path effects. Smaller amplitude differences can result from site-effects, while larger amplitude errors are more likely to result from instrument or meta data errors.</p>
+
+                </section>
+
+                INCLUDE_HERE_GAINS
+
+            </section>
+
+
+            <section>
+                <section id="psd">
+                    <h2>PSD test</h2>
+
+                    <img src="figures/psds.svg" style="height: 2.5em;" />
+                    <p style="font-size:90%">Comparison of PSD computed from observed and synthetic waveforms</p>
+                    <p style="font-size:50%">Power spectral density plots (PSDs) are computed for synthetic and observed data of all (deep) events and stations. PSDs of synthetic and observed waveforms are calculated for all station–component–event combinations in long time windows (>30 min). For each pair of synthetic and observed PSDs, the ratio of both PSDs is calculated. Subsequently, the median power ratio over all events is computed for each frequency band of each station and component. Frequency ranges with a stable PSD ratio are determined by line fits to a given number of frequency ratio points (default 25). Successive lines having a slope below a given threshold (default 10) set up the recommended frequency ranges. Higher thresholds and fitting more frequency ratio points can be used to search for large misfits due to erroneous amplitude gains or extremely noisy environments, as well as to verify the instrument corner frequency.</p>
+
+                </section>
+
+                INCLUDE_HERE_PSDS
+
+            </section>
+
+            <section>
+                <section id="timing">
+                    <h2>Timing error test</h2>
+
+                    <img src="figures/clock.svg" style="height: 3em;" />
+                    <p style="font-size:60%">Systematic comparison of timing differences between synthetic and observed traces for timing errors >2s.</p>
+
+                    <p style="font-size:40%">The small implemented check for timing errors is based on the cross-correlation between the recorded traces and the synthetic vertical traces: (1) First, for each event and station the two (syn. + obs.) traces are correlated to obtain the time shift for which the correlation is highest. (2) In a second step the median time shift of each event over all stations is determined and the time shift values at the single stations are corrected for this median value. This is done to avoid errors from wrong origin times in the catalog, to take into account large deviations between orgin time and centroid time, and to consider large path effects of the teleseismic test events which effect all stations in a similar manner.
+
+                    The test is run in low frequency ranges (e.g. 0.01-0.10 Hz) and using synthetics computed from a global GFDB with a sampling of 2s. Therefore this test can only be applied to detect large timing errors in the order of several seconds. This error range is only useful to check prior to other seismological applications which use a similar frequency range as e.g. MT inversions.</p>
+
+                </section>
+
+                INCLUDE_HERE_TIMING
+
+
+                </section>
+            </section>            
+
+
+
+
+        </div>
+    </div>
+
+    <script src="reveal/dist/reveal.js"></script>
+    <script src="reveal/plugin/notes/notes.js"></script>
+    <script src="reveal/plugin/markdown/markdown.js"></script>
+    <script src="reveal/plugin/highlight/highlight.js"></script>
+    <script>
+        // More info about initialization & config:
+        // - https://revealjs.com/initialization/
+        // - https://revealjs.com/config/
+        Reveal.initialize({
+            hash: true,
+
+            // Learn about plugins: https://revealjs.com/plugins/
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+        });
+    </script>
+</body>
+
+</html>

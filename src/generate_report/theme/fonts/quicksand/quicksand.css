@@ -1,0 +1,9 @@
+
+@font-face {
+    font-family: 'Quicksand';
+    src: url('Quicksand-VariableFont_wght.woff2') format('woff2-variations'),
+         url('Quicksand-VariableFont_wght.ttf') format('truetype');
+
+    font-weight: normal;
+    font-style: normal;
+}
