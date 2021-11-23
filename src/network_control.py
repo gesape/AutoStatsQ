@@ -33,7 +33,7 @@ MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
 GainfactorsConfig, PSDConfig, OrientConfig, TimingConfig, TeleCheckConfig,\
 maps, AutoStatsQConfig
 from .calc_ttt import *
-
+from .make_report import gen_report
 
 '''
 Quality control of array stations
@@ -102,6 +102,7 @@ def main():
     parser.add_argument('--config')
     parser.add_argument('--run', action='store_true')
     parser.add_argument('--generate_config', action='store_true')
+    parser.add_argument('--report', action='store_true')
     parser.add_argument('-l', '--loglevel',
                         help='Verbosity in the output.', default='INFO',
                         choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO',
@@ -141,6 +142,12 @@ def main():
     if args.config:
         logging.info('Checking configuration file.')
         check_config(args.config)
+
+    if args.report:
+        logging.info('Generating html report from results.')
+        if not args.config:
+            logging.error('AutoStatsQ needs a config file.')
+        gen_report(args.config)
 
 
     # run AutoStatsQ
