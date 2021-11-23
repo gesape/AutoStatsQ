@@ -21,6 +21,7 @@ Petersen, G. M., Cesca, S., Kriegerowski, M. (2019): Automated Quality Control f
 
 Latest changes
 -------------
+- report generation option: After running AutoStatsQ, a html report file can be generated using ```--report```. The report is generated using reveal (Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors).
 - Improved feedback and error logging for easier user support.
 - Option to generate automated maps without setting mid point and radius manuallyby setting ```pl_opt: ['automatic']``` in the config file (see example file below.)
 - data is downsampled to 10 Hz prior to restitution. This is necessary in case of high sampling rates to not introduce filtering errors.
@@ -80,6 +81,15 @@ To get detailed error/ info logging, use the -l option:
 ```
 
 Helpful for debugging: Forward terminal output into a logging file by using the option ```--logoutput FILENAME```.
+
+
+To generate a html report after running AutoStatsQ use the option:
+
+```
+  autostatsq --config name_of_config_file --report
+```
+
+The report is saved in a directory result_report and the file index_report.html can be opend for example with firefox.
 
 
 Config file settings
