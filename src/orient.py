@@ -120,7 +120,7 @@ def plot_corr_baz(nsl, filename_all, filename_stats, dir_ro, events, stations):
 
         for i_ev, (ev, angle) in enumerate(item.ev_rota.items()):
             #print(ev)
-            angle_list.append(-float(angle))
+            angle_list.append(float(angle))
             ev_pyr = [e for e in events if e.time == float(util.str_to_time(ev))][0]
             bazi = azibazi( ev_pyr.lat, ev_pyr.lon, st_pyr.lat, st_pyr.lon)[1]
             t_list.append(ev_pyr.time)
@@ -146,10 +146,10 @@ def plot_corr_baz(nsl, filename_all, filename_stats, dir_ro, events, stations):
             xvals = num.linspace(-0, 360, 100)
 
             fig, ax = plt.subplots(figsize=(10, 3))
-            ax.plot(xvals, [- _mean for i in range(len(xvals))], c='black', ls='--', label='mean')
-            ax.plot(xvals, [- _median for i in range(len(xvals))], c='red', ls=':', label='median')
+            ax.plot(xvals, [_mean for i in range(len(xvals))], c='black', ls='--', label='mean')
+            ax.plot(xvals, [_median for i in range(len(xvals))], c='red', ls=':', label='median')
             ax.legend(loc='center right', bbox_to_anchor=(1, 0.5))
-            ax.fill_between(xvals, [- _mean-_stdev for i in range(len(xvals))], [- _mean+_stdev for i in range(len(xvals))], facecolor='gray', alpha=0.2)
+            ax.fill_between(xvals, [_mean-_stdev for i in range(len(xvals))], [_mean+_stdev for i in range(len(xvals))], facecolor='gray', alpha=0.2)
             im = ax.scatter(baz_list, angle_list, c=t_list, vmin=min(times), vmax=max(times), s=8)
             ax.set_ylim((-abs(absmax)-20,abs(absmax)+20))
             ax.set_xlim((0,+360))
