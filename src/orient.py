@@ -138,15 +138,18 @@ def plot_corr_baz(nsl, filename_all, filename_stats, dir_ro, events, stations):
             try:
                 _median = stats_fromfile.CorrectAngl_perStat_median['%s %s %s' % (st[0],st[1], st[2])]
                 _mean =  stats_fromfile.CorrectAngl_perStat_mean['%s %s %s' % (st[0], st[1], st[2])]
+                _stdev = stats_fromfile.CorrectAngl_perStat_stdd['%s %s %s' % (st[0], st[1], st[2])]
+            
             except:
                 continue
+            
             xvals = num.linspace(-0, 360, 100)
 
             fig, ax = plt.subplots(figsize=(10, 3))
             ax.plot(xvals, [- _mean for i in range(len(xvals))], c='black', ls='--', label='mean')
             ax.plot(xvals, [- _median for i in range(len(xvals))], c='red', ls=':', label='median')
             ax.legend(loc='center right', bbox_to_anchor=(1, 0.5))
-            ax.fill_between(xvals, [- _mean-7 for i in range(len(xvals))], [- _mean+7 for i in range(len(xvals))], facecolor='gray', alpha=0.2)
+            ax.fill_between(xvals, [- _mean-_stdev for i in range(len(xvals))], [- _mean+_stdev for i in range(len(xvals))], facecolor='gray', alpha=0.2)
             im = ax.scatter(baz_list, angle_list, c=t_list, vmin=min(times), vmax=max(times), s=8)
             ax.set_ylim((-abs(absmax)-20,abs(absmax)+20))
             ax.set_xlim((0,+360))
@@ -159,7 +162,7 @@ def plot_corr_baz(nsl, filename_all, filename_stats, dir_ro, events, stations):
             #fig.colorbar(times, ax=ax)
             cbar = fig.colorbar(im, ax=ax, ticks=ticks)
             cbar.ax.set_yticklabels(ticklabels, fontsize=8)
-            fig.savefig(os.path.join(dir_ro, '%s_%s_baz.pdf' % (st[0], st[1])))
+            fig.savefig(os.path.join(dir_ro, '%s_%s_baz.png' % (st[0], st[1])))
             plt.close(fig)            
 
 
