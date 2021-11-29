@@ -281,6 +281,8 @@ Settings:
   # plot a map with correction angles as lines
   plot_angles_vs_events: false
   # plot angle vs single events, one plot for each station
+  plot_angles_vs_baz: false
+  # plot angle vs. backazimuth, color scale for event time
 
 - !autostatsq.config.TimingConfig
   # simple test for large timing errors (> 2s)
