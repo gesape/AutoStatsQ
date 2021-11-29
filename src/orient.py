@@ -5,12 +5,15 @@ import os
 import datetime
 from pyrocko import trace, pile
 from pyrocko import util
-from pyrocko.orthodrome import distance_accurate50m_numpy
+from pyrocko.orthodrome import distance_accurate50m_numpy, azibazi
 from matplotlib import pyplot as plt
 from pyrocko.guts import Object, Dict, String, Float, List, Int, Tuple, load
 from pyrocko.plot.automap import Map
 import matplotlib.dates as mdates
 from pyrocko.gui import marker as pm
+
+import matplotlib as make_pile
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 class dict_stats_rota(Object):
@@ -91,6 +94,73 @@ def plot_corr_time(nsl, filename, dir_ro):
             
             fig.savefig(os.path.join(dir_ro, '%s_%s_overtime.png' % (st[0], st[1])))
             plt.close(fig)
+
+
+def plot_corr_baz(nsl, filename_all, filename_stats, dir_ro, events, stations):
+    """
+    Plot angle of max. cr-corr vs event baz for each station.
+    """
+
+    stats_fromfile = load(filename=os.path.join(dir_ro, filename_stats))
+    #print(stats_fromfile)
+    angles_fromfile = load(filename=os.path.join(dir_ro, filename_all))
+
+    times = [ev.time for ev in events]
+    cmap = plt.get_cmap('viridis')
+    ticks = [min(times), num.mean(times), max(times)]
+    ticklabels = [util.tts(min(times))[:10], util.tts(num.mean(times))[:10], util.tts(max(times))[:10]]
+
+    for item in angles_fromfile.dict_stats_all:
+        st = item.station
+        st_pyr = [s for s in stations if s.station == st[1] and s.network == st[0]][0]
+
+        angle_list = []
+        baz_list = []
+        t_list = []
+
+        for i_ev, (ev, angle) in enumerate(item.ev_rota.items()):
+            #print(ev)
+            angle_list.append(-float(angle))
+            ev_pyr = [e for e in events if e.time == float(util.str_to_time(ev))][0]
+            bazi = azibazi( ev_pyr.lat, ev_pyr.lon, st_pyr.lat, st_pyr.lon)[1]
+            t_list.append(ev_pyr.time)
+            if bazi < 0:
+                bazi = 360 + bazi
+            baz_list.append(bazi)
+
+        if angle_list and baz_list:
+            absmax = max(angle_list, key=abs)
+            if abs(absmax) < 60:
+                absmax = 60
+            #_median = num.median(angle_list)
+            #_mean = num.mean(angle_list)
+            #xvals = num.linspace(-180, 180, 100)
+            try:
+                _median = stats_fromfile.CorrectAngl_perStat_median['%s %s %s' % (st[0],st[1], st[2])]
+                _mean =  stats_fromfile.CorrectAngl_perStat_mean['%s %s %s' % (st[0], st[1], st[2])]
+            except:
+                continue
+            xvals = num.linspace(-0, 360, 100)
+
+            fig, ax = plt.subplots(figsize=(10, 3))
+            ax.plot(xvals, [- _mean for i in range(len(xvals))], c='black', ls='--', label='mean')
+            ax.plot(xvals, [- _median for i in range(len(xvals))], c='red', ls=':', label='median')
+            ax.legend(loc='center right', bbox_to_anchor=(1, 0.5))
+            ax.fill_between(xvals, [- _mean-7 for i in range(len(xvals))], [- _mean+7 for i in range(len(xvals))], facecolor='gray', alpha=0.2)
+            im = ax.scatter(baz_list, angle_list, c=t_list, vmin=min(times), vmax=max(times), s=8)
+            ax.set_ylim((-abs(absmax)-20,abs(absmax)+20))
+            ax.set_xlim((0,+360))
+            ax.set_title('%s.%s' % (st[0],st[1]))
+            ax.set_xlabel('Station-Event BAZ [°]')
+            ax.set_ylabel('Sensor deviation angle [°]')
+            plt.tick_params(labelsize=10)
+            plt.yticks(num.arange(-60,70,20.))
+            plt.tight_layout(rect=[0,0,0.8,1])
+            #fig.colorbar(times, ax=ax)
+            cbar = fig.colorbar(im, ax=ax, ticks=ticks)
+            cbar.ax.set_yticklabels(ticklabels, fontsize=8)
+            fig.savefig(os.path.join(dir_ro, '%s_%s_baz.pdf' % (st[0], st[1])))
+            plt.close(fig)            
 
 
 def write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,

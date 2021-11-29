@@ -1726,6 +1726,13 @@ def main():
             orient.plot_corr_time(ns, 'AllCorrectionAngles.yaml', dir_ro)
             logs.info(' Saved plot in directory %s.' % dir_ro)
 
+        if orientconf.plot_angles_vs_baz is True:
+            dir_ro = os.path.join(data_dir, 'results', 'orient')
+            orient.plot_corr_baz(ns, 'AllCorrectionAngles.yaml', 
+                                 'CorrectionAngles.yaml', dir_ro, 
+                                 subsets_events['shallow'], all_stations)
+
+
         if timingconf.timing_test is True:
             # Set Logger name and verbosity
             logs = logging.getLogger('Timing')
