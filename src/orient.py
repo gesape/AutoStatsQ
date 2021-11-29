@@ -155,7 +155,7 @@ def plot_corr_baz(nsl, filename_all, filename_stats, dir_ro, events, stations):
             ax.set_xlim((0,+360))
             ax.set_title('%s.%s' % (st[0],st[1]))
             ax.set_xlabel('Station-Event BAZ [°]')
-            ax.set_ylabel('Sensor deviation angle [°]')
+            ax.set_ylabel('Sensor correction angle [°]')
             plt.tick_params(labelsize=10)
             plt.yticks(num.arange(-60,70,20.))
             plt.tight_layout(rect=[0,0,0.8,1])
