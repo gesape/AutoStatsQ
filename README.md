@@ -11,7 +11,7 @@ Please contact me for further description, help or when something does not behav
 - Rayleigh wave polarization analysis for detection of sensor misorientations
 - Comparison of obs. and synth. PSDs; determining frequency ranges suitable for MT inversion
 - Test for large timing errors (resolution depends on sampling rate of synthetic data)
-- second independent and interactive test for exact and reliable amplitude corrections based on phase picking in snuffler and correlating waveforms
+- Second independent and interactive test for exact and reliable amplitude corrections based on phase picking in snuffler and correlating waveforms
 
 
 Citation:
@@ -21,13 +21,10 @@ Petersen, G. M., Cesca, S., Kriegerowski, M. (2019): Automated Quality Control f
 
 Latest changes
 -------------
+- You can find an example config file with a step-by-step tutorial in the ```example``` directory.
 - report generation option: After running AutoStatsQ, a html report file can be generated using ```--report```. The report is generated using reveal (Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors).
 - Improved feedback and error logging for easier user support.
-- Option to generate automated maps without setting mid point and radius manuallyby setting ```pl_opt: ['automatic']``` in the config file (see example file below.)
-- data is downsampled to 10 Hz prior to restitution. This is necessary in case of high sampling rates to not introduce filtering errors.
 - new independent and interactive test for amplitude corrections based on waveform correlations of teleseismic P phases --> please contact me for detailed instructions, I didn't have time to document the work-flow yet, but it is a great new test ;-)
-- new simple test for large timing errors (see below...)
-- added debug mode for a nice to gain and orientation test window selection experience;) can also be used to test filter settings
 
 
 Requirements
