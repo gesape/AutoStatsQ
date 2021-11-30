@@ -22,6 +22,7 @@ setup(
     include_package_data=True,
     package_data={'': ['generate_report/index_template.html', 
                        'generate_report/figures/*',
+                       'generate_report/reveal/',
                        'generate_report/reveal/*',
                        'generate_report/reveal/*/*',
                        'generate_report/reveal/*/*/*',

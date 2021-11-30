@@ -161,9 +161,43 @@ def add_all_stats_figures_timing(orient_result_dir):
     return str1+str2+str3
 
 
+
+def add_all_stats_figures_baz(orient_result_dir):
+
+    baz_plots = glob.glob(os.path.join(orient_result_dir, '*_baz.png'))
+
+    if len(baz_plots) <1:
+
+        logger.info('Error: orient over backazimuth plots not found.')
+        error = ''' \t \t \t \t<section data-transition="fade">\n
+                    \t \t \t \t \t <h4>Median orientation angle over time</h4>\n
+                    \t \t \t \t \t<p style="font-size:%s">Figure not found.</p>\n
+                    \t \t \t \t</section>
+                    ''' % ('50%'.format())
+
+        return error
+
+    else:
+
+        str1 = '''
+                <section>
+                    <h4>Median orientation angle vs. event backazimuth</h4>
+                    <div style="overflow:scroll; height:500px; font-size: 30%;">\n'''
+        str2 = ''
+        for ot in baz_plots:
+            pl = ot.split('/')[-1]
+            str2 += '''<img style="margin:0; margin-bottom:-0.6em; margin-right:0.3em; height: 12em;"
+                                src="../results/orient/%s" />\n''' % (pl)
+        str3 = '''
+                </section>'''
+
+    return str1+str2+str3
+
+
+
 def add_all_stats_figures_ccs(orient_result_dir):
 
-    cc_plots = glob.glob(os.path.join(orient_result_dir, '*_distr.pdf'))
+    cc_plots = glob.glob(os.path.join(orient_result_dir, '*_distr.*'))
 
     if len(cc_plots) <1:
         logger.info('Error: orient cc plots not found.')
@@ -191,7 +225,7 @@ def add_all_stats_figures_ccs(orient_result_dir):
             #str2 += '''<img style="margin:0; margin-bottom:-0.6em; margin-right:0.3em; height: 20em;"
             #                    src="%s" />\n''' % (ot)
             str2 +=         '''<p>%s</p>\n''' % st
-            str2 +=         '''<embed src="../results/orient/%s" width="600px" height="300px" />\n''' % plo
+            str2 +=         '''<embed src="../results/orient/%s" />\n''' % plo
         str3 = '''
                 </section>'''
 
