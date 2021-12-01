@@ -149,7 +149,7 @@ class PSDConfig(Object):
     plot_ratio_extra = Bool.T(default=False)
     plot_m_rat = Bool.T(default=False)
     plot_flat_ranges = Bool.T()
-    plt_neigh_ranges = Bool.T(default=False)
+    # plt_neigh_ranges = Bool.T(default=False)
 
 
 class OrientConfig(Object):

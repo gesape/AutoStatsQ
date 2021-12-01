@@ -567,8 +567,8 @@ def calc_plot_psds(catalog, data_pile, syn_data_pile,
                    tinc, tpad, dt_s, dt_e,
                    n, fac_norm, f_ign,
                    plot_psds, plot_ratio_extra,
-                   plot_m_rat, plot_flat_ranges,
-                   plot_neighb_ranges):
+                   plot_m_rat, plot_flat_ranges): # ,
+                   # plot_neighb_ranges):
     """
     Next level function, called by ```prep_psd_fct``` to procede with current
     synthetic and observed datapiles.
@@ -677,8 +677,8 @@ def prep_psd_fct(i_st, st, nst, l, subset_catalog, dir_f, arrT_array, arrT_R_arr
                  syndatapath, tinc, tpad, dt_s, dt_e,
                  n, fac_norm, f_ign,
                  plot_psds=False, plot_ratio_extra=False,
-                 plot_m_rat=False, plot_flat_ranges=False,
-                 plot_neighb_ranges=False):
+                 plot_m_rat=False, plot_flat_ranges=False): # ,
+                 # plot_neighb_ranges=False):
     """
     Preparing the PSD calculations and plotting, e.g. making data-piles
     and calling next function if both, synthetic and recorded data is
@@ -733,8 +733,8 @@ def prep_psd_fct(i_st, st, nst, l, subset_catalog, dir_f, arrT_array, arrT_R_arr
                 plot_psds=plot_psds,
                 plot_ratio_extra=plot_ratio_extra,
                 plot_m_rat=plot_m_rat,
-                plot_flat_ranges=plot_flat_ranges,
-                plot_neighb_ranges=plot_neighb_ranges)
+                plot_flat_ranges=plot_flat_ranges)  # ,
+                # plot_neighb_ranges=plot_neighb_ranges)
 
             ratio_npar = outs[-1]
             f_syn_keep = outs[-2]

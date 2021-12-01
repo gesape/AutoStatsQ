@@ -1598,8 +1598,8 @@ def main():
                       plot_psds=psdsconf.plot_psds,
                       plot_ratio_extra=psdsconf.plot_ratio_extra,
                       plot_m_rat=psdsconf.plot_m_rat,
-                      plot_flat_ranges=psdsconf.plot_flat_ranges,
-                      plot_neighb_ranges=psdsconf.plt_neigh_ranges)
+                      plot_flat_ranges=psdsconf.plot_flat_ranges)  # ,
+                      # plot_neighb_ranges=psdsconf.plt_neigh_ranges)
 
                     if freq_rat_list_st != [] and nslc_list_st != []:
                         flat_f_ranges_ll.extend(freq_rat_list_st)
