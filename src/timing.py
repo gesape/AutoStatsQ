@@ -7,6 +7,10 @@ import logging
 import matplotlib.pyplot as plt
 import matplotlib
 from pyrocko.guts import Object, Dict, String, Float, Int
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+
+# aspect ratio of array plots look ugly
 
 
 #matplotlib.rc('xtick', labelsize=20)
@@ -141,7 +145,7 @@ def plot_matrix(tshifts, tshifts_cor, stations, dir_time):
     max_col = num.max([num.nanmax(tshifts), num.nanmax(tshifts_cor)])
     absmax = 20 # num.max([abs(min_col), abs(max_col)])
     a = ax[0].imshow(tshifts, vmin=-absmax,
-                     vmax=+absmax, interpolation='nearest')
+                     vmax=+absmax, interpolation='nearest', aspect='equal')
     ax[0].set_title('Not corrected.', fontsize=10)
     ax[0].set_xlabel('Events', fontsize=10)
     ax[0].set_ylabel('Stations', fontsize=10)
@@ -152,22 +156,31 @@ def plot_matrix(tshifts, tshifts_cor, stations, dir_time):
     ax[0].set_yticks(num.arange(len(stats)))
     ax[0].set_yticklabels(stats)
     ax[0].tick_params(axis='both', which='major', labelsize=8)
-    cbar = plt.colorbar(a, ax=ax[0], extend='both', fraction=0.046, pad=0.04)
+    ax[0].set_xticks(ticks=num.arange(0,tshifts.shape[1]+1,1))
+    
+    divider = make_axes_locatable(ax[0])
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cbar = plt.colorbar(a, cax=cax, extend='both') #ax[0], extend='both', fraction=0.046, pad=0.04)
     cbar.ax.tick_params(labelsize=8) 
     cbar.set_label('Timing error [s]', rotation=90, fontsize=8)
 
     b = ax[1].imshow(tshifts_cor, vmin=-absmax,
-                     vmax=absmax, interpolation='nearest')
+                     vmax=absmax, interpolation='nearest', aspect='equal')
     ax[1].set_title('Corrected for median of event over all stations.', fontsize=10)
     ax[1].set_xlabel('Events', fontsize=10)
     ax[1].set_ylabel('Stations', fontsize=10)
     ax[1].set_yticks(num.arange(len(stats)))
     ax[1].set_yticklabels(stats)
     ax[1].tick_params(axis='both', which='major', labelsize=8)
-    cbar = plt.colorbar(b, ax=ax[1], extend='both', fraction=0.046, pad=0.04)
+    ax[1].set_xticks(ticks=num.arange(0,tshifts.shape[1]+1,1))
+
+    divider = make_axes_locatable(ax[1])
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cbar = plt.colorbar(b, cax=cax, extend='both') 
+    #cbar = plt.colorbar(b, ax=ax[1], extend='both', fraction=0.046, pad=0.04)
     cbar.set_label('Timing error [s]', rotation=90, fontsize=8)
     cbar.ax.tick_params(labelsize=8)
-    plt.tight_layout()
+    #plt.tight_layout()
     fig.savefig(os.path.join(dir_time, 'timing_arrays.png'))
     plt.close()
 

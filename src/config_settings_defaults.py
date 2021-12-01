@@ -112,7 +112,7 @@ def generate_default_config():
                               bandpass=(3, 0.01, 0.1),
                               time_wdw=['firstP', 1200],
                               cc_thresh=0.6,
-                              search_avail_stats=True,
+                              # search_avail_stats=True,
                               debug_mode=False)
 
     _tele_check = TeleCheckConfig(tele_check=False)

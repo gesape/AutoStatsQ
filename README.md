@@ -288,9 +288,6 @@ Settings:
   # needs a long time window for correlation
   cc_thresh: 0.6
   # test appropriate setting with debug mode, depends on frequency range
-  search_avail_stats: false  
-  # uses all stations in station list if false, otherwise all found 
-  # in traces are used
   debug_mode: false 
   # starts in interactive mode in snuffler showing the traces and the obtained
   # cross correlation function

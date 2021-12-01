@@ -1759,15 +1759,16 @@ def main():
 
             # print(p_obs, p_syn)
 
-            if timingconf.search_avail_stats is True:
-                nslc_list = []
-                for t in p_obs.iter_traces(trace_selector=lambda tr: tr.channel=='R'):
-                    nslc_list.append(t.nslc_id)
-                nslc_list = list(set(nslc_list))
-                stations = nslc_list
+            #if timingconf.search_avail_stats is True:
+            #    nslc_list = []
+            #    for t in p_obs.iter_traces(trace_selector=lambda tr: tr.channel=='R'):
+            #        nslc_list.append(t.nslc_id)
+            #    nslc_list = list(set(nslc_list))
+            #    stations = nslc_list
 
-            else:
-                stations = all_stations
+            # else:
+            
+            stations = all_stations
 
             tshifts = num.empty((len(stations), len(subset_catalog)))
             tshifts.fill(num.nan)
