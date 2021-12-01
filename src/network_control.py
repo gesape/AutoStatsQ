@@ -1758,7 +1758,7 @@ def main():
 
             # print(p_obs, p_syn)
 
-            if timingconf.search_locations is True:
+            if timingconf.search_avail_stats is True:
                 nslc_list = []
                 for t in p_obs.iter_traces(trace_selector=lambda tr: tr.channel=='R'):
                     nslc_list.append(t.nslc_id)

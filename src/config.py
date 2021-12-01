@@ -172,7 +172,7 @@ class TimingConfig(Object):
     bandpass = Tuple.T(3, Float.T())
     time_wdw = List.T()
     cc_thresh = Float.T()
-    search_locations = Bool.T()
+    search_avail_stats = Bool.T()
     debug_mode = Bool.T(default=False)
 
 
