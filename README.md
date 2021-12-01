@@ -11,7 +11,7 @@ Please contact me for further description, help or when something does not behav
 - Rayleigh wave polarization analysis for detection of sensor misorientations
 - Comparison of obs. and synth. PSDs; determining frequency ranges suitable for MT inversion
 - Test for large timing errors (resolution depends on sampling rate of synthetic data)
-- second independent and interactive test for exact and reliable amplitude corrections based on phase picking in snuffler and correlating waveforms
+- Second independent and interactive test for exact and reliable amplitude corrections based on phase picking in snuffler and correlating waveforms
 
 
 Citation:
@@ -21,13 +21,10 @@ Petersen, G. M., Cesca, S., Kriegerowski, M. (2019): Automated Quality Control f
 
 Latest changes
 -------------
+- You can find an example config file with a step-by-step tutorial in the ```example``` directory.
 - report generation option: After running AutoStatsQ, a html report file can be generated using ```--report```. The report is generated using reveal (Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors).
 - Improved feedback and error logging for easier user support.
-- Option to generate automated maps without setting mid point and radius manuallyby setting ```pl_opt: ['automatic']``` in the config file (see example file below.)
-- data is downsampled to 10 Hz prior to restitution. This is necessary in case of high sampling rates to not introduce filtering errors.
 - new independent and interactive test for amplitude corrections based on waveform correlations of teleseismic P phases --> please contact me for detailed instructions, I didn't have time to document the work-flow yet, but it is a great new test ;-)
-- new simple test for large timing errors (see below...)
-- added debug mode for a nice to gain and orientation test window selection experience;) can also be used to test filter settings
 
 
 Requirements
@@ -362,6 +359,19 @@ The test is run in low frequency ranges (e.g. 0.01-0.10 Hz) and using synthetics
 The output is returned as a yaml file with mean, median, standard deviations and number of considered events. Additionally one figure shows the correlation matrices, before and after correction with the median of each event, and a second figure shows the obtained timing errors for each station.
 
 For the input parameters please check the exemplary config file above.
+
+
+
+
+## License
+GNU General Public License, Version 3, 29 June 2007
+
+AutoStatsQ is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+AutoStatsQ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+
+
 
 
 References:

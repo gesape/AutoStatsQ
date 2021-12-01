@@ -62,6 +62,7 @@ def gen_report(config):
                 extended_lines.append(ori.include_map(orient_result_dir))
                 extended_lines.append(ori.include_table_correction_angles(orient_result_dir))
                 extended_lines.append(ori.add_single_station_results(orient_result_dir))
+                extended_lines.append(ori.add_all_stats_figures_baz(orient_result_dir))
                 extended_lines.append(ori.add_all_stats_figures_timing(orient_result_dir))
                 extended_lines.append(ori.add_all_stats_figures_ccs(orient_result_dir))
             
