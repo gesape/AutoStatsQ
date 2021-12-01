@@ -128,7 +128,7 @@ class GainfactorsConfig(Object):
     wdw_sp_arr = Int.T()
     snr_thresh = Float.T(default=1.)
     debug_mode = Bool.T(default=False)
-    phase_select = String.T()
+    # phase_select = String.T()
     components = List.T()
 
     plot_median_gain_on_map = Bool.T()

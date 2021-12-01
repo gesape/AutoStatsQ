@@ -77,8 +77,8 @@ def generate_default_config():
                                   taper_xfrac=0.25,
                                   wdw_st_arr=5,
                                   wdw_sp_arr=120,
-                                  phase_select='first(P|p|P(cmb)P(icb)P(icb)p(cmb)p|' +\
-                                               'P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p)',
+                                  # phase_select='first(P|p|P(cmb)P(icb)P(icb)p(cmb)p|' +\
+                                  #              'P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p)',
                                   components=['Z'],
                                   plot_median_gain_on_map=False,
                                   plot_allgains=False,

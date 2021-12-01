@@ -233,7 +233,6 @@ Settings:
   snr_thresh: 2. # threshold for snr of used event
   debug_mode: false # if true, time windows are opened in snuffler to check window settings.
 
-  phase_select: first(P|p|P(cmb)P(icb)P(icb)p(cmb)p|P(cmb)Pv(icb)p(cmb)p|P(cmb)P<(icb)(cmb)p)
   components: [Z, R, T]
 
   # plotting options
@@ -289,7 +288,7 @@ Settings:
   # needs a long time window for correlation
   cc_thresh: 0.6
   # test appropriate setting with debug mode, depends on frequency range
-  search_locations: false  
+  search_avail_stats: false  
   # uses all stations in station list if false, otherwise all found 
   # in traces are used
   debug_mode: false 

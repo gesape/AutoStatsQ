@@ -116,8 +116,6 @@ class AutoGain():
                  component='Z', gain_rel_to='scale_one',
                  syn_data_pile=None):
         """
-       :param phase_selection: follows the logic of
-                               fomosto's Store phase definitions
        :param gain_rel_to: gain relative to options:
                            * 'scale_one' for reference amplitude = 1.
                            *  tuple ('reference_nsl', refernce_id) - gain
