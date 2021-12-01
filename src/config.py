@@ -40,7 +40,7 @@ class CatalogConfig(Object):
     plot_hist_wedges = Bool.T(default=False)
     plot_wedges_vs_dist = Bool.T(default=False)
     plot_wedges_vs_magn = Bool.T(default=False)
-    plot_dist_vs_magn = Bool.T(default=False)
+    # plot_dist_vs_magn = Bool.T(default=False)
     plot_catalog_subset = Bool.T(default=False)
     # pl_opt = List.T(
     # help='[map center lat, centre lon, map radius [m]]')

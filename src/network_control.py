@@ -399,9 +399,10 @@ def main():
                                       bins_hist, data_dir, catalogconf.min_mag, d,
                                       catalogconf.wedges_width, no_bins)
 
-                if catalogconf.plot_dist_vs_magn is True:
-                    logs.info(' Plotting catalog distance vs. magnitude for full catalog: %s.' % d)
-                    plot_distmagn(dist_array, ev_cat, data_dir, d)
+                # if catalogconf.plot_dist_vs_magn is True:
+                #     logs.info(' Plotting catalog distance vs. magnitude for full catalog: %s.' % d)
+                #     plot_distmagn(dist_array, ev_cat, data_dir, d)
+
 
                 # find 'best' subset of catalog events
                 subset_catalog = []
@@ -556,16 +557,16 @@ def main():
                                   bins_hist_subset, data_dir, catalogconf.min_mag, d,
                                   catalogconf.wedges_width, no_bins, full_cat=False)
 
-            if catalogconf.plot_dist_vs_magn is True:
-                dist_array_subset = num.empty((len(subset_catalog), len(ns)))
+            #if catalogconf.plot_dist_vs_magn is True:
+            #    dist_array_subset = num.empty((len(subset_catalog), len(ns)))
 
-                for i_ev, ev in enumerate(subset_catalog):
-                    dist_array_subset[i_ev, :] = [float(orthodrome.distance_accurate50m_numpy(
-                                          ev.lat, ev.lon, lat, lon))
-                                          for (lat, lon) in zip(st_lats, st_lons)]
+            #    for i_ev, ev in enumerate(subset_catalog):
+            #        dist_array_subset[i_ev, :] = [float(orthodrome.distance_accurate50m_numpy(
+            #                              ev.lat, ev.lon, lat, lon))
+            #                              for (lat, lon) in zip(st_lats, st_lons)]
 
-                logs.info(' Plotting catalog distance vs. magnitude for subset: %s.' % d)
-                plot_distmagn(dist_array_subset, subset_catalog, data_dir, d, full_cat=False)
+            #    logs.info(' Plotting catalog distance vs. magnitude for subset: %s.' % d)
+            #    plot_distmagn(dist_array_subset, subset_catalog, data_dir, d, full_cat=False)
 
             if catalogconf.plot_catalog_subset is True:
                 '''
