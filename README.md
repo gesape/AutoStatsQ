@@ -35,7 +35,20 @@ Requirements
 - To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto`. For instance, `fomosto download kinherd global_2s` from the pyrocko environment. https://greens-mill.pyrocko.org/
 - for new interactive test: [Grond](https://pyrocko.org/grond/docs/current/) (from the pyrocko suite of applications).
 
-Tested on Ubuntu 16.04 and openSUSE, using matplotlib version 1.5.1 and gmt version 5.4.2 (Wessel et al., 2013).
+Tested on Ubuntu 16.04 and openSUSE, using matplotlib version 1.5.1 and gmt version 5.4.2 (Wessel et al., 2013). AutoStatsQ cannot run with gmt version 6.
+
+
+To install gmt 5 from source, if your package manager only installs gmt 6, you can follow these instructions:
+(1) First all dependencies are needed:
+https://github.com/GenericMappingTools/gmt/wiki/Install-dependencies-on-Ubuntu-and-Debian
+
+(2) Download (and extract) the gmt version package:
+https://github.com/GenericMappingTools/gmt/releases/tag/5.4.5
+
+(3) And you can follow the instructions here to install from source. I did not change any configuration files, but only followed the commands:
+https://github.com/GenericMappingTools/gmt/blob/master/BUILDING.md
+
+
 
 Download and Installation
 -------------------------
