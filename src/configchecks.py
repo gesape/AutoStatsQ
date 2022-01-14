@@ -196,7 +196,8 @@ def check_gain_settings(gainfconf, RestDownconf):
 
     # check methods
     if len(cf.gain_factor_method) == 1:
-        if cf.gain_factor_method not in ['scale_one', 'median_all_avail', 'syn_comp']:
+        if cf.gain_factor_method[0] not in ['scale_one', 'median_all_avail', 'syn_comp']:
+            logging.info(cf.gain_factor_method)
             logging.error(' Gain factor method not known. Choose between reference_nsl, syn_comp, median_all_avail, scale_one.')
             error = True
 
