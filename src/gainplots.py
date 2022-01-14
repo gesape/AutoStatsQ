@@ -93,7 +93,12 @@ def plot_allgains(self, results_all, stats_list, directory, fn):
                                      boundaries=bounds,
                                      orientation='horizontal')
     # plt.colorbar(cax=cax)
-    cbar.ax.set_xticklabels(times, rotation=60)
+    try:
+        cbar.ax.set_xticklabels(times, rotation=60)
+    except:
+        # work around for newer matplotlib versions...
+        times.append('')
+        cbar.ax.set_xticklabels(times, rotation=60)
     # ax[-1].axis('off')
 
     plt.tight_layout()
