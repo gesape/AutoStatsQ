@@ -84,8 +84,8 @@ class Section():
                     #print(nslc_id[0:2])
                     self.relative_scalings[nslc_id] = maxA / self.max_tr_syn[nslc_id[0:2]]
                 except:
-                    self.logs.warning(' Synthetic data for comparison missing: %s' 
-                                      % nslc_id[0:2])
+                    self.logs.warning(' Data or synthetic data for comparison missing: %s' 
+                                      % str(nslc_id[0:2]))
             #print(self.relative_scalings)
             self.finished = True
 
