@@ -872,7 +872,7 @@ def main():
                         trs = []
                         if not metaDataconf.local_waveforms_only:
                             #trs = p.all(
-                            #    trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2])                              
+                            #    trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2])
                             trs.extend(p.all(tmin=tmin, tmax=tmax,
                                              trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2]))
 
@@ -971,7 +971,8 @@ def main():
 
                                 for tr in trs:
                                     cnt_resp = 0
-                                    tr.downsample_to(0.1)
+                                    if RestDownconf.deltat_down > 0.0 and not RestDownconf.deltat_down == tr.deltat:
+                                        tr.downsample_to(0.1)
                                     for resp_now in responses:
                                         try:
                                             polezero_resp = resp_now.get_pyrocko_response(
@@ -1021,7 +1022,8 @@ def main():
                                       continue
 
                                     for tr in trs:
-                                        tr.downsample_to(0.1)
+                                        if RestDownconf.deltat_down > 0.0 and not RestDownconf.deltat_down == tr.deltat:
+                                            tr.downsample_to(0.1)
                                         cnt_resp = 0
                                         for resp_now in responses:
                                             try:

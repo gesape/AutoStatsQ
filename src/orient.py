@@ -1,11 +1,13 @@
 import numpy as num
-import math
+import math, sys
 import logging
 import os
 import datetime
 from pyrocko import trace, pile
 from pyrocko import util
 from pyrocko.orthodrome import distance_accurate50m_numpy, azibazi
+import matplotlib as mpl 
+mpl.use('agg')
 from matplotlib import pyplot as plt
 from pyrocko.guts import Object, Dict, String, Float, List, Int, Tuple, load
 from pyrocko.plot.automap import Map
@@ -121,7 +123,10 @@ def plot_corr_baz(nsl, filename_all, filename_stats, dir_ro, events, stations):
         for i_ev, (ev, angle) in enumerate(item.ev_rota.items()):
             #print(ev)
             angle_list.append(float(angle))
-            ev_pyr = [e for e in events if e.time == float(util.str_to_time(ev))][0]
+            try:
+                ev_pyr = [e for e in events if abs((e.time - float(util.str_to_time(ev)))) < 100][0]
+            except IndexError:
+                continue
             bazi = azibazi( ev_pyr.lat, ev_pyr.lon, st_pyr.lat, st_pyr.lon)[1]
             t_list.append(ev_pyr.time)
             if bazi < 0:
@@ -163,7 +168,8 @@ def plot_corr_baz(nsl, filename_all, filename_stats, dir_ro, events, stations):
             cbar = fig.colorbar(im, ax=ax, ticks=ticks)
             cbar.ax.set_yticklabels(ticklabels, fontsize=8)
             fig.savefig(os.path.join(dir_ro, '%s_%s_baz.png' % (st[0], st[1])))
-            plt.close(fig)            
+            plt.close(fig)
+        #sys.exit()         
 
 
 def write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
