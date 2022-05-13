@@ -3,7 +3,7 @@
 ### Attention! Default branch is main, not master!
 
 Toolbox for automated station quality control for MT inversion.
-Please contact me for further description, help or when something does not behave as expected ;-) : gesap@gfz-potsdam.de
+Please contact me for more information, help or when something does not behave as expected ;-) : gesap@gfz-potsdam.de
 
 - Catalog search for teleseismic events with uniform azimuthal coverage around array
 - Download of data & metadata for these events + computation of synthetic data
@@ -21,10 +21,10 @@ Petersen, G. M., Cesca, S., Kriegerowski, M. (2019): Automated Quality Control f
 
 Latest changes
 -------------
-- You can find an example config file with a step-by-step tutorial in the ```example``` directory.
-- report generation option: After running AutoStatsQ, a html report file can be generated using ```--report```. The report is generated using reveal (Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors).
-- Improved feedback and error logging for easier user support.
-- new independent and interactive test for amplitude corrections based on waveform correlations of teleseismic P phases --> please contact me for detailed instructions, I didn't have time to document the work-flow yet, but it is a great new test ;-)
+- New example config file with step-by-step tutorial in the ```example``` directory!
+- Beautiful html report! After running AutoStatsQ, a html report file can be generated using ```--report```. The report is based on reveal (Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors).
+- Improved config file checks, feedback and error logging.
+- new independent and interactive test for amplitude corrections based on waveform correlations of teleseismic P phases --> please contact me for detailed instructions, I didn't have time to document the work-flow yet. ;-)
 
 
 Requirements
@@ -93,7 +93,7 @@ To get detailed error/ info logging, use the -l option:
 Helpful for debugging: Forward terminal output into a logging file by using the option ```--logoutput FILENAME```.
 
 
-To generate a html report after running AutoStatsQ use the option:
+To generate a html report after running AutoStatsQ:
 
 ```
   autostatsq --config name_of_config_file --report
@@ -239,7 +239,7 @@ Settings:
     order: 4
   taper_xfrac: 0.25 # [s]
 
-  wdw_st_arr: 5
+  wdw_st_arr: 60
   wdw_sp_arr: 60
   # time window around P phase onset, start [s] before and end [s] after theo. arrival time
 
@@ -328,6 +328,8 @@ Lists of stations as input can be in pyrocko station format, as station-xml or a
 
 Step-by-step instructions:
 --------------------------
+
+Please refer to the examples in the example dir for very detailed step-by-step instructions.
 
 - make a working directory
 - prepare station list for input
