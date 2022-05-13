@@ -30,7 +30,7 @@ def check_general_settings(gensettings):
                 error = True
     
     if len(gensettings.st_use_list) > 0:                      
-        logger.debug('Using only stations: %s' % st_use_list)
+        logger.debug('Using only stations: %s' % gensettings.st_use_list)
 
     return error
 
@@ -308,7 +308,6 @@ def check_maps_settings(maps):
     return error
 
 
-
 def check_config(configfile):
 
     gensettings, catalogconf, arrTconf, metaDataconf, RestDownconf,\
@@ -327,7 +326,6 @@ def check_config(configfile):
     error_tim = check_timing_settings(timingconf)
     error_tele = check_telecheck_settings(tc)
     error_map = check_maps_settings(maps)
-
 
     if error_gen or error_cat or error_arr or error_md or error_rest or error_syn\
       or error_gain or error_psd or error_ori or error_tim or error_tele or error_map:
