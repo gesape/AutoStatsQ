@@ -35,7 +35,7 @@ Requirements
 - To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto`. For instance, `fomosto download kinherd global_2s` from the pyrocko environment. https://greens-mill.pyrocko.org/
 - for new interactive test: [Grond](https://pyrocko.org/grond/docs/current/) (from the pyrocko suite of applications).
 
-Tested on Ubuntu 16.04 and openSUSE, using matplotlib version 1.5.1 and gmt version 5.4.2 (Wessel et al., 2013). AutoStatsQ cannot run with gmt version 6.
+Tested on Ubuntu 16.04 and openSUSE, using matplotlib version 1.5.1 (Hunter 2007) and gmt version 5.4.2 (Wessel et al., 2013). AutoStatsQ cannot run with gmt version 6.
 
 
 To install gmt 5 from source, if your package manager only installs gmt 6, you can follow these instructions:
@@ -386,11 +386,16 @@ You should have received a copy of the GNU General Public License along with thi
 References:
 -----------
 
-Wessel, P., Smith, W. H.~F., Scharroo, R., Luis, J.~F., and Wobbe, F. (2013).
-Generic Mapping Tools: Improved version released. EOS Trans. AGU, 94:409--410.
-
 Heimann, S., Kriegerowski, M., Isken, M., Cesca, S., Daout, S., Grigoli, F.,
 Juretzek, C., Megies, T., Nooshiri, N., Steinberg, A., Sudhaus, H.,
 Vasyura-Bathke, H., Willey, T., and Dahm, T. (2017).
 Pyrocko - an open-source seismology toolbox and library. v. 0.3. GFZ Data Services.
 http://doi.org/10.5880/GFZ.2.1.2017.001.
+
+Hunter, J.D., 2007. Matplotlib: a 2D graphics environment, Comput. Sci.
+Eng., 9(3), 90–95.
+
+Petersen, G. M., Cesca, S., Kriegerowski, M., & AlpArray Working Group. (2019). Automated quality control for large seismic networks: Implementation and application to the AlpArray seismic network. Seismological Research Letters, 90(3), 1177-1190.
+
+Wessel, P., Smith, W. H.~F., Scharroo, R., Luis, J.~F., and Wobbe, F. (2013).
+Generic Mapping Tools: Improved version released. EOS Trans. AGU, 94:409--410.
