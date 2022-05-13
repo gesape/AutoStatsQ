@@ -35,6 +35,9 @@ maps, AutoStatsQConfig
 from .calc_ttt import *
 from .make_report import gen_report
 
+
+fdsn.g_timeout = 120.
+
 '''
 Quality control of array stations
 
