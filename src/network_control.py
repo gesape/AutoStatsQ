@@ -1675,6 +1675,7 @@ def main():
                                             orientconf.ccmin,
                                             orientconf.plot_heatmap,
                                             orientconf.plot_distr,
+                                            orientconf.plot_stackdistr,
                                             orientconf.debug_mode)
 
                     if out:

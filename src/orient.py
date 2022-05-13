@@ -456,9 +456,73 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
     plt.close(fig)
 
 
+def stack_ccdist(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_ro, ccmin):
+    """
+    Stacks the cc-coefficients for events above the threshold, normalizes them, and plots them.
+    by Patrick Bradshaw, Univ. of Utah
+    """
+
+    logs = logging.getLogger('orient_evstack')
+
+    n_ev = len(catalog)
+    y_lim = (-1., 1.)
+    x_lim = (-180, 180)
+    
+    fig, ax = plt.subplots()
+    
+
+    stack = num.zeros(360)
+    n_stack = 0
+    max_stack_cc_angle = 0
+    max_stack_cc_coef = -1
+    ccthresh_mask = []
+    
+    for (i_row, row), ev in zip(enumerate(cc_i_ev_vs_rota), catalog):
+        logs.debug("first in row = %s" % str(row[0]))
+        if (num.max(row) > ccmin):
+            stack += row
+            n_stack += 1
+            ccthresh_mask.append(True)
+            logs.debug("in the mask")
+        else:
+            ccthresh_mask.append(False)
+            logs.debug("not in the mask")
+    
+    #mx = ma.masked_array(x, mask=[0, 0, 0, 1, 0])
+    masked = cc_i_ev_vs_rota[ccthresh_mask,:]
+    
+    logs.debug("The mask is: %s" % str(ccthresh_mask))
+    logs.debug(masked)
+    logs.debug("n_stack = %s" % str(n_stack))
+    logs.debug("cc_i_ev_vs_rota is of type: %s" % str(type(cc_i_ev_vs_rota)))
+
+    orientstackpath = os.path.join(dir_ro, '%s_%s_cc_values.' % (st.network, st.station))
+    num.savetxt(orientstackpath, masked, delimiter=",")
+    
+    logs.info("Saved stacked orient cross correlations here: %s " % orientstackpath)
+
+    for i_val, val in enumerate(stack):
+        stack[i_val] = val / n_stack
+        if (stack[i_val] > max_stack_cc_coef):
+            max_stack_cc_coef = stack[i_val]
+            max_stack_cc_angle = i_val - 180
+    
+    ax.set_xlabel('Correction angle [deg]')
+    ax.set_ylabel('C-c coef.')
+    ax.plot(rot_angles, stack, 'k', label = "Max CC of %s at %s deg using %s events" % (round(max_stack_cc_coef,4), max_stack_cc_angle, n_stack))
+    
+    ax.set_xlim(x_lim)
+    ax.set_ylim(y_lim)
+    ax.set_xticks([-180, 0, 180])
+    plt.legend(loc='lower right')
+    plt.tight_layout()
+    fig.savefig(os.path.join(dir_ro, '%s_%s_%s_stackdistr.png' % (st.network, st.station, loc)))
+    plt.close(fig)
+
+
 def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
                 bp, dt_start, dt_stop, ccmin=0.80,
-                plot_heatmap=False,  plot_distr=False,
+                plot_heatmap=False,  plot_distr=False, plot_stackdistr=False,
                 debug=False):
     """
     Perform orientation analysis using Rayleigh waves, main function.
@@ -597,6 +661,10 @@ def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
             logs.debug('Plotting distributions for station %s.%s' % (st.network, st.station))
             plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog,
                                     rot_angles, st, loc, dir_ro)
+        if plot_stackdistr is True:
+            logs.debug('Plotting stacked distribution for station %s.%s' % (st.network, st.station))
+            stack_ccdist(cc_i_ev_vs_rota, catalog,
+                                    rot_angles, st, loc, dir_ro, ccmin)
 
         median_a, mean_a, std_a, switched, n_ev =\
             get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin)

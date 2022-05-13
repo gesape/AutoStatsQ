@@ -161,6 +161,7 @@ class OrientConfig(Object):
     plot_heatmap = Bool.T()
     ccmin = Float.T(optional=True)
     plot_distr = Bool.T()
+    plot_stackdistr = Bool.T(optional=True)
     plot_orient_map_fromfile = Bool.T()
     plot_angles_vs_events = Bool.T(default=False)
     plot_angles_vs_baz = Bool.T(default=False)
