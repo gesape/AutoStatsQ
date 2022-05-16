@@ -119,7 +119,7 @@ def generate_default_config():
 
     
     _maps = maps(map_size=[30.0, 30.0],
-                 pl_opt=['lat', 'lon', 'radius', 'scale_gains'],
+                 pl_opt=['lat', 'lon', 'radius', 'split'],
                  pl_topo=False)
 
 
