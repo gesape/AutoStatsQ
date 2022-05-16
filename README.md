@@ -311,8 +311,8 @@ Settings:
 - !autostatsq.config.maps
   # settings for all output maps
   map_size: [30.0, 30.0]
-  pl_opt: [46, 11.75, 800000]
-  # mid point of map (lat, lon) and radius [m]
+  pl_opt: [46, 11.75, 800000, 'split']
+  # mid point of map (lat, lon), radius [m] and cpt color scale
   # to use automated map dimensions:
   # pl_opt: ['automatic']
   pl_topo: false
