@@ -974,8 +974,8 @@ def main():
 
                                 for tr in trs:
                                     cnt_resp = 0
-                                    if RestDownconf.deltat_down > 0.0 and not RestDownconf.deltat_down == tr.deltat:
-                                        tr.downsample_to(0.1)
+                                    if RestDownconf.deltat_down > 0.0 and RestDownconf.deltat_down > tr.deltat and tr.deltat < 0.1:
+                                            tr.downsample_to(0.1,allow_upsample_max=3)
                                     for resp_now in responses:
                                         try:
                                             polezero_resp = resp_now.get_pyrocko_response(
@@ -1025,8 +1025,8 @@ def main():
                                       continue
 
                                     for tr in trs:
-                                        if RestDownconf.deltat_down > 0.0 and not RestDownconf.deltat_down == tr.deltat:
-                                            tr.downsample_to(0.1)
+                                        if RestDownconf.deltat_down > 0.0 and RestDownconf.deltat_down > tr.deltat and tr.deltat < 0.1:
+                                            tr.downsample_to(0.1,allow_upsample_max=3)
                                         cnt_resp = 0
                                         for resp_now in responses:
                                             try:
@@ -1172,7 +1172,7 @@ def main():
                                                     try:
                                                         tr1.chop(trmin, trmax)
                                                         if deltat_down > 0.0:
-                                                            tr1.downsample_to(deltat=deltat_down)
+                                                            tr1.downsample_to(deltat=deltat_down,allow_upsample_max=3)
                                                         save_rot_down_tr(tr1, dir_rot, ev_t_str)
 
                                                     except trace.NoData:
@@ -1197,7 +1197,7 @@ def main():
                                                     try:
                                                         tr2.chop(trmin, trmax)
                                                         if deltat_down > 0.0:                                                
-                                                            tr2.downsample_to(deltat=deltat_down)
+                                                            tr2.downsample_to(deltat=deltat_down,allow_upsample_max=3)
                                                         save_rot_down_tr(tr2, dir_rot, ev_t_str)
 
                                                     except trace.NoData:
@@ -1217,7 +1217,7 @@ def main():
                                             try:
                                                 trZ.chop(trmin, trmax)
                                                 if deltat_down > 0.0:
-                                                    trZ.downsample_to(deltat=deltat_down)
+                                                    trZ.downsample_to(deltat=deltat_down,allow_upsample_max=3)
                                                 trZ.set_channel('Z')
                                                 save_rot_down_tr(trZ, dir_rot, ev_t_str)
 
