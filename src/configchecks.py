@@ -1,8 +1,5 @@
 import sys, logging, os
-from .config import GeneralSettings, CatalogConfig, ArrTConfig,\
-MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
-GainfactorsConfig, PSDConfig, OrientConfig, TimingConfig, TeleCheckConfig,\
-maps, AutoStatsQConfig
+from .config import AutoStatsQConfig
 
 
 logs = logging.getLogger('CONFIG')
