@@ -21,6 +21,7 @@ Petersen, G. M., Cesca, S., Kriegerowski, M. (2019): Automated Quality Control f
 
 Latest changes
 -------------
+- updated AutoStatsQ to work with recent matplotlib, gmt, pyrocko versions (27.10.2023)
 - 2 new tutorials with step-by-step instructions in the ```example``` directory; including all input to get started. Example (I) - testing data and metadata downloaded from an fdsn server; Example (II) - testing locally stored data (including a synthetic test dataset).
 - Result presentation as a html report! After running AutoStatsQ, a html report file can be generated using ```--report```. The report is based on reveal (Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors).
 - Improved config file checks, feedback and error logging.
@@ -35,18 +36,8 @@ Requirements
 - To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto`. For instance, `fomosto download kinherd global_2s` from the pyrocko environment. https://greens-mill.pyrocko.org/
 - for new interactive test: [Grond](https://pyrocko.org/grond/docs/current/) (from the pyrocko suite of applications).
 
-Tested on Ubuntu 16.04 and openSUSE, using matplotlib version 1.5.1 (Hunter 2007) and gmt version 5.4.2 (Wessel et al., 2013). AutoStatsQ cannot run with gmt version 6.
 
-
-To install gmt 5 from source, if your package manager only installs gmt 6, you can follow these instructions:
-(1) First all dependencies are needed:
-https://github.com/GenericMappingTools/gmt/wiki/Install-dependencies-on-Ubuntu-and-Debian
-
-(2) Download (and extract) the gmt version package:
-https://github.com/GenericMappingTools/gmt/releases/tag/5.4.5
-
-(3) And you can follow the instructions here to install from source. I did not change any configuration files, but only followed the commands:
-https://github.com/GenericMappingTools/gmt/blob/master/BUILDING.md
+AutoStatsQ does now also work with gmt6. Tested on Ubuntu 20.04.6, matplotlib version 3.5.1; pyrocko version 2023.10.11
 
 
 
@@ -112,7 +103,8 @@ The default config file should look like this (without the comments):
 Settings:
 - !autostatsq.config.GeneralSettings
   work_dir: /some/data/directory/
-  list_station_lists: [/path/to/station-file/file.csv, /path/to/station-file/file.xml]
+  list_station_lists: [/path/to/station-file/file.pf, /path/to/station-file/file.xml]
+  # use as input station list in pyrocko format or in fdsn stationxml format
   st_use_list: [STATION] 
   # if set, only stations in this list are considered. remove or set to [] to use all stations
   # in station files.
@@ -324,7 +316,7 @@ Settings:
 Station list:
 -------------
 
-Lists of stations as input can be in pyrocko station format, as station-xml or as comma-spread-file with columns: network code, station code, latitude (float), longitude(float), station elevation [km], station depth [km]. Please use the file extensions 
+Lists of stations as input can be in pyrocko station format, as fdsn station-xml or as comma-spread-file with columns: network code, station code, latitude (float), longitude(float), station elevation [km], station depth [km]. Please use the file extensions 
 
 Step-by-step instructions:
 --------------------------
