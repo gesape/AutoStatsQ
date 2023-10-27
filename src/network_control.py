@@ -1102,6 +1102,7 @@ def main():
                     #if st.network not in net_check:
                     #    continue 
                     nsl = st.nsl()
+                    nsl_string=str(nsl)
                     trs = ev_data_pile.all(
                             trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2],
                             want_incomplete=True)
@@ -1176,7 +1177,7 @@ def main():
                                                         save_rot_down_tr(tr1, dir_rot, ev_t_str)
 
                                                     except trace.NoData:
-                                                        logs.error('N/2 comp no data in twd %s' % nsl)
+                                                        logs.error('N/2 comp no data in twd %s' % nsl_string)
                                                         tr1 = None
                                                     except ValueError:
                                                         tr1 = None
@@ -1201,7 +1202,7 @@ def main():
                                                         save_rot_down_tr(tr2, dir_rot, ev_t_str)
 
                                                     except trace.NoData:
-                                                        logs.error('E/3 comp no data in twd %s' % nsl)
+                                                        logs.error('E/3 comp no data in twd %s' % nsl_string)
                                                         tr2 = None
                                                     except ValueError:
                                                         tr2 = None
@@ -1222,7 +1223,7 @@ def main():
                                                 save_rot_down_tr(trZ, dir_rot, ev_t_str)
 
                                             except trace.NoData:
-                                                logs.error('E/3 comp no data in twd %s' % nsl)
+                                                logs.error('E/3 comp no data in twd %s' % nsl_string)
                                             except ValueError:
                                                 trZ = None
                                                 logs.error('Z downsampling not successful')
