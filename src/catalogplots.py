@@ -61,7 +61,7 @@ def plot_catalog_hist(catalog, dist_array, mean_wedges_mp, bins_hist,
 
     mean_dists = num.mean(dist_array, axis=1)
     fig, ax1 = plt.subplots()
-    ax1.hist(mean_wedges_mp, normed=False, bins=bins_hist, color='lightgrey')
+    ax1.hist(mean_wedges_mp, bins=bins_hist, color='lightgrey')
     ax1.set_xlabel(str(bin_width) + r'$^\circ$' + ' backazimuth bins',
                    fontsize=10)
     ax1.set_ylabel('Number of events in catalog', fontsize=10)
