@@ -156,8 +156,9 @@ def check_metadata_settings(metaDataconf):
         logger.warning(' Set MetaDataDownloadConfig use_downmeta to true to use the downloaded metadata.')
     
     if len(cf.channels_download) !=3:
-        logger.error(' MetaDataDownloadConfig channels_download takes a string with three characters as input. Use * as wildcard, e.g. HH*.')
-        error = True
+        if cf.channels_download != '*':
+            logger.error(' MetaDataDownloadConfig channels_download takes a string with three characters as input. Use * as wildcard, e.g. HH*.')
+            error = True
 
     if cf.dt_start > 0.5 or cf.dt_start < 0 or cf.dt_end < 0.5:
         logger.warning( 'MetaDataDownloadConfig dt_start is in hours before and dt_end in hours after origin time. Make sure time windows are long enough to include body waves, surface waves and sufficient time for filtering etc.')
