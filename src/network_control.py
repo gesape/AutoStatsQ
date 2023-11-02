@@ -192,12 +192,13 @@ def main():
                                 d = '0'
                             n_s = '%s.%s' % (n, s)
                             if n_s in gensettings.st_use_list or gensettings.st_use_list == []:
-                                all_stations.append(model.Station(network=n, station=s,
-                                                                  lat=float(lat), lon=float(lon),
-                                                                  elevation=float(elev), depth=d))
-                                st_lats.append(float(lat))
-                                st_lons.append(float(lon))
-                                ns.append((n, s))
+                                if n_s not in gensettings.st_block_list or gensettings.st_block_list == []:
+                                    all_stations.append(model.Station(network=n, station=s,
+                                                                      lat=float(lat), lon=float(lon),
+                                                                      elevation=float(elev), depth=d))
+                                    st_lats.append(float(lat))
+                                    st_lons.append(float(lon))
+                                    ns.append((n, s))
 
                         elif len(line.strip().split(',')) == 5:
                             n, s, lat, lon, elev = line.strip().split(',')
@@ -206,12 +207,13 @@ def main():
                                 elev = '0'
                             n_s = '%s.%s' % (n, s)
                             if n_s in gensettings.st_use_list or gensettings.st_use_list == []:
-                                all_stations.append(model.Station(network=n, station=s,
-                                                                  lat=float(lat), lon=float(lon),
-                                                                  elevation=float(elev)))                            
-                                st_lats.append(float(lat))
-                                st_lons.append(float(lon))
-                                ns.append((n, s))
+                                if n_s not in gensettings.st_block_list or gensettings.st_block_list == []:
+                                    all_stations.append(model.Station(network=n, station=s,
+                                                                      lat=float(lat), lon=float(lon),
+                                                                      elevation=float(elev)))                            
+                                    st_lats.append(float(lat))
+                                    st_lons.append(float(lon))
+                                    ns.append((n, s))
 
             elif stat_list.endswith('.xml'):
                 zs = stationxml.load_xml(filename=stat_list)
@@ -219,29 +221,31 @@ def main():
                     for stat in net.station_list:
                         n_s = '%s.%s' % (net.code, stat.code)
                         if n_s in gensettings.st_use_list or gensettings.st_use_list == []:
+                            if n_s not in gensettings.st_block_list or gensettings.st_block_list == []:
 
-                            st_lats.append(float(stat.latitude.value))
-                            st_lons.append(float(stat.longitude.value))
-                            ns.append((net.code, stat.code))
-                            all_stations.append(model.Station(network=net.code,
-                                                station=stat.code,
-                                                lat=float(stat.latitude.value),
-                                                lon=float(stat.longitude.value),
-                                                elevation=float(stat.elevation.value)))
+                                st_lats.append(float(stat.latitude.value))
+                                st_lons.append(float(stat.longitude.value))
+                                ns.append((net.code, stat.code))
+                                all_stations.append(model.Station(network=net.code,
+                                                    station=stat.code,
+                                                    lat=float(stat.latitude.value),
+                                                    lon=float(stat.longitude.value),
+                                                    elevation=float(stat.elevation.value)))
 
             elif stat_list.endswith('.yaml') or stat_list.endswith('.pf'):
                 zs = model.station.load_stations(filename=stat_list)
                 for stat in zs:
                     n_s = '%s.%s' % (stat.network, stat.station)
                     if n_s in gensettings.st_use_list or gensettings.st_use_list == []:
-                        st_lats.append(float(stat.lat))
-                        st_lons.append(float(stat.lon))
-                        ns.append((stat.network, stat.station))
-                        all_stations.append(model.Station(network=stat.network,
-                                            station=stat.station,
-                                            lat=float(stat.lat),
-                                            lon=float(stat.lon),
-                                            elevation=float(stat.elevation)))
+                        if n_s not in gensettings.st_block_list or gensettings.st_block_list == []:
+                            st_lats.append(float(stat.lat))
+                            st_lons.append(float(stat.lon))
+                            ns.append((stat.network, stat.station))
+                            all_stations.append(model.Station(network=stat.network,
+                                                station=stat.station,
+                                                lat=float(stat.lat),
+                                                lon=float(stat.lon),
+                                                elevation=float(stat.elevation)))
             else:
                 msg = 'Station file extension not known: %s. Please use .xml, .csv or .yaml.' % stat_list
                 logs.error(msg)
@@ -733,10 +737,18 @@ def main():
                             continue
                         #else:
                         #    print(glob.glob(mseed_fn_st+'*'))
+
+                        if metaDataconf.channels_download and not metaDataconf.channels_download_list:
                         
-                        selection = [(ns_now[0], ns_now[1], '*',
-                                      metaDataconf.channels_download,
-                                      t_start, t_end)]
+                            selection = [(ns_now[0], ns_now[1], '*',
+                                          metaDataconf.channels_download,
+                                          t_start, t_end)]
+                        elif metaDataconf.channels_download_list:
+                            selection = []
+                            for ch_item in metaDataconf.channels_download_list:
+                                selection.append(((ns_now[0], ns_now[1], '*', ch_item,
+                                          t_start, t_end)))
+
                         logs.debug(selection)
 
                         for site in sites:
@@ -787,14 +799,20 @@ def main():
             # one file for all events
             selection = []
             for ns_now in ns:
-                selection.append((ns_now[0], ns_now[1], '*',
-                                  metaDataconf.channels_download,
-                                  cat_tmin, cat_tmax))
+                if not metaDataconf.channels_download_list:
+                    selection.append((ns_now[0], ns_now[1], '*',
+                                      metaDataconf.channels_download,
+                                      cat_tmin, cat_tmax))
+                
+                elif metaDataconf.channels_download_list:
+                    for ch_item in metaDataconf.channels_download_list:
+                        selection.append((ns_now[0], ns_now[1], '*',
+                                      ch_item,
+                                      cat_tmin, cat_tmax))
 
             meta_fn = os.path.join(data_dir, 'Resp_all')
 
             for site in sites:
-                # This sometimes does not work properly, why? Further testing?...
                 logs.info(site)
                 try:
                     request_response = fdsn.station(
