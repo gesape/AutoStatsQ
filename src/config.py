@@ -8,6 +8,7 @@ class GeneralSettings(Object):
     list_station_lists = List.T(
         help='List of station list names, either txt or xml files')
     st_use_list = List.T(default=[])
+    st_block_list = List.T(default=[])
 
 class CatalogConfig(Object):
     search_events = Bool.T()
@@ -81,7 +82,8 @@ class MetaDataDownloadConfig(Object):
     local_waveforms_only = Bool.T(default=False)
     sds_structure = Bool.T(default=False)
     use_downmeta = Bool.T(default=True)
-    channels_download = String.T()
+    channels_download = String.T(optional=True)
+    channels_download_list = List.T(optional=True)
     all_channels = Bool.T(default=False)
     # components = List.T()
     token = Dict.T(default={})
