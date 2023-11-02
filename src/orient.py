@@ -533,9 +533,15 @@ def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
             for i_r, r in enumerate(rot_angles):
                 print('Station: %5d/%s, Event: %5d/%s, rotation angle [deg]: %5d' 
                        % (i_st, nst, i_ev, n_ev, r), end='\r')
-                rot_2, rot_3 = trace.rotate(traces=[trR, trT], azimuth=r,
+                try:
+                    rot_2, rot_3 = trace.rotate(traces=[trR, trT], azimuth=r,
                                             in_channels=['R', 'T'],
                                             out_channels=['2', '3'])
+                except ValueError:
+                    logs.warning('Rotation failed, %s.%s, %s' % (st.network, st.station, r))
+                    cc_i_ev_vs_rota[i_ev, i_r] = num.nan
+                    continue
+
                 rot_2_y = rot_2.ydata
                 rot_2_hilb = num.imag(trace.hilbert(rot_2_y, len(rot_2_y)))
                 rot_2_hilb_tr = trace.Trace(deltat=rot_2.deltat,
