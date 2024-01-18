@@ -984,6 +984,10 @@ def main():
                                     trs = [tr for tr in trs if tr.channel in ['DHZ', 'DH1', 'DH2']]
                                 elif 'DH1' in comps and 'DH2' in comps and 'DH3' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['DH1', 'DH2', 'DH3']]
+                                
+                                elif 'EPZ' in comps and 'EPN' in comps and 'EPE' in comps:
+                                    trs = [tr for tr in trs if tr.channel in ['EPZ', 'EPN', 'EPE']]
+
 
                                 else:
                                     # print('no BH* or HH* data for station %s found' % (str(nsl)))
