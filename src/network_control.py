@@ -1772,6 +1772,7 @@ def main():
                 try:
                     data_dir = gensettings.work_dir
                     arrT_array = num.load(os.path.join(data_dir, 'ttt', 'ArrivalTimes_deep.npy'))
+                    arrT_R_array = num.load(os.path.join(data_dir, 'ttt', 'ArrivalTimes_estR_deep.npy'))
                 except:
                     logs.error('Please calculate arrival times first!')
                     raise Exception('Arrival times must be calculated first!')
@@ -1801,15 +1802,22 @@ def main():
             tshifts = num.empty((len(stations), len(subset_catalog)))
             tshifts.fill(num.nan)
 
+            ccs = num.empty((len(stations), len(subset_catalog)))
+            ccs.fill(num.nan)
+
             for i_ev, ev in enumerate(subset_catalog):
-                tshifts[:, i_ev] = tt.ccs_allstats_one_event(i_ev, nev, ev, stations, all_stations,
+                tshifts[:, i_ev], ccs[:, i_ev] = tt.ccs_allstats_one_event(i_ev, nev, ev, stations, all_stations,
                                                              p_obs, p_syn,
                                                              dir_time, timingconf.bandpass,
-                                                             arrT_array, timingconf.cc_thresh,
+                                                             arrT_array, arrT_R_array, timingconf.cc_thresh,
                                                              timingconf.time_wdw,
-                                                             debug_mode=timingconf.debug_mode)
+                                                             debug_mode=timingconf.debug_mode,
+                                                             debug_only_cc_abovethresh=timingconf.debug_only_cc_abovethresh)
             tshifts_cor = tt.correct_for_med_tshifts(tshifts)
             tt.plot_matrix(tshifts, tshifts_cor, stations, dir_time)
+
+            # save all results
+            tt.save_all(tshifts_cor, ccs, stations, subset_catalog, dir_time)
 
             # get mean and stdev
             medians = num.nanmedian(tshifts_cor, axis=1)

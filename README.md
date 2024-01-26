@@ -21,6 +21,7 @@ Petersen, G. M., Cesca, S., Kriegerowski, M. (2019): Automated Quality Control f
 
 Latest changes
 -------------
+- Improved timing test (26.01.2024): More flexible selection of time windows; choppingof traces after bandpass filtering; improved plots; save single results for all stations and events. See also example config file and section on timing test below.
 - updated AutoStatsQ to work with recent matplotlib, gmt, pyrocko versions (27.10.2023)
 - 2 new tutorials with step-by-step instructions in the ```example``` directory; including all input to get started. Example (I) - testing data and metadata downloaded from an fdsn server; Example (II) - testing locally stored data (including a synthetic test dataset).
 - Result presentation as a html report! After running AutoStatsQ, a html report file can be generated using ```--report```. The report is based on reveal (Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors).
@@ -288,14 +289,16 @@ Settings:
 - !autostatsq.config.TimingConfig
   # simple test for large timing errors (> 2s)
   timing_test: false
-  bandpass: [3, 0.01, 0.1]
-  time_wdw: [firstP, 1200]  
+  bandpass: [3, 0.01, 0.08]
+  time_wdw: ['tP-120', 'tP+600']  
   # needs a long time window for correlation
+  # time windows can be defined relative to P arrival (tP) or estimated Rayleigh wave arrival (4km/s; tR), for example 'tP-60' means 60 s before tP, 'tR+1200' corresponds to 1200 s after tR
   cc_thresh: 0.6
   # test appropriate setting with debug mode, depends on frequency range
   debug_mode: false 
-  # starts in interactive mode in snuffler showing the traces and the obtained
-  # cross correlation function
+  # starts in interactive mode in snuffler showing the traces
+  debug_only_cc_abovethresh: false
+  # to only show traces above cc thrshold in debugging snuffling window
 
 - !autostatsq.config.TeleCheckConfig
   tele_check: false
@@ -348,6 +351,11 @@ PSD test:
 - optional: synth. and real PSDs
 - optional: plots showing fit through PSD ratios
 
+Timing test:
+- yaml file with median, mean and standard deviation of obtained timing errors
+- csv table of results obtained from all stations and all events
+- overview plot of all results and matrices showing time shifts obtained from cross-correlation
+
 
 Small intro to the timing error test:
 -------------------------------------
@@ -355,13 +363,15 @@ Small intro to the timing error test:
 --> The other tests are described in detail here: http://doi.org/10.1785/0220180342
 
 
-The small implemented check for timing errors is based on the cross-correlation between the recorded traces and the synthetic vertical traces: (1) First, for each event and station the two (syn. + obs.) traces are correlated to obtain the time shift for which the correlation is highest. (2) In a second step the median time shift of each event over all stations is determined and the time shift values at the single stations are corrected for this median value. This is done to avoid errors from wrong origin times in the catalog, to take into account large deviations between orgin time and centroid time, and to consider large path effects of the teleseismic test events which effect all stations in a similar manner.
+The small implemented check for timing errors is based on the cross-correlation between the recorded traces and the synthetic vertical traces: (1) First, for each event and station the two traces (syn. + obs.) are correlated to obtain the time shift for which the correlation is highest. (2) In a second step the median time shift of each event over all stations is computed and the time shift values at the single stations are corrected for this median value. This is done to avoid errors from wrong origin times in the catalog, to take into account large deviations between orgin time and centroid time, and to consider large path effects of the teleseismic test events which effect all stations in a similar manner.
 
-The test is run in low frequency ranges (e.g. 0.01-0.10 Hz) and using synthetics computed from a global GFDB with a sampling of 2s. Therefore this test can only be applied to detect large timing errors in the order of several seconds. This error range is only useful to check prior to other seismological applications which use a similar frequency range as e.g. MT inversions.
+The test is performed in low frequency ranges (e.g. 0.01-0.08 Hz) and using synthetics computed from a global GFDB with a sampling of 2s. Therefore this test can only be applied to detect large timing errors in the order of several seconds. This error range is only useful to check prior to other seismological applications which use a similar frequency range as e.g. MT inversions.
 
-The output is returned as a yaml file with mean, median, standard deviations and number of considered events. Additionally one figure shows the correlation matrices, before and after correction with the median of each event, and a second figure shows the obtained timing errors for each station.
+The output is returned as a yaml file with mean, median, standard deviations and number of considered events. Additionally one figure shows the correlation matrices, before and after correction with the median of each event, and a second figure shows the obtained timing errors for each station and event. The time shift results of the single events for each station, corrected as described above, are saved along with the cross-correlation value in an additional csv file.
 
-For the input parameters please check the exemplary config file above.
+In the configuration file you can set the band pass filter, the time window relative to P wave arrival (tP) and estimated Rayleigh wave arrival (tR), as well as the minimum cross-correlation threshold. For information on defining these settings please see the exemplary config file above.
+
+
 
 
 

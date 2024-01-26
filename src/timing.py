@@ -16,10 +16,11 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 #matplotlib.rc('xtick', labelsize=20)
 #matplotlib.rc('ytick', labelsize=20)
 
+
 def ccs_allstats_one_event(i_ev, nev, ev, stat_list, all_stations,
                            p_obs, p_syn,
-                           out_dir, bp, arrT_array, cc_thresh,
-                           time_wdw, debug_mode=False):
+                           out_dir, bp, arrT_array, arrT_R_array, cc_thresh,
+                           time_wdw, debug_mode=False, debug_only_cc_abovethresh=False):
     """
     for one event: call cc_single_stat_single_event for each station,
     collect optimal time shifts
@@ -34,6 +35,7 @@ def ccs_allstats_one_event(i_ev, nev, ev, stat_list, all_stations,
     #p_syn = pile.make_pile(syndatapath+ev_t_str, show_progress=False)
 
     tshift_list = []
+    cc_list = []
 
     nst = len(stat_list)
 
@@ -58,7 +60,20 @@ def ccs_allstats_one_event(i_ev, nev, ev, stat_list, all_stations,
 
             if len(i_ast) >= 1:
                 ii_ast = i_ast[0]
-                tmin = arrT_array[i_ev, ii_ast]-60
+                tP = arrT_array[i_ev, ii_ast]
+                tR = arrT_R_array[i_ev, ii_ast]
+                if 'tP' in time_wdw[0]:
+                    dt = time_wdw[0].split('tP')[-1]
+                    tmin_chop = tP+float(dt)
+                elif 'tR' in time_wdw[0]:
+                    dt = time_wdw[0].split('tR')[-1]
+                    tmin_chop = tR+float(dt)
+                if 'tP' in time_wdw[1]:
+                    dt = time_wdw[1].split('tP')[-1]
+                    tmax_chop = tP+float(dt)
+                elif 'tR' in time_wdw[1]:
+                    dt = time_wdw[1].split('tR')[-1]
+                    tmax_chop = tR+float(dt)                
 
             elif len(i_ast) == 0:
                 logging.warning('station %s.%s not in all station list' % (n, s))
@@ -70,33 +85,50 @@ def ccs_allstats_one_event(i_ev, nev, ev, stat_list, all_stations,
                             tr.station == s and
                             tr.location == l and
                             tr.channel == 'Z',
-                            tmin=tmin,
-                            tmax=tmin + time_wdw[1],
+                            tmin=tP - 900,
+                            tmax=tR + 900,
                             want_incomplete=True)
             else:
                 tr_obs = p_obs.all(
                                 trace_selector=lambda tr: tr.network == n and
                                 tr.station == s and
                                 tr.channel == 'Z',
-                                tmin=tmin,
-                                tmax=tmin + time_wdw[1],
+                                tmin=tP-900,
+                                tmax=tR+900,
                                 want_incomplete=True)
 
             tr_syn = p_syn.all(
                             trace_selector=lambda tr: tr.network == n and
                             tr.station == s and
                             tr.channel == 'Z',
-                            tmin=tmin,
-                            tmax=tmin + time_wdw[1],
+                            tmin=tP-900,
+                            tmax=tR+900,
                             want_incomplete=True)
 
             if len(tr_obs) != 0 and len(tr_syn) != 0:
                 logs.debug('tr obs and tr syn found')
                 tr_syn = tr_syn[0]
-                tr_obs = tr_obs[0]
+                if len(tr_obs) == 1:
+                    tr_obs = tr_obs[0]
+                else:
+                    tr_obs = sorted(tr_obs, key=lambda x: len(x.ydata), reverse=True)[0]
                 # logging.info('syn tmin: %s, obs tmin: %s, diff: %s' % (tr_syn.tmin, tr_obs.tmin, tr_syn.tmin-tr_obs.tmin))
                 tr_obs.bandpass(bp[0], bp[1], bp[2])
                 tr_syn.bandpass(bp[0], bp[1], bp[2])
+
+                if debug_mode is True:
+                    logs.info('pile select: %s, %s' % (util.tts(tP-900),util.tts(tR+900)))
+                    logs.info('trace before chop: %s, %s' % (util.tts(tr_obs.tmin), util.tts(tr_obs.tmax)))
+                    logs.info('trace chop: %s, %s' % (util.tts(tmin_chop),util.tts(tmax_chop)))
+
+                try:
+                    tr_obs.chop(tmin=tmin_chop,tmax=tmax_chop)
+                    tr_syn.chop(tmin=tmin_chop,tmax=tmax_chop)
+                except trace.NoData:
+                    logs.debug('No Data: %s.%s - %s' % (st.network, st.station, util.tts(ev.time).replace(' ', '_').replace(':', '-')))
+                    tshift_list.append(num.nan)
+                    cc_list.append(num.nan)
+                    continue
 
                 c = trace.correlate(tr_syn, tr_obs, mode='same',
                                     normalization='normal')
@@ -104,18 +136,26 @@ def ccs_allstats_one_event(i_ev, nev, ev, stat_list, all_stations,
                 logs.debug('t shift: %s, cc: %s' % (t, coef))
 
                 if debug_mode is True:
-                    logging.debug('%s %s' % (t, coef))
-                    trace.snuffle([tr_syn, tr_obs])
-                    trace.snuffle([c])
+                    logs.info('%s.%s - %s' % (st.network, st.station, util.tts(ev.time).replace(' ', '_').replace(':', '-')))
+                    logs.info('t shift: %s, cc: %s' % (t, coef))
+                    if not debug_only_cc_abovethresh:
+                        trace.snuffle([tr_syn, tr_obs])
+                    else:
+                        if coef > cc_thresh:
+                            trace.snuffle([tr_syn, tr_obs])
+                    #trace.snuffle([c])
 
                 if coef > cc_thresh:
                     tshift_list.append(t)
+                    cc_list.append(coef)
                 else:
                     tshift_list.append(num.nan)
+                    cc_list.append(num.nan)
             else:
                 tshift_list.append(num.nan)
+                cc_list.append(num.nan)
 
-    return tshift_list
+    return tshift_list, cc_list
 
 
 def correct_for_med_tshifts(tshift_array):
@@ -138,6 +178,51 @@ def correct_for_med_tshifts(tshift_array):
     return tshift_corr
 
 
+def save_all(tshifts_cor, ccs, stations, subset_catalog, dir_time):
+    outfile = os.path.join(dir_time, 'tshifts_corr_all-ev-sta.csv')
+    nevs = tshifts_cor.shape[1]
+
+    i_ev_onlynans = []
+    for i_ev in range(nevs):
+        any_avail = False
+        for i_st in range(len(stations)):
+            if not num.isnan(tshifts_cor[i_st,i_ev]):
+                any_avail = True
+
+        if not any_avail:
+            i_ev_onlynans.append(i_ev)
+
+
+    lines = []
+
+    first_line = 'NET.STA.LOC'
+    for i_ev, ev in enumerate(subset_catalog):
+        if i_ev in i_ev_onlynans:
+            continue
+        first_line += ', %s' % util.tts(ev.time).replace(' ', '_').replace(':', '-')
+    lines.append(first_line)
+
+    for i_st in range(len(stations)):
+        line ='%s.%s.%s' % (stations[i_st].network,
+            stations[i_st].station, stations[i_st].location)
+        for i_ev in range(nevs):
+            if i_ev in i_ev_onlynans:
+                continue
+
+            ts = tshifts_cor[i_st,i_ev]
+            c = round(ccs[i_st,i_ev],2)
+            if num.isnan(ts):
+                line += ','
+            else:    
+                line += ', %s (%s)' % (ts,c)
+        line += '\n'
+        lines.append(line)
+
+    with open(outfile, 'w') as f:
+        for l in lines:
+            f.write(l)
+
+
 def plot_matrix(tshifts, tshifts_cor, stations, dir_time):
 
     fig, ax = plt.subplots(nrows=2, figsize=(5, 10))
@@ -145,7 +230,7 @@ def plot_matrix(tshifts, tshifts_cor, stations, dir_time):
     max_col = num.max([num.nanmax(tshifts), num.nanmax(tshifts_cor)])
     absmax = 20 # num.max([abs(min_col), abs(max_col)])
     a = ax[0].imshow(tshifts, vmin=-absmax,
-                     vmax=+absmax, interpolation='nearest', aspect='equal')
+                     vmax=+absmax, interpolation='nearest', aspect='equal', cmap='RdYlBu')
     ax[0].set_title('Not corrected.', fontsize=10)
     ax[0].set_xlabel('Events', fontsize=10)
     ax[0].set_ylabel('Stations', fontsize=10)
@@ -165,7 +250,7 @@ def plot_matrix(tshifts, tshifts_cor, stations, dir_time):
     cbar.set_label('Timing error [s]', rotation=90, fontsize=8)
 
     b = ax[1].imshow(tshifts_cor, vmin=-absmax,
-                     vmax=absmax, interpolation='nearest', aspect='equal')
+                     vmax=absmax, interpolation='nearest', aspect='equal', cmap='RdYlBu')
     ax[1].set_title('Corrected for median of event over all stations.', fontsize=10)
     ax[1].set_xlabel('Events', fontsize=10)
     ax[1].set_ylabel('Stations', fontsize=10)
@@ -214,32 +299,36 @@ def plot_tshifts(tshifts_cor, means, stdevs, outfile, stations):
                            squeeze=False)
 
     absmax = max(abs(num.nanmin(tshifts_cor)), abs(num.nanmax(tshifts_cor) ))
+    ylim = absmax + 0.1*absmax
     
     for i_row in range(n_plotrows):
-        ax[i_row, 0].set_ylim(-absmax, absmax)
+        ax[i_row, 0].set_ylim(-ylim, ylim)
         ax[i_row, 0].set_xlim(-1, n_per_row)
         i_start = i_row*n_per_row
         i_stop = i_start + n_per_row
+        x_label_stats = []
         for i_st, st in enumerate(stations_sorted[i_start:i_stop]):
+            sname = '%s.%s.%s' % (st.network,st.station,st.location)
+            x_label_stats.append(sname)
             i_st_all = indices_st[i_st+i_row*(n_per_row)]
             yval = tshifts_cor[i_st_all, :]
             xval = [i_st for val in yval]
             if i_st == 0 and i_row == 0:
-                ax[i_row, 0].scatter(xval, yval, marker='.', label='single event')
-                ax[i_row, 0].plot(i_st, means[i_st_all], 'o', label='mean')
+                ax[i_row, 0].scatter(xval, yval, marker='.', c='gray', label='single event', alpha=0.5)
+                ax[i_row, 0].plot(i_st, means[i_st_all], '+', c='black', label='mean')
             else:
-                ax[i_row, 0].scatter(xval, yval, marker='.')
-                ax[i_row, 0].plot(i_st, means[i_st_all], 'o')
-        try:
-            stats = ['%s.%s' % (st.network, st.station)
-                     for st in stations_sorted[i_row+(i_row*(n_per_row-1)):(n_per_row-1)*(i_row+1)+1]]
-        except AttributeError:
-            stats = ['%s.%s.%s' % (st[0], st[1], st[2])
-                     for st in stations_sorted[i_row+(i_row*(n_per_row-1)):(n_per_row-1)*(i_row+1)+1]]
-            # print([(i,j) for (i,j) in enumerate(stats)])
+                ax[i_row, 0].scatter(xval, yval, marker='.', c='gray', alpha=0.5)
+                ax[i_row, 0].plot(i_st, means[i_st_all], '+',c='black')
+        #try:
+        #    stats = ['%s.%s' % (st.network, st.station)
+        #             for st in stations_sorted[i_row+(i_row*(n_per_row-1)):(n_per_row-1)*(i_row+1)+1]]
+        #except AttributeError:
+        #    stats = ['%s.%s.%s' % (st[0], st[1], st[2])
+        #             for st in stations_sorted[i_row+(i_row*(n_per_row-1)):(n_per_row-1)*(i_row+1)+1]]
+        #    #logger.info([(i,j) for (i,j) in enumerate(stats)])
 
-        ax[i_row, 0].set_xticks(num.arange(len(stats)))
-        ax[i_row, 0].set_xticklabels(stats, rotation=60, fontsize=10)
+        ax[i_row, 0].set_xticks(num.arange(len(x_label_stats)))
+        ax[i_row, 0].set_xticklabels(x_label_stats, rotation=60, fontsize=10)
         ax[i_row, 0].set_ylabel('Time shift [s]', fontsize=10)
         if i_row == 0:
             ax[i_row, 0].legend()

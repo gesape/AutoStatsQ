@@ -176,6 +176,7 @@ class TimingConfig(Object):
     cc_thresh = Float.T()
     # search_avail_stats = Bool.T()
     debug_mode = Bool.T(default=False)
+    debug_only_cc_abovethresh = Bool.T(default=False)
 
 
 class TeleCheckConfig(Object):
