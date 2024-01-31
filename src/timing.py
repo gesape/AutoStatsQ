@@ -270,7 +270,7 @@ def plot_matrix(tshifts, tshifts_cor, stations, dir_time):
     plt.close()
 
 
-def plot_tshifts(tshifts_cor, means, stdevs, outfile, stations):
+def plot_tshifts(tshifts_cor, medians, means, stdevs, outfile, stations):
     # scatter plot: for each station all offsets
     n_per_row = 20
     n_plotrows = math.ceil(len(stations)/n_per_row)
@@ -298,8 +298,11 @@ def plot_tshifts(tshifts_cor, means, stdevs, outfile, stations):
     fig, ax = plt.subplots(nrows=n_plotrows, figsize=(10, n_plotrows*3),
                            squeeze=False)
 
-    absmax = max(abs(num.nanmin(tshifts_cor)), abs(num.nanmax(tshifts_cor) ))
-    ylim = absmax + 0.1*absmax
+    if '30s' in outfile:
+        ylim=30
+    else:
+        absmax = max(abs(num.nanmin(tshifts_cor)), abs(num.nanmax(tshifts_cor) ))
+        ylim = absmax + 0.1*absmax
     
     for i_row in range(n_plotrows):
         ax[i_row, 0].set_ylim(-ylim, ylim)
@@ -316,9 +319,12 @@ def plot_tshifts(tshifts_cor, means, stdevs, outfile, stations):
             if i_st == 0 and i_row == 0:
                 ax[i_row, 0].scatter(xval, yval, marker='.', c='gray', label='single event', alpha=0.5)
                 ax[i_row, 0].plot(i_st, means[i_st_all], '+', c='black', label='mean')
+                ax[i_row, 0].plot(i_st, medians[i_st_all], '+', c='darkblue', label='median')
             else:
                 ax[i_row, 0].scatter(xval, yval, marker='.', c='gray', alpha=0.5)
                 ax[i_row, 0].plot(i_st, means[i_st_all], '+',c='black')
+                ax[i_row, 0].plot(i_st, medians[i_st_all], '+', c='darkblue')
+
         #try:
         #    stats = ['%s.%s' % (st.network, st.station)
         #             for st in stations_sorted[i_row+(i_row*(n_per_row-1)):(n_per_row-1)*(i_row+1)+1]]

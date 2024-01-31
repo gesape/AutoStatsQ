@@ -1829,7 +1829,9 @@ def main():
 
             # plot
             outfile = os.path.join(dir_time, 'timing_errors_allStats.%s' % maps.outformat)
-            tt.plot_tshifts(tshifts_cor, means, stdevs, outfile, stations)
+            tt.plot_tshifts(tshifts_cor, medians, means, stdevs, outfile, stations)
+            outfile2 = os.path.join(dir_time, 'timing_errors_allStats_30s.%s' % maps.outformat)
+            tt.plot_tshifts(tshifts_cor, medians, means, stdevs, outfile2, stations)
             tt.save_mms(medians, means, stdevs, stations, dir_time, n_evs)
 
             logs.info(' Finished timing error test.' + 
