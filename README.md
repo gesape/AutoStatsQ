@@ -372,8 +372,46 @@ The output is returned as a yaml file with mean, median, standard deviations and
 In the configuration file you can set the band pass filter, the time window relative to P wave arrival (tP) and estimated Rayleigh wave arrival (tR), as well as the minimum cross-correlation threshold. For information on defining these settings please see the exemplary config file above.
 
 
+Building a docker:
+--------------------
 
+first steps: installation and building a docker container (continue below, if the container is already built)
+- after following the download and installations steps from above, build an image (autostatsq2024) from the Dockerfile in the local directory. This includes updates and installations>
 
+        docker build -t autostatsq2024 .
+
+- then run a new interactive container (autostatsq) and open a bash-shell in there
+
+        docker run -it --name autostatsq --entrypoint /bin/bash autostatsq2024
+
+continue here if the container is already built
+- start docker container "autostatsq"
+
+        docker start autostatsq
+
+- sign up for the docker with a bash-shell
+
+        docker exec -it autostatsq /bin/bash
+
+workflow using the docker container "autostatsq" for quality tests on seismic networks
+- switch user from root to sysop
+
+        su - sysop
+
+- make a work directory and copy AutoStatsQ.config file and test_stations.pf list to run a test
+- open AutoStatsQ.config to adjust the parameters for your testing
+
+        nano AutoStatsQ.config
+
+- run AutoStatsQ with different parameters depending on the desired testings
+
+        autostatsq --config AutoStatsQ.config --run -l INFO
+
+- to view the results leave the docker container and go back to your local server (
+
+- copy the results from the docker container autostatsq to a local directory
+
+	docker cp autostatsq:/path/to/results/docker/ /path/to/local/directory
 
 
 ## License
@@ -403,3 +441,4 @@ Petersen, G. M., Cesca, S., Kriegerowski, M., & AlpArray Working Group. (2019). 
 
 Wessel, P., Smith, W. H.~F., Scharroo, R., Luis, J.~F., and Wobbe, F. (2013).
 Generic Mapping Tools: Improved version released. EOS Trans. AGU, 94:409--410.
+
