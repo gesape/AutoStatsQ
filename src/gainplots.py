@@ -194,25 +194,25 @@ def plot_median_gain_map_from_file(ns,
     maxy = max(gains_no_nan)
 
     # plus/minus 10 % for nicer scale
-    miny = miny  # -0.1*miny
-    maxy = maxy  # +0.1*maxy
+    miny = miny-0.1*abs(miny)
+    maxy = maxy+0.1*abs(maxy)
 
     try:
         m.gmt.makecpt(
             C=pl_options[3],#'split',#'polar',  # '/home/gesap/Documents/CETperceptual_GMT/CET-D4.cpt',#'split',#'polar',
-            T='%g/%g' % (miny, maxy),  # (miny, maxy), # (-1,1),#(-0.7, 0.7), (-20, 20)
+            T='%f/%f' % (miny, maxy),  # (miny, maxy), # (-1,1),#(-0.7, 0.7), (-20, 20)
             Q=True,
             out_filename=cptfile, suppress_defaults=True)
     except:
         try:
             m.gmt.makecpt(
                 C='split',
-                T='%g/%g' % (miny, maxy),
+                T='%f/%f' % (miny, maxy),
                 Q=True,
                 out_filename=cptfile, suppress_defaults=True)
-            logs.warning('Could not find gmt cptfile, using split instead.')
+            logging.warning('Could not find gmt cptfile, using split instead.')
         except:
-            logs.error('Could not make gmt cpt file for map.')
+            logging.error('Could not make gmt cpt file for map.')
 
     # if ns_rel:
     #     text = 'Gains relative to station %s, colorbar values 10^x.'\
