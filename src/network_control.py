@@ -6,6 +6,7 @@ import logging
 import gc
 import math
 import argparse
+import re
 
 # import matplotlib.pyplot as plt
 from pyrocko import util, model, orthodrome, pile, trace, io
@@ -92,6 +93,14 @@ def get_pl_opt(lats_all, lons_all):
     print(lat_m, lon_m, radius)
 
     return [lat_m, lon_m, radius, 'split']
+
+
+def url_to_filename(site):
+    return re.sub(r'^https?://', '', site).replace('/', '_')
+
+
+def response_file_name(directory, site):
+    return os.path.join(directory, 'Resp_all_%s.xml' % url_to_filename(site))
 
 
 def main(): 
@@ -752,7 +761,7 @@ def main():
                         logs.debug(selection)
 
                         for site in sites:
-                            mseed_fn = mseed_fn_st + site + 'tr.mseed'
+                            mseed_fn = mseed_fn_st + url_to_filename(site) + 'tr.mseed'
 
                             if site in metaDataconf.token:
                                 token = open(metaDataconf.token[site], 'rb').read()
@@ -773,8 +782,8 @@ def main():
                             except fdsn.EmptyResult:
                                 logs.warning('%s no data from %s' % (ns_now, site))
 
-                            except:
-                                logs.error('exception unknown %s' % (ns_now,))
+                            except Exception as error:
+                                logs.error('exception unknown %s, %s' % (ns_now, error))
 
                             else:
                                 logs.debug('%s data downloaded from %s' % (ns_now, site))
@@ -820,7 +829,9 @@ def main():
                 except EmptyResult:
                     logs.warning('no metadata for %s from %s' % (selection[1], site))
                     continue
-                request_response.dump_xml(filename='%s_%s.xml' % (meta_fn, site))
+
+                #request_response.dump_xml(filename='%s_%s.xml' % (meta_fn, sitename))
+                request_response.dump_xml(filename=response_file_name(data_dir, site))
                 #except:
                 #    print('no metadata at all', site, selection[1])
 
@@ -845,7 +856,9 @@ def main():
                 logs.debug(' Looking for downloaded metadata.')
                 for site in sites:
                     stations_fn = os.path.join(data_dir, 'Resp_all_' + str(site) + '.xml')
-                    responses.append(stationxml.load_xml(filename=stations_fn))
+                    #responses.append(stationxml.load_xml(filename=stations_fn))
+                    responses.append(stationxml.load_xml(
+                        filename=response_file_name(data_dir, site)))
 
             if not metaDataconf.use_downmeta and not metaDataconf.local_metadata:
                 logs.error(' No response files found. Set *use_downmeta* to True '
@@ -1307,7 +1320,8 @@ def main():
                 for site in sites:
                     stations_fn = os.path.join(data_dir, 'Resp_all_' + str(site) 
                                                + '.xml')
-                    st_xml.append(stationxml.load_xml(filename=stations_fn))
+                    #st_xml.append(stationxml.load_xml(filename=stations_fn))
+                    st_xml.append(stationxml.load_xml(filename=response_file_name(data_dir, site)))
 
             i_st_xml = len(st_xml)
             for key, subset_catalog in subsets_events.items():
