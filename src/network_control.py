@@ -935,7 +935,7 @@ def main():
                                     trs = [tr for tr in trs if tr.channel in ['HHZ', 'HHN', 'HHE']]
                                 elif 'HHZ' in comps and 'HH2' in comps and 'HH3' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH2', 'HH3']]
-                                elif 'HHZ' in comps and 'HH1' in comps and 'HH1' in comps:
+                                elif 'HHZ' in comps and 'HH1' in comps and 'HH2' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH1', 'HH2']]
 
                                 elif 'BHZ' in comps and 'BHN' in comps and 'BHE' in comps:
