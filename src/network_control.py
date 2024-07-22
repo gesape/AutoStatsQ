@@ -898,8 +898,7 @@ def main():
                     transf_taper = 1/min(RestDownconf.freqlim)
 
                     for i_st, st in enumerate(all_stations):
-                        print('Event: %5d/%s, Station: %5d/%s' % (i_ev, nev, i_st, nst),
-                              end='\r')
+                        logs.debug('Event: %5d/%s, Station: %5d/%s, %s' % (i_ev, nev, i_st, nst, st.station))
                         #if st.network not in net_check:
                         #    continue                        
                         nsl = st.nsl()
@@ -928,6 +927,7 @@ def main():
 
                         if trs:
                             comps = [tr.channel for tr in trs]
+                            logs.debug(comps)
 
                             if metaDataconf.all_channels == False:
                                 
@@ -935,7 +935,7 @@ def main():
                                     trs = [tr for tr in trs if tr.channel in ['HHZ', 'HHN', 'HHE']]
                                 elif 'HHZ' in comps and 'HH2' in comps and 'HH3' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH2', 'HH3']]
-                                elif 'HHZ' in comps and 'HH1' in comps and 'HH1' in comps:
+                                elif 'HHZ' in comps and 'HH1' in comps and 'HH2' in comps:
                                     trs = [tr for tr in trs if tr.channel in ['HHZ', 'HH1', 'HH2']]
 
                                 elif 'BHZ' in comps and 'BHN' in comps and 'BHE' in comps:
@@ -1007,10 +1007,15 @@ def main():
                                     # print('found these:', [tr.channel for tr in trs])
                                     continue
 
+                                logs.debug(trs)
+
                                 for tr in trs:
                                     cnt_resp = 0
                                     if RestDownconf.deltat_down > 0.0 and RestDownconf.deltat_down > tr.deltat and tr.deltat < 0.1:
+                                            logs.debug('Desired sampling: %s s' % RestDownconf.deltat_down)
+                                            logs.debug('Starting intermediate downsampling to 10 Hz for efficiency.')
                                             tr.downsample_to(0.1,allow_upsample_max=3)
+                                            logs.debug('Finished intermediate downsampling to 10 Hz.')
                                     for resp_now in responses:
                                         try:
                                             polezero_resp = resp_now.get_pyrocko_response(
