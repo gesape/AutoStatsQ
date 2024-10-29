@@ -155,16 +155,17 @@ def check_metadata_settings(metaDataconf):
     if not cf.use_downmeta:
         logger.warning(' Set MetaDataDownloadConfig use_downmeta to true to use the downloaded metadata.')
     
-    if not (cf.channels_download or cf.channels_download_list):
-        logger.error(' MetaDataDownloadConfig: No channels to download defined.')
-        error = True
+    if cf.download_data:
+        if not (cf.channels_download or cf.channels_download_list):
+            logger.error(' MetaDataDownloadConfig: No channels to download defined.')
+            error = True
 
-    else:
-        if not cf.channels_download_list:
-            if len(cf.channels_download) !=3:
-                if not '*' in cf.channels_download:
-                    logger.error(' MetaDataDownloadConfig channels_download takes a string with three characters as input. Use * as wildcard, e.g. HH*.')
-                    error = True
+        else:
+            if not cf.channels_download_list:
+                if len(cf.channels_download) !=3:
+                    if not '*' in cf.channels_download:
+                        logger.error(' MetaDataDownloadConfig channels_download takes a string with three characters as input. Use * as wildcard, e.g. HH*.')
+                        error = True
 
     if cf.channels_download and cf.channels_download_list:
         logger.warning(' MetaDataDownloadConfig channels_download and channels_download_list are set. channels_download is ignored.')

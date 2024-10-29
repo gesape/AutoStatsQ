@@ -42,13 +42,16 @@ AutoStatsQ does now also work with gmt6. Tested on Ubuntu 20.04.6, matplotlib ve
 
 
 
-Download and Installation
+Download and Installation (System-wide, from source)
 -------------------------
 
 - cd into the folder where you want to do the installation
 - git clone https://github.com/gesape/AutoStatsQ
 - cd AutoStatsQ
 - (sudo) python3 setup.py install
+
+
+Have a look at the section ```Building a docker``` (in the end of this file) if you prefer to use a docker container.
 
 Update
 ------

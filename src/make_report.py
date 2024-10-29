@@ -70,7 +70,7 @@ def gen_report(config):
                 logger.info('Including gain test results in html report.')
                 gain_result_dir = os.path.join(result_dir, 'gains')
                 
-                for comp in ['Z', 'N', 'E']:
+                for comp in ['Z', 'R', 'T']:
                     extended_lines.append(gains.add_gain_map(comp, gain_result_dir))                    
                     extended_lines.append(gains.add_gain_median_mean(comp, gainconf.gain_factor_method, gain_result_dir))
                     extended_lines.append(gains.add_gain_allevents_plot(comp, gain_result_dir))

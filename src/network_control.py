@@ -37,6 +37,8 @@ from .calc_ttt import *
 from .make_report import gen_report
 
 
+ver = '2024.10'
+
 fdsn.g_timeout = 120.
 
 '''
@@ -132,7 +134,7 @@ def main():
 
     # Generate a (template) config file:
     if args.generate_config:
-        logging.info('Welcome to AutoStatsQ - a station quality control checking tool.\n')
+        logging.info('Welcome to AutoStatsQ - a station quality control checking tool. Version %s\n' % ver)
         # Set Logger name and verbosity
         logs = logging.getLogger('Generate config')
         logs.setLevel(verbo)
@@ -147,7 +149,7 @@ def main():
         logs.info('created a fresh config file %s' % fn_config)
 
     if not args.generate_config and not args.config:
-        logging.info('Welcome to AutoStatsQ - a station quality control checking tool.\n')
+        logging.info('Welcome to AutoStatsQ - a station quality control checking tool. Version %s\n' % ver)
         logging.error('AutoStatsQ needs a config file.')
         print(parser.print_help())
 
@@ -168,7 +170,7 @@ def main():
         logs = logging.getLogger('Run')
         logs.setLevel(verbo)
 
-        logging.info('Welcome to AutoStatsQ - a station quality control checking tool.\n')
+        logging.info('Welcome to AutoStatsQ - a station quality control checking tool. Version %s\n' % ver)
 
         # read existing config file:
 
