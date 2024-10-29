@@ -3,7 +3,14 @@
 # from setuptools import setup, find_packages
 from setuptools import setup
 
-version = '0.1'
+version = '0.2'
+
+dependencies =[
+    'numpy',
+    'pyrocko',
+    'grond',
+    'matplotlib'
+]
 
 setup(
     name='autostatsq',
@@ -12,7 +19,7 @@ setup(
     author_email='gesap@gfz-potsdam.de',
     python_requires='!=3.0.*, !=3.1.*, !=3.2.*, <4',
     license='GPLv3', 
-    install_requires=[],
+    install_requires=dependencies,
     packages=['autostatsq', 'autostatsq.generate_report'],
     package_dir={'autostatsq': 'src', 'autostatsq.generate_report': 'src/generate_report'},
     entry_points={
