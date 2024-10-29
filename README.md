@@ -48,6 +48,7 @@ Download and Installation (System-wide, from source)
 - cd into the folder where you want to do the installation
 - git clone https://github.com/gesape/AutoStatsQ
 - cd AutoStatsQ
+(- git submodule update --init --recursive ```only needed to generate html reports```
 - (sudo) python3 setup.py install
 
 
