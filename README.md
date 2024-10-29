@@ -21,6 +21,7 @@ Petersen, G. M., Cesca, S., Kriegerowski, M. (2019): Automated Quality Control f
 
 Latest changes
 -------------
+- # Please have a look at the updated installation instructions. The module reveal is now linked, not copied, therefore a fresh installation may be needed instead of updating...
 - Improved timing test (26.01.2024): More flexible selection of time windows; choppingof traces after bandpass filtering; improved plots; save single results for all stations and events. See also example config file and section on timing test below.
 - updated AutoStatsQ to work with recent matplotlib, gmt, pyrocko versions (27.10.2023)
 - 2 new tutorials with step-by-step instructions in the ```example``` directory; including all input to get started. Example (I) - testing data and metadata downloaded from an fdsn server; Example (II) - testing locally stored data (including a synthetic test dataset).
