@@ -65,11 +65,11 @@ If you prefer using a docker container, please see instructions in the end of th
 mkdir src
 cd src
 git clone https://git.pyrocko.org/pyrocko/pyrocko.git pyrocko
+cd pyrocko
 ```
 Activate venv before installation!
 ```
 source ../autostatsq_test_env/bin/activate
-cd pyrocko
 pip install .
 pip install --only-binary :all: PyQt5 PyQtWebEngine
 deactivate
@@ -78,11 +78,11 @@ deactivate
 ```
 cd ..
 git clone https://git.pyrocko.org/pyrocko/grond.git
+cd grond
 ```
 Activate venv before installation!
 ```
 source ../autostatsq_test_env/bin/activate
-cd grond
 pip3 install .
 deactivate
 ```
