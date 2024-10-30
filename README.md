@@ -120,7 +120,7 @@ pip install .
 If that is still not working, try instead to use ```pip install .--use-pep517```.
 
 
-# (4) Before running autostatsq, make sure the venv is active!
+### (4) Before running autostatsq, make sure the venv is active!
 
 
 
