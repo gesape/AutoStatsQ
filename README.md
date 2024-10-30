@@ -33,16 +33,13 @@ Latest changes
 Requirements
 ------------
 
-- python3
 - Seismology toolbox pyrocko: https://pyrocko.org/ (Heimann et al. 2017) (and all requirements needed for pyrocko)
 - To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto`. For instance, `fomosto download kinherd global_2s` from the pyrocko environment. https://greens-mill.pyrocko.org/
-- for new interactive test: [Grond](https://pyrocko.org/grond/docs/current/) (from the pyrocko suite of applications).
+- [Grond](https://pyrocko.org/grond/docs/current/)
 
 
-AutoStatsQ does now also work with gmt6. Tested on Ubuntu 20.04.6, matplotlib version 3.5.1; pyrocko version 2023.10.11
 
-
-Download and Installation in a python virtual environment (venv)
+Download and Installation:  In a python virtual environment (venv)
 -------------------------
 Installation in a venv will assure that all requirements are met without interfering with other installations.
 
@@ -95,11 +92,13 @@ deactivate
 cd ..    # to go back to /src/
 git clone https://github.com/gesape/AutoStatsQ
 cd AutoStatsQ
-git submodule update --init --recursive        # to clone reveal for report
-
-vim or vim setup.py  
-    --> change install_requires=[] to install_requires=['numpy<2'] 
+git submodule update --init --recursive  # to clone reveal for report
 ```
+Open setup.py in a text editor (e.g., vim). Modify install_requires=[] to install_requires=['numpy<2']
+```
+vim setup.py
+```  
+
 Activate venv before installation!
 ```
 source ../../autostatsq_test_env/bin/activate  # activate venv 
@@ -109,7 +108,7 @@ pip install .
 
 If there is an error message saying something about no wheels could be built:
 
---> try updting pip:
+--> try updating pip, setuptools and wheel:
 ```
 pip install --upgrade pip setuptools wheel
 ```
@@ -118,24 +117,23 @@ pip install --upgrade pip setuptools wheel
 pip install .
 ```
 
-backup, if that is not working, try instead to use ```pip install .--use-pep517```
+If that is still not working, try instead to use ```pip install .--use-pep517```.
 
 
-(4) Before running autostatsq, make sure the venv is active!
+# (4) Before running autostatsq, make sure the venv is active!
 
 
 
 Download and Installation (System-wide, from source)
 -------------------------
 
-- cd into the folder where you want to do the installation
-- git clone https://github.com/gesape/AutoStatsQ
-- cd AutoStatsQ
-- git submodule update --init --recursive (```only needed for html reports```)
-- (sudo) python3 setup.py install
+- ```cd``` into the folder where you want to do the installation
+- ```git clone https://github.com/gesape/AutoStatsQ```
+- ```cd AutoStatsQ```
+- ```git submodule update --init --recursive``` (only needed for html reports)
+- ```(sudo) python3 setup.py install``` Old way, better use ```pip install .```
 
-
-Have a look at the section ```Building a docker``` (in the end of this file) if you prefer to use a docker container.
+Have a look at the section ```Building a docker``` (in the end of this file) if you prefer to use a docker container or the previous instructions to install in a virtual environment.
 
 Update
 ------
