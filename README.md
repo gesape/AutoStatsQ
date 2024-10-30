@@ -42,6 +42,88 @@ Requirements
 AutoStatsQ does now also work with gmt6. Tested on Ubuntu 20.04.6, matplotlib version 3.5.1; pyrocko version 2023.10.11
 
 
+Download and Installation in a python virtual environment (venv)
+-------------------------
+Installation in a venv will assure that all requirements are met without interfering with other installations.
+
+If you prefer using a docker container, please see instructions in the end of this page.
+
+
+### (1) Make a fresh venv to work in:
+
+- make a new venv:
+```python -m venv autostatsq_test_env```
+
+- activate venv:
+```source autostatsq_test_env/bin/activate```
+
+- deactivate venv:
+```deactivate```
+
+
+### (2) Install Pyrocko and Grond, which are used by AutoStatsQ.
+
+(2a) Pyrocko
+```
+mkdir src
+cd src
+git clone https://git.pyrocko.org/pyrocko/pyrocko.git pyrocko
+```
+Activate venv before installation!
+```
+source ../autostatsq_test_env/bin/activate
+cd pyrocko
+pip install .
+pip install --only-binary :all: PyQt5 PyQtWebEngine
+deactivate
+```
+(2b) Grond
+```
+cd ..
+git clone https://git.pyrocko.org/pyrocko/grond.git
+```
+Activate venv before installation!
+```
+source ../autostatsq_test_env/bin/activate
+cd grond
+pip3 install .
+deactivate
+```
+
+### (3) Install AutoStatsQ
+```
+cd ..    # to go back to /src/
+git clone https://github.com/gesape/AutoStatsQ
+cd AutoStatsQ
+git submodule update --init --recursive        # to clone reveal for report
+
+vim or vim setup.py  
+    --> change install_requires=[] to install_requires=['numpy<2'] 
+```
+Activate venv before installation!
+```
+source ../../autostatsq_test_env/bin/activate  # activate venv 
+
+pip install .
+```
+
+If there is an error message saying something about no wheels could be built:
+
+--> try updting pip:
+```
+pip install --upgrade pip setuptools wheel
+```
+--> then try again:
+```
+pip install .
+```
+
+backup, if that is not working, try instead to use ```pip install .--use-pep517```
+
+
+(4) Before running autostatsq, make sure the venv is active!
+
+
 
 Download and Installation (System-wide, from source)
 -------------------------
