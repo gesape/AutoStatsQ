@@ -83,7 +83,7 @@ cd grond
 Activate venv before installation!
 ```
 source ../autostatsq_test_env/bin/activate
-pip3 install .
+pip install .
 deactivate
 ```
 
