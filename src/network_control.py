@@ -1120,7 +1120,7 @@ def main():
             def save_rot_down_tr(tr, dir_rot, ev_t_str):
                 fname = '%s_%s_%s__%s_%srrd2.mseed' % \
                         (tr.nslc_id[0], tr.nslc_id[1],
-                         tr.nslc_id[2], tr.nslc_id[3],
+                         tr.nslc_id[2], tr.nslc_id[3][-1],
                          ev_t_str)
                 rot_fn = os.path.join(dir_rot, fname)
                 # rot_fn = dir_rot + '/' + str(tr.nslc_id[0]) + '_' +\
@@ -1211,6 +1211,7 @@ def main():
                                                         tr1.chop(trmin, trmax)
                                                         if deltat_down > 0.0:
                                                             tr1.downsample_to(deltat=deltat_down,allow_upsample_max=3)
+                                                        tr1.set_channel(tr1.channel[-1])
                                                         save_rot_down_tr(tr1, dir_rot, ev_t_str)
 
                                                     except trace.NoData:
@@ -1236,6 +1237,7 @@ def main():
                                                         tr2.chop(trmin, trmax)
                                                         if deltat_down > 0.0:                                                
                                                             tr2.downsample_to(deltat=deltat_down,allow_upsample_max=3)
+                                                        tr2.set_channel(tr2.channel[-1])
                                                         save_rot_down_tr(tr2, dir_rot, ev_t_str)
 
                                                     except trace.NoData:
@@ -1378,6 +1380,12 @@ def main():
             loc = '0'
             nst = len(all_stations)
 
+
+            channel_list = ['Z', 'R', 'T']
+
+            if 'N' or 'E' in gainfconf.components:
+                channel_list += ['N', 'E']
+
             for key, subset_catalog in subsets_events.items():
                 logs.info(' Generating synthetic data for %s subset.' % key)
                 nev = len(subset_catalog)
@@ -1407,7 +1415,7 @@ def main():
                         sta = st.station
                         net = st.network
 
-                        for cha in ['Z', 'R', 'T']:
+                        for cha in channel_list:
                             target = gf.Target(
                                     codes=(net, sta, loc, cha),
                                     quantity='displacement',
@@ -1424,9 +1432,17 @@ def main():
                                 target.azimuth = azi - 90.
                                 target.dip = 0.
 
-                            if cha == 'Z':
+                            elif cha == 'Z':
                                 target.azimuth = 0.
                                 target.dip = -90.
+
+                            elif cha == 'N':
+                                target.azimuth = 0.
+                                target.dip = 0.
+
+                            elif cha == 'E':
+                                target.azimuth = 90.
+                                target.dip = 0.
 
                             targets.append(target)
 

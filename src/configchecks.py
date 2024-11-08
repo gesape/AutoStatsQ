@@ -231,8 +231,8 @@ def check_gain_settings(gainfconf, RestDownconf):
 
     # component Z
     for x in cf.components:
-        if x not in ['Z', 'R', 'T']:
-            logging.error(' GainfactorsConfig Components must Z, R and/or T, e.g. [Z] or [Z,R,T].')
+        if x not in ['Z', 'R', 'T', 'N', 'E']:
+            logging.error(' GainfactorsConfig Components must Z, R, T, N and/or E. e.g. [Z] or [Z,R,T].')
             error = True
 
     return error
