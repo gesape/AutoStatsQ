@@ -324,7 +324,7 @@ Settings:
   snr_thresh: 2. # threshold for snr of used event
   debug_mode: false # if true, time windows are opened in snuffler to check window settings.
 
-  components: [Z, R, T]
+  components: [Z]  # [Z,R,T] or [Z,N,E] also possible
 
   # plotting options
   plot_median_gain_on_map: false
