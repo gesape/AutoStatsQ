@@ -98,7 +98,10 @@ def get_pl_opt(lats_all, lons_all):
 
 
 def url_to_filename(site):
-    return re.sub(r'^https?://', '', site).replace('/', '_')
+    fn = re.sub(r'^https?://', '', site).replace('/', '_')
+    if ':' in fn:
+        fn = fn.replace(':', '-')
+    return fn
 
 
 def response_file_name(directory, site):
