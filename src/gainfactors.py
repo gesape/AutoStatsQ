@@ -171,8 +171,9 @@ class AutoGain():
                     continue
                 else:
                     unskipped += 1
-                selector = lambda tr: (s.network, s.station, self.component)\
-                                   == (tr.network, tr.station, tr.channel)
+                selector = lambda tr: (s.network, s.station)\
+                                   == (tr.network, tr.station)\
+                                   and tr.channel.endswith(self.component)
 
                 tr_generator = self.data_pile.chopper(tmin=arrival -
                                                       twd[0],
