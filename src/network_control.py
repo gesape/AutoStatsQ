@@ -1613,23 +1613,23 @@ def main():
 
             nst = len(all_stations)
 
-            if arrT_array is None:
-                try:
-                    data_dir = gensettings.work_dir
-                    atfile = os.path.join(data_dir, 'ttt', 'ArrivalTimes_deep.npy')
-                    arrT_array = num.load(atfile)
-                except:
-                    logs.error('Please calculate arrival times first!')
-                    raise Exception('Arrival times not calculated!')
+            #if arrT_array is None:
+            try:
+                data_dir = gensettings.work_dir
+                atfile = os.path.join(data_dir, 'ttt', 'ArrivalTimes_deep.npy')
+                arrT_array = num.load(atfile)
+            except:
+                logs.error('Please calculate arrival times first!')
+                raise Exception('Arrival times not calculated!')
 
-            if arrT_R_array is None:
-                try:
-                    data_dir = gensettings.work_dir
-                    atrfile = os.path.join(data_dir, 'ttt', 'ArrivalTimes_estR_deep.npy')
-                    arrT_R_array = num.load(atrfile)
-                except Exception:
-                    logs.error('Please calculate R arrival times first!')
-                    raise Exception('R arrival times not calculated!')
+            #if arrT_R_array is None:
+            try:
+                data_dir = gensettings.work_dir
+                atrfile = os.path.join(data_dir, 'ttt', 'ArrivalTimes_estR_deep.npy')
+                arrT_R_array = num.load(atrfile)
+            except Exception:
+                logs.error('Please calculate R arrival times first!')
+                raise Exception('R arrival times not calculated!')
 
             st_numbers = [i_st for i_st in range(len(all_stations))]
             flat_f_ranges_ll = []
