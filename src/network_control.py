@@ -888,7 +888,7 @@ def main():
                     logs.debug(util.time_to_str(ev.time))
 
                     ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
-                    tmin = ev.time+metaDataconf.dt_start*3600
+                    tmin = ev.time-metaDataconf.dt_start*3600
                     tmax = ev.time+metaDataconf.dt_end*3600
 
                     # stations_fn = data_dir + ev_t_str + '_resp_geofon.xml'

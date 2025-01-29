@@ -59,7 +59,7 @@ def generate_default_config():
         use_downmeta=False,
         token={'geofon': os.path.join(os.path.expanduser('~'), '.eidatoken')},
         sites=['geofon', 'orfeus', 'iris'],
-        dt_start=0.1,
+        dt_start=0.5,
         dt_end=1.5)
 
     RestDownconf = RestDownRotConfig(rest_data=False,

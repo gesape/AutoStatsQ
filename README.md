@@ -281,8 +281,9 @@ Settings:
   # delete token-dictionary, if no token needed for fdsn query
   sites: [geofon, orfeus, iris]
 
-  dt_start: 0.1
-  # start time before origin time [h]
+  dt_start: 0.5
+  # start time before origin time [h] 
+  # (use long time windows to allow resitution in low frequency bands...)
   dt_end: 1.5
   # end time after origin time [h]
 
