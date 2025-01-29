@@ -403,37 +403,63 @@ def plot_psdratio_from_dict(ratpsd_by_event, st, l, cha, catalog, dir_f):
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(13, nrows*3))
 
     for i_ev, ev in enumerate(catalog):
-        i_x = int(i_ev/ncols)
-        i_y = int(i_ev % ncols)
 
-        if i_x == nrows-1:
-            ax[i_x, i_y].set_xlabel('Frequency [Hz]')
+        if nrows > 1:
+            i_x = int(i_ev/ncols)
+            i_y = int(i_ev % ncols)
 
-        if i_y == 0:
-            ax[i_x, i_y].set_ylabel('PSD ratio (syn/obs)')
+            if i_x == nrows-1:
+                ax[i_x, i_y].set_xlabel('Frequency [Hz]')
 
-        ev_time_str = util.time_to_str(ev.time)[0:10]
-        ax[i_x, i_y].set_title(ev_time_str)
-        #ax[i_x, i_y].set_xscale('log')
-        #ax[i_x, i_y].set_yscale('log')
+            if i_y == 0:
+                ax[i_x, i_y].set_ylabel('PSD ratio (syn/obs)')
 
-        try:
-            f_syn, rat = ratpsd_by_event[ev_time_str]
-            ax[i_x, i_y].plot(f_syn[1:], rat[1:], 'k.')
-            if i_ev == 0 or not fmax:
-                fmax = max(f_syn)
-        except ValueError:
-            logging.error('ValueError obs')
-        except KeyError:
-            logging.error('no data key obs')
+            ev_time_str = util.time_to_str(ev.time)[0:10]
+            ax[i_x, i_y].set_title(ev_time_str)
+            #ax[i_x, i_y].set_xscale('log')
+            #ax[i_x, i_y].set_yscale('log')
 
-        ax[i_x, i_y].set_xlim(fmin, fmax)
-        ax[i_x, i_y].set_ylim(0, 10)
+            try:
+                f_syn, rat = ratpsd_by_event[ev_time_str]
+                ax[i_x, i_y].plot(f_syn[1:], rat[1:], 'k.')
+                if i_ev == 0 or not fmax:
+                    fmax = max(f_syn)
+            except ValueError:
+                logging.error('ValueError obs')
+            except KeyError:
+                logging.error('no data key obs')
 
-    if nrows*ncols > n_ev:
-        dif = nrows*ncols - n_ev
-        for i in range(dif):
-            ax[i_x, i_y+i+1].set_xlabel('Frequency [Hz]')
+            ax[i_x, i_y].set_xlim(fmin, fmax)
+            ax[i_x, i_y].set_ylim(0, 10)
+
+        if nrows*ncols > n_ev:
+            dif = nrows*ncols - n_ev
+            for i in range(dif):
+                ax[i_x, i_y+i+1].set_xlabel('Frequency [Hz]')
+
+        if nrows == 1:
+            i_x = int(i_ev)
+            ax[i_x].set_xlabel('Frequency [Hz]')
+
+            ax[i_x].set_ylabel('PSD ratio (syn/obs)')
+
+            ev_time_str = util.time_to_str(ev.time)[0:10]
+            ax[i_x].set_title(ev_time_str)
+            #ax[i_x, i_y].set_xscale('log')
+            #ax[i_x, i_y].set_yscale('log')
+
+            try:
+                f_syn, rat = ratpsd_by_event[ev_time_str]
+                ax[i_x].plot(f_syn[1:], rat[1:], 'k.')
+                if i_ev == 0 or not fmax:
+                    fmax = max(f_syn)
+            except ValueError:
+                logging.error('ValueError obs')
+            except KeyError:
+                logging.error('no data key obs')
+
+            ax[i_x].set_xlim(fmin, fmax)
+            ax[i_x].set_ylim(0, 10)
     try:
         plt.tight_layout()
     except Exception:
@@ -470,47 +496,82 @@ def plot_psd_from_dict(obspsd_by_event, synpsd_by_event,
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(13, nrows*3))
 
     for i_ev, ev in enumerate(catalog):
-        i_x = int(i_ev/ncols)
-        i_y = int(i_ev % ncols)
+        if nrows > 1:
+            i_x = int(i_ev/ncols)
+            i_y = int(i_ev % ncols)
 
-        if i_x == nrows-1:
-            ax[i_x, i_y].set_xlabel('Frequency [Hz]')
+            if i_x == nrows-1:
+                ax[i_x, i_y].set_xlabel('Frequency [Hz]')
 
-        if i_y == 0:
-            ax[i_x, i_y].set_ylabel('PSD')
+            if i_y == 0:
+                ax[i_x, i_y].set_ylabel('PSD')
 
-        ev_time_str = util.time_to_str(ev.time)[0:10]
+            ev_time_str = util.time_to_str(ev.time)[0:10]
 
-        ax[i_x, i_y].set_title(ev_time_str)
-        ax[i_x, i_y].set_xscale('log')
-        ax[i_x, i_y].set_yscale('log')
+            ax[i_x, i_y].set_title(ev_time_str)
+            ax[i_x, i_y].set_xscale('log')
+            ax[i_x, i_y].set_yscale('log')
 
-        try:
-            f_obs_Z, a_obs_Z = obspsd_by_event[ev_time_str]
-            ax[i_x, i_y].plot(f_obs_Z[1:], a_obs_Z[1:], 'k')
-            if i_ev == 0 or not fmax:
-                fmax = max(f_obs_Z)
-        except ValueError:
-            logging.error('ValueError obs')
-        except KeyError:
-            logging.error('no data key obs: %s' % ev_time_str)
-        try:
-            f_syn_Z, a_syn_Z = synpsd_by_event[ev_time_str]
-            ax[i_x, i_y].plot(f_syn_Z[1:], a_syn_Z[1:], 'r')
-            if i_ev == 0 or not fmax:
-                fmax = max(f_syn_Z)
-        except ValueError:
-            logging.error('ValueError syn')
-        except KeyError:
-            logging.error('no data key syn: %s' % ev_time_str)
+            try:
+                f_obs_Z, a_obs_Z = obspsd_by_event[ev_time_str]
+                ax[i_x, i_y].plot(f_obs_Z[1:], a_obs_Z[1:], 'k')
+                if i_ev == 0 or not fmax:
+                    fmax = max(f_obs_Z)
+            except ValueError:
+                logging.error('ValueError obs')
+            except KeyError:
+                logging.error('no data key obs: %s' % ev_time_str)
+            try:
+                f_syn_Z, a_syn_Z = synpsd_by_event[ev_time_str]
+                ax[i_x, i_y].plot(f_syn_Z[1:], a_syn_Z[1:], 'r')
+                if i_ev == 0 or not fmax:
+                    fmax = max(f_syn_Z)
+            except ValueError:
+                logging.error('ValueError syn')
+            except KeyError:
+                logging.error('no data key syn: %s' % ev_time_str)
 
-        ax[i_x, i_y].set_xlim(fmin, fmax)
-        ax[i_x, i_y].set_ylim(a_min, a_max)
+            ax[i_x, i_y].set_xlim(fmin, fmax)
+            ax[i_x, i_y].set_ylim(a_min, a_max)
 
-    if nrows*ncols > n_ev:
-        dif = nrows*ncols - n_ev
-        for i in range(dif):
-            ax[i_x, i_y+i+1].set_xlabel('Frequency [Hz]')
+        if nrows*ncols > n_ev:
+            dif = nrows*ncols - n_ev
+            for i in range(dif):
+                ax[i_x, i_y+i+1].set_xlabel('Frequency [Hz]')
+
+        if nrows == 1:
+            i_x = i_ev
+
+            ax[i_x].set_xlabel('Frequency [Hz]')
+            ax[i_x].set_ylabel('PSD')
+
+            ev_time_str = util.time_to_str(ev.time)[0:10]
+
+            ax[i_x].set_title(ev_time_str)
+            ax[i_x].set_xscale('log')
+            ax[i_x].set_yscale('log')
+
+            try:
+                f_obs_Z, a_obs_Z = obspsd_by_event[ev_time_str]
+                ax[i_x].plot(f_obs_Z[1:], a_obs_Z[1:], 'k')
+                if i_ev == 0 or not fmax:
+                    fmax = max(f_obs_Z)
+            except ValueError:
+                logging.error('ValueError obs')
+            except KeyError:
+                logging.error('no data key obs: %s' % ev_time_str)
+            try:
+                f_syn_Z, a_syn_Z = synpsd_by_event[ev_time_str]
+                ax[i_x].plot(f_syn_Z[1:], a_syn_Z[1:], 'r')
+                if i_ev == 0 or not fmax:
+                    fmax = max(f_syn_Z)
+            except ValueError:
+                logging.error('ValueError syn')
+            except KeyError:
+                logging.error('no data key syn: %s' % ev_time_str)
+
+            ax[i_x].set_xlim(fmin, fmax)
+            ax[i_x].set_ylim(a_min, a_max)
 
     plt.tight_layout()
     fig.savefig(os.path.join(dir_f, '%s_%s_%s_%s.png' % (st.network, st.station, l, cha)))
