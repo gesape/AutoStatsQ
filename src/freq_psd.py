@@ -432,10 +432,6 @@ def plot_psdratio_from_dict(ratpsd_by_event, st, l, cha, catalog, dir_f):
             ax[i_x, i_y].set_xlim(fmin, fmax)
             ax[i_x, i_y].set_ylim(0, 10)
 
-        if nrows*ncols > n_ev:
-            dif = nrows*ncols - n_ev
-            for i in range(dif):
-                ax[i_x, i_y+i+1].set_xlabel('Frequency [Hz]')
 
         if nrows == 1:
             i_x = int(i_ev)
@@ -460,6 +456,18 @@ def plot_psdratio_from_dict(ratpsd_by_event, st, l, cha, catalog, dir_f):
 
             ax[i_x].set_xlim(fmin, fmax)
             ax[i_x].set_ylim(0, 10)
+
+    if nrows*ncols > n_ev:
+        dif = nrows*ncols - n_ev
+        for i in range(dif):
+            ax[i_x, i_y+i+1].set_yticks([])
+            ax[i_x, i_y+i+1].set_xticks([])
+            ax[i_x, i_y+i+1].spines['top'].set_visible(False)
+            ax[i_x, i_y+i+1].spines['right'].set_visible(False)
+            ax[i_x, i_y+i+1].spines['bottom'].set_visible(False)
+            ax[i_x, i_y+i+1].spines['left'].set_visible(False)
+            ax[i_x, i_y+i+1].set_xlabel('Frequency [Hz]')
+
     try:
         plt.tight_layout()
     except Exception:
@@ -469,7 +477,7 @@ def plot_psdratio_from_dict(ratpsd_by_event, st, l, cha, catalog, dir_f):
         fig.savefig(os.path.join(dir_f, '%s_%s_%s_%s_ratio.png' % (st.network, st.station, l, cha)))
     except Exception:
         pass
-    # plt.show()
+    #plt.show()
     plt.close(fig)
 
 
@@ -478,6 +486,7 @@ def plot_psd_from_dict(obspsd_by_event, synpsd_by_event,
 
     n_ev = len(catalog)
     nrows = math.ceil(n_ev / 5)
+    print(n_ev, nrows)
     ncols = 5
     fmin = 0.01#0.001
     fmax = None
@@ -534,10 +543,6 @@ def plot_psd_from_dict(obspsd_by_event, synpsd_by_event,
             ax[i_x, i_y].set_xlim(fmin, fmax)
             ax[i_x, i_y].set_ylim(a_min, a_max)
 
-        if nrows*ncols > n_ev:
-            dif = nrows*ncols - n_ev
-            for i in range(dif):
-                ax[i_x, i_y+i+1].set_xlabel('Frequency [Hz]')
 
         if nrows == 1:
             i_x = i_ev
@@ -572,6 +577,17 @@ def plot_psd_from_dict(obspsd_by_event, synpsd_by_event,
 
             ax[i_x].set_xlim(fmin, fmax)
             ax[i_x].set_ylim(a_min, a_max)
+
+    if nrows*ncols > n_ev:
+        dif = nrows*ncols - n_ev
+        for i in range(dif):
+            ax[i_x, i_y+i+1].set_yticks([])
+            ax[i_x, i_y+i+1].set_xticks([])
+            ax[i_x, i_y+i+1].spines['top'].set_visible(False)
+            ax[i_x, i_y+i+1].spines['right'].set_visible(False)
+            ax[i_x, i_y+i+1].spines['bottom'].set_visible(False)
+            ax[i_x, i_y+i+1].spines['left'].set_visible(False)
+            ax[i_x, i_y+i+1].set_xlabel('Frequency [Hz]')
 
     plt.tight_layout()
     fig.savefig(os.path.join(dir_f, '%s_%s_%s_%s.png' % (st.network, st.station, l, cha)))
