@@ -1610,83 +1610,87 @@ def main():
             syndatapath = os.path.join(data_dir, 'synthetics')
 
             logs.info('Data path: %s\nSynthetic data path: %s' % (datapath, syndatapath))
+            if not os.path.isdir(syndatapath):
+                logs.error('PDS Test: No synthetic data found. Please compute synthetic data.')
 
-            nst = len(all_stations)
+            else:
+                
+                nst = len(all_stations)
 
-            #if arrT_array is None:
-            try:
-                data_dir = gensettings.work_dir
-                atfile = os.path.join(data_dir, 'ttt', 'ArrivalTimes_deep.npy')
-                arrT_array = num.load(atfile)
-            except:
-                logs.error('Please calculate arrival times first!')
-                raise Exception('Arrival times not calculated!')
+                #if arrT_array is None:
+                try:
+                    data_dir = gensettings.work_dir
+                    atfile = os.path.join(data_dir, 'ttt', 'ArrivalTimes_deep.npy')
+                    arrT_array = num.load(atfile)
+                except:
+                    logs.error('Please calculate arrival times first!')
+                    raise Exception('Arrival times not calculated!')
 
-            #if arrT_R_array is None:
-            try:
-                data_dir = gensettings.work_dir
-                atrfile = os.path.join(data_dir, 'ttt', 'ArrivalTimes_estR_deep.npy')
-                arrT_R_array = num.load(atrfile)
-            except Exception:
-                logs.error('Please calculate R arrival times first!')
-                raise Exception('R arrival times not calculated!')
+                #if arrT_R_array is None:
+                try:
+                    data_dir = gensettings.work_dir
+                    atrfile = os.path.join(data_dir, 'ttt', 'ArrivalTimes_estR_deep.npy')
+                    arrT_R_array = num.load(atrfile)
+                except Exception:
+                    logs.error('Please calculate R arrival times first!')
+                    raise Exception('R arrival times not calculated!')
 
-            st_numbers = [i_st for i_st in range(len(all_stations))]
-            flat_f_ranges_ll = []
-            freq_rat_list_y_ll = []
-            # flat_by_next_ll = []
-            freq_neigh_list_y_ll = []
+                st_numbers = [i_st for i_st in range(len(all_stations))]
+                flat_f_ranges_ll = []
+                freq_rat_list_y_ll = []
+                # flat_by_next_ll = []
+                freq_neigh_list_y_ll = []
 
-            nslc_list = []
-            # nslc_list2 = []
-            # freq_neigh_list_y_ll = []
+                nslc_list = []
+                # nslc_list2 = []
+                # freq_neigh_list_y_ll = []
 
-            for i_st, st in zip(st_numbers, all_stations):
-                logs.info('%s %s' % (i_st, st.station))
-            # for i_st, st in enumerate(all_stations):
-                st_data_pile = pile.make_pile(datapath,
-                                              regex='%s_%s_' % (st.network, st.station),
-                                              show_progress=False)
-                locs = list(set(list(st_data_pile.locations.keys())))
-                for l in locs:
-                    freq_rat_list_st, freq_rat_list_y, nslc_list_st = fp.prep_psd_fct(
-                      i_st, st, nst, l, subsets_events['deep'],
-                      dir_f,
-                      arrT_array, arrT_R_array,
-                      datapath, syndatapath,
-                      psdsconf.tinc, psdsconf.tpad,
-                      psdsconf.dt_start, psdsconf.dt_end,
-                      psdsconf.n_poly,
-                      psdsconf.norm_factor,
-                      psdsconf.f_ign,
-                      plot_psds=psdsconf.plot_psds,
-                      plot_ratio_extra=psdsconf.plot_ratio_extra,
-                      plot_m_rat=psdsconf.plot_m_rat,
-                      plot_flat_ranges=psdsconf.plot_flat_ranges)  # ,
-                      # plot_neighb_ranges=psdsconf.plt_neigh_ranges)
+                for i_st, st in zip(st_numbers, all_stations):
+                    logs.info('%s %s' % (i_st, st.station))
+                # for i_st, st in enumerate(all_stations):
+                    st_data_pile = pile.make_pile(datapath,
+                                                  regex='%s_%s_' % (st.network, st.station),
+                                                  show_progress=False)
+                    locs = list(set(list(st_data_pile.locations.keys())))
+                    for l in locs:
+                        freq_rat_list_st, freq_rat_list_y, nslc_list_st = fp.prep_psd_fct(
+                          i_st, st, nst, l, subsets_events['deep'],
+                          dir_f,
+                          arrT_array, arrT_R_array,
+                          datapath, syndatapath,
+                          psdsconf.tinc, psdsconf.tpad,
+                          psdsconf.dt_start, psdsconf.dt_end,
+                          psdsconf.n_poly,
+                          psdsconf.norm_factor,
+                          psdsconf.f_ign,
+                          plot_psds=psdsconf.plot_psds,
+                          plot_ratio_extra=psdsconf.plot_ratio_extra,
+                          plot_m_rat=psdsconf.plot_m_rat,
+                          plot_flat_ranges=psdsconf.plot_flat_ranges)  # ,
+                          # plot_neighb_ranges=psdsconf.plt_neigh_ranges)
 
-                    if freq_rat_list_st != [] and nslc_list_st != []:
-                        flat_f_ranges_ll.extend(freq_rat_list_st)
-                        freq_rat_list_y_ll.extend(freq_rat_list_y)
-                        nslc_list.extend(nslc_list_st)
+                        if freq_rat_list_st != [] and nslc_list_st != []:
+                            flat_f_ranges_ll.extend(freq_rat_list_st)
+                            freq_rat_list_y_ll.extend(freq_rat_list_y)
+                            nslc_list.extend(nslc_list_st)
+                    '''
+                    if flat_by_next != [] and nslc_list_st != []:
+                        flat_by_next_ll.extend(flat_by_next)
+                        freq_neigh_list_y_ll.extend(flat_by_next_y)
+                        nslc_list2.extend(nslc_list_st)
+                    '''
+
+                fp.dump_flat_ranges(flat_f_ranges_ll, freq_rat_list_y_ll,
+                                    nslc_list, dir_f,
+                                    fname_ext='linefit2',
+                                    only_first=psdsconf.only_first)
                 '''
-                if flat_by_next != [] and nslc_list_st != []:
-                    flat_by_next_ll.extend(flat_by_next)
-                    freq_neigh_list_y_ll.extend(flat_by_next_y)
-                    nslc_list2.extend(nslc_list_st)
+                dump_flat_ranges(flat_by_next_ll, freq_neigh_list_y_ll,
+                                    nslc_list2, dir_f,
+                                    fname_ext='neighbour2')
                 '''
-
-            fp.dump_flat_ranges(flat_f_ranges_ll, freq_rat_list_y_ll,
-                                nslc_list, dir_f,
-                                fname_ext='linefit2',
-                                only_first=psdsconf.only_first)
-            '''
-            dump_flat_ranges(flat_by_next_ll, freq_neigh_list_y_ll,
-                                nslc_list2, dir_f,
-                                fname_ext='neighbour2')
-            '''
-            logs.info(' Finished PSD test section.')
-            logs.info(' Results saved in directoriy %s.' % dir_f)
+                logs.info(' Finished PSD test section.')
+                logs.info(' Results saved in directoriy %s.' % dir_f)
 
 
         # 9. Rayleigh wave polarization analysis for orientation
@@ -1831,7 +1835,7 @@ def main():
                 logs.error('No synthetic data found for timing test, please compute synthetic waveforms first.')
 
             else:
-                
+
                 # print(p_obs, p_syn)
 
                 #if timingconf.search_avail_stats is True:
