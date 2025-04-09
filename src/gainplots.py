@@ -176,6 +176,7 @@ def plot_median_gain_map_from_file(ns,
         height=mapsize[1],
         show_grid=False,
         show_topo=pl_topo,
+        topo_cpt_dry='white_sea_land',
         # topo_cpt_dry='/home/gesap/Documents/CETperceptual_GMT/CET-L2.cpt',#'/usr/local/share/cpt/gray.cpt',
         color_dry=(143, 188, 143),  # grey
         illuminate=True,
