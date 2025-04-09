@@ -500,9 +500,13 @@ def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
             start_twd1 = ev.time
             end_twd1 = arrT + 1800
 
-            trZ = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'Z')
-            trR = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'R')
-            trT = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'T')
+            try:
+                trZ = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'Z')
+                trR = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'R')
+                trT = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'T')
+            except:
+                cc_i_ev_vs_rota[i_ev, :] = num.nan
+                continue
 
             start_twd2 = ev.time + r_arr_by_ev[i_ev] - dt_start
             end_twd2 = arrT + dt_stop
