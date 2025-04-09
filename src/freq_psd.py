@@ -350,7 +350,7 @@ def plot_m_ratio(median_rat, f_syn_Z_nonan, nsl, l, dir_f, cha):
     """
     fig3, ax3 = plt.subplots(nrows=1, ncols=1, figsize=(6, 5))
 
-    if not median_rat == []:
+    if not median_rat.size == 0:
         ax3.plot(f_syn_Z_nonan[1:], median_rat[1:], 'k.')
         fmax = max(f_syn_Z_nonan)
         fmin = 0.01#0.001
@@ -392,7 +392,7 @@ def plot_psdratio_from_dict(ratpsd_by_event, st, l, cha, catalog, dir_f):
     r_max = 0
     r_min = 0
     for k, i in ratpsd_by_event.items():
-        if not i[1] == []:
+        if not i[1].size == 0:
             r_maxnow = num.max(i[1])
             r_minnow = num.min(i[1])
             if r_maxnow > r_max:
