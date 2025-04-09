@@ -23,10 +23,11 @@ def check_general_settings(gensettings):
         error = True
     else:
         for f in gensettings.list_station_lists:
-            if os.path.exists(f):
-                logger.debug(' Check passed: Found station file %s.' % f)
+            statspath = os.path.join(gensettings.work_dir, f)
+            if os.path.exists(statspath):
+                logger.debug(' Check passed: Found station file %s.' % statspath)
             else:
-                logger.error('ERROR: Station file not found: %s.' % f)
+                logger.error('ERROR: Station file not found: %s.' % statspath)
                 error = True
     
     if len(gensettings.st_use_list) > 0:                      
@@ -35,7 +36,7 @@ def check_general_settings(gensettings):
     return error
 
 
-def check_catalog_settings(catalogconf):
+def check_catalog_settings(gensettings, catalogconf):
     cf = catalogconf
 
     error = False
@@ -63,10 +64,11 @@ def check_catalog_settings(catalogconf):
 
     if cf.subset_fns:
         for key, value in cf.subset_fns.items():
-            if os.path.exists(value):
+            catpath = os.path.join(gensettings.work_dir, value)
+            if os.path.exists(catpath):
                 logger.debug(' Check passed: %s catalog file exists.' % key)
             else:
-                logger.error(' ERROR: %s catalog file not found: %s.' % (key, value))
+                logger.error(' ERROR: %s catalog file not found: %s.' % (key, catpath))
                 error = True
     
     
@@ -326,7 +328,7 @@ def check_config(configfile):
         AutoStatsQConfig.load(filename=configfile).Settings
 
     error_gen = check_general_settings(gensettings)
-    error_cat = check_catalog_settings(catalogconf)
+    error_cat = check_catalog_settings(gensettings,catalogconf)
     error_arr = check_arrivaltime_settings(arrTconf)
     error_md = check_metadata_settings(metaDataconf)
     error_rest = check_restitution_settings(RestDownconf)
