@@ -1818,59 +1818,70 @@ def main():
             syndatapath = os.path.join(gensettings.work_dir, 'synthetics')
             dir_time = os.path.join(gensettings.work_dir, 'results/timing')
             os.makedirs(dir_time, exist_ok=True)
-            p_obs = pile.make_pile(datapath, show_progress=False)
-            p_syn = pile.make_pile(syndatapath, show_progress=False)
+            try:
+                p_obs = pile.make_pile(datapath, show_progress=False)
+            except:
+                logs.error('No data found for timing test.')
+            try:
+                p_syn = pile.make_pile(syndatapath, show_progress=False)
+            except:
+                logs.error('No synthetic data found for timing test, please compute synthetic waveforms first.')
 
-            # print(p_obs, p_syn)
+            if not p_syn.tmin:
+                logs.error('No synthetic data found for timing test, please compute synthetic waveforms first.')
 
-            #if timingconf.search_avail_stats is True:
-            #    nslc_list = []
-            #    for t in p_obs.iter_traces(trace_selector=lambda tr: tr.channel=='R'):
-            #        nslc_list.append(t.nslc_id)
-            #    nslc_list = list(set(nslc_list))
-            #    stations = nslc_list
+            else:
+                
+                # print(p_obs, p_syn)
 
-            # else:
-            
-            stations = all_stations
+                #if timingconf.search_avail_stats is True:
+                #    nslc_list = []
+                #    for t in p_obs.iter_traces(trace_selector=lambda tr: tr.channel=='R'):
+                #        nslc_list.append(t.nslc_id)
+                #    nslc_list = list(set(nslc_list))
+                #    stations = nslc_list
 
-            tshifts = num.empty((len(stations), len(subset_catalog)))
-            tshifts.fill(num.nan)
+                # else:
+                
+                stations = all_stations
 
-            ccs = num.empty((len(stations), len(subset_catalog)))
-            ccs.fill(num.nan)
+                tshifts = num.empty((len(stations), len(subset_catalog)))
+                tshifts.fill(num.nan)
 
-            for i_ev, ev in enumerate(subset_catalog):
-                tshifts[:, i_ev], ccs[:, i_ev] = tt.ccs_allstats_one_event(i_ev, nev, ev, stations, all_stations,
-                                                             p_obs, p_syn,
-                                                             dir_time, timingconf.bandpass,
-                                                             arrT_array, arrT_R_array, timingconf.cc_thresh,
-                                                             timingconf.time_wdw,
-                                                             debug_mode=timingconf.debug_mode,
-                                                             debug_only_cc_abovethresh=timingconf.debug_only_cc_abovethresh)
-            tshifts_cor = tt.correct_for_med_tshifts(tshifts)
-            tt.plot_matrix(tshifts, tshifts_cor, stations, dir_time)
+                ccs = num.empty((len(stations), len(subset_catalog)))
+                ccs.fill(num.nan)
 
-            # save all results
-            tt.save_all(tshifts_cor, ccs, stations, subset_catalog, dir_time)
+                for i_ev, ev in enumerate(subset_catalog):
+                    tshifts[:, i_ev], ccs[:, i_ev] = tt.ccs_allstats_one_event(i_ev, nev, ev, stations, all_stations,
+                                                                 p_obs, p_syn,
+                                                                 dir_time, timingconf.bandpass,
+                                                                 arrT_array, arrT_R_array, timingconf.cc_thresh,
+                                                                 timingconf.time_wdw,
+                                                                 debug_mode=timingconf.debug_mode,
+                                                                 debug_only_cc_abovethresh=timingconf.debug_only_cc_abovethresh)
+                tshifts_cor = tt.correct_for_med_tshifts(tshifts)
+                tt.plot_matrix(tshifts, tshifts_cor, stations, dir_time)
 
-            # get mean and stdev
-            medians = num.nanmedian(tshifts_cor, axis=1)
-            means = num.nanmean(tshifts_cor, axis=1)
-            stdevs = num.nanstd(tshifts_cor, axis=1)
+                # save all results
+                tt.save_all(tshifts_cor, ccs, stations, subset_catalog, dir_time)
 
-            n_evs = [tshifts_cor.shape[1] - num.isnan(tshifts_cor[i_st,:]).sum()
-                     for i_st in range(tshifts_cor.shape[0])]
+                # get mean and stdev
+                medians = num.nanmedian(tshifts_cor, axis=1)
+                means = num.nanmean(tshifts_cor, axis=1)
+                stdevs = num.nanstd(tshifts_cor, axis=1)
 
-            # plot
-            outfile = os.path.join(dir_time, 'timing_errors_allStats.%s' % maps.outformat)
-            tt.plot_tshifts(tshifts_cor, medians, means, stdevs, outfile, stations)
-            outfile2 = os.path.join(dir_time, 'timing_errors_allStats_30s.%s' % maps.outformat)
-            tt.plot_tshifts(tshifts_cor, medians, means, stdevs, outfile2, stations)
-            tt.save_mms(medians, means, stdevs, stations, dir_time, n_evs)
+                n_evs = [tshifts_cor.shape[1] - num.isnan(tshifts_cor[i_st,:]).sum()
+                         for i_st in range(tshifts_cor.shape[0])]
 
-            logs.info(' Finished timing error test.' + 
-                      ' Results saved in directory %s.' % dir_time)
+                # plot
+                outfile = os.path.join(dir_time, 'timing_errors_allStats.%s' % maps.outformat)
+                tt.plot_tshifts(tshifts_cor, medians, means, stdevs, outfile, stations)
+                outfile2 = os.path.join(dir_time, 'timing_errors_allStats_30s.%s' % maps.outformat)
+                tt.plot_tshifts(tshifts_cor, medians, means, stdevs, outfile2, stations)
+                tt.save_mms(medians, means, stdevs, stations, dir_time, n_evs)
+
+                logs.info(' Finished timing error test.' + 
+                          ' Results saved in directory %s.' % dir_time)
 
         if tc.tele_check is True:
             # Set Logger name and verbosity
