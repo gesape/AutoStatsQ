@@ -392,7 +392,7 @@ def plot_psdratio_from_dict(ratpsd_by_event, st, l, cha, catalog, dir_f):
     r_max = 0
     r_min = 0
     for k, i in ratpsd_by_event.items():
-        if not i[1].size == 0:
+        if not len(i[1]) == 0:
             r_maxnow = num.max(i[1])
             r_minnow = num.min(i[1])
             if r_maxnow > r_max:
@@ -494,7 +494,7 @@ def plot_psd_from_dict(obspsd_by_event, synpsd_by_event,
     a_max = 0
     a_min = 0
     for k, i in obspsd_by_event.items():
-        if not i[1] == []:
+        if not len(i[1]) == 0:
             a_maxnow = num.max(i[1])
             a_minnow = num.min(i[1])
             if a_maxnow > a_max:
