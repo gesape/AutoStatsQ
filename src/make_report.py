@@ -19,22 +19,22 @@ def gen_report(config):
     logger.info('yes')
     tpl_file = os.path.join(file_path, 'generate_report/index_template.html')
 
-    try:
-        os.makedirs('result_report')
-    except:
-        rmtree('result_report')
-        os.makedirs('result_report')
-
-    html_directories = ['figures', 'reveal', 'theme']
-    for h in html_directories:
-        copytree(src=os.path.join(file_path, 'generate_report', h),
-                        dst=os.path.join('result_report', h))
-
     configfile = config  # '../../../../AutoStatsQ_settings.config'
 
     gensettings, catalogconf, arrTconf, metaDataconf, RestDownconf,\
             synthsconf, gainconf, psdsconf, orientconf, timingconf, tc, maps =\
             AutoStatsQConfig.load(filename=configfile).Settings
+
+    try:
+        os.makedirs(os.path.join(gensettings.work_dir, 'result_report'))
+    except:
+        rmtree(os.path.join(gensettings.work_dir, 'result_report'))
+        os.makedirs(os.path.join(gensettings.work_dir, 'result_report'))
+
+    html_directories = ['figures', 'reveal', 'theme']
+    for h in html_directories:
+        copytree(src=os.path.join(file_path, 'generate_report', h),
+                        dst=os.path.join(os.path.join(gensettings.work_dir, 'result_report'), h))
 
     outfile = os.path.join(gensettings.work_dir, 'result_report', 'index_report.html')
 
