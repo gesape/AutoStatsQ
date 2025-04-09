@@ -37,7 +37,7 @@ from .calc_ttt import *
 from .make_report import gen_report
 
 
-ver = '2024.10.29'
+ver = '2025.04.09'
 
 fdsn.g_timeout = 120.
 
@@ -1614,7 +1614,7 @@ def main():
                 logs.error('PDS Test: No synthetic data found. Please compute synthetic data.')
 
             else:
-                
+
                 nst = len(all_stations)
 
                 #if arrT_array is None:
