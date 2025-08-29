@@ -54,7 +54,7 @@ def invert_relative_amplitudes(pair_corrs):
         data.append(0.0)
         weights.append(0.01)
 
-    data = num.array(data, dtype=num.float)
+    data = num.array(data, dtype=float)
     mat = num.vstack(rows)
     weights = num.array(weights)
 
@@ -346,8 +346,8 @@ class TeleCheck(Snuffling):
         ys_l = [nsl_to_xy[nsl][1] for nsl in nsls]
         nsamp = min(min(x.size for x in xs_l), min(y.size for y in ys_l))
 
-        xs = num.vstack(x[:nsamp] for x in xs_l)
-        ys = num.vstack(y[:nsamp] for y in ys_l)
+        xs = num.vstack([x[:nsamp] for x in xs_l])
+        ys = num.vstack([y[:nsamp] for y in ys_l])
 
         amps = num.sqrt(xs**2 + ys**2)
         amp_maxs = num.max(amps, axis=1)
