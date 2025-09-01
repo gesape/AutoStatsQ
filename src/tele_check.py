@@ -381,7 +381,7 @@ class TeleCheck(Snuffling):
 
             azimuth = r2d*num.arctan2(pc[1], pc[0])
             azimuth = (-azimuth) % 180. - 90.
-            print('POL AZI: %-20s %8.0f' % ('.'.join(nsls[ia]), azimuth))
+            print('POL AZI (assumes R,T): %-20s %8.0f' % ('.'.join(nsls[ia]), azimuth))
 
 
 
