@@ -9,6 +9,7 @@ from pyrocko.plot import mpl_color
 
 
 d2r = num.pi / 180.
+r2d = 1.0 / d2r
 
 
 class NoArrival(Exception):
@@ -358,6 +359,7 @@ class TeleCheck(Snuffling):
         phis = num.linspace(-180., 180., nphi)
         d = num.zeros((n, n, nphi))
 
+        print('Result Event %s' % str(util.tts(event.time)))
         for ia in range(n):
             for iphi, phi in enumerate(phis):
                 x = xs[ia, :]
@@ -368,6 +370,19 @@ class TeleCheck(Snuffling):
                 d[ia, :, iphi] = num.sqrt(num.sum(
                         (xrot[num.newaxis, :] - xs)**2
                         + (yrot[num.newaxis, :] - ys)**2, axis=1))
+
+            data = num.zeros((2,len(x)))
+            data[0] = x
+            data[1] = y
+            cov = num.cov(data)
+            evals, evecs = num.linalg.eigh(cov)
+
+            pc = evecs[:, -1]
+
+            azimuth = r2d*num.arctan2(pc[1], pc[0])
+            azimuth = (-azimuth) % 180. - 90.
+            print('POL AZI: %-20s %8.0f' % ('.'.join(nsls[ia]), azimuth))
+
 
 
         imins = num.argmin(d, axis=2)
@@ -388,7 +403,7 @@ class TeleCheck(Snuffling):
             if mean_min_error > 3.0:
                 failed.add(nsls[i])
 
-        print('Result Event %s' % str(util.tts(event.time)))
+       
         while True:
             ia_worst = num.argmax(num.mean(num.abs(phimins), axis=1))
 
