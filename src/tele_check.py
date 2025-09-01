@@ -4,7 +4,7 @@ import numpy as num
 from pyrocko.gui_util import PhaseMarker
 from pyrocko.snuffling import Snuffling, Choice, Param
 from pyrocko.gui import marker as pmarker
-from pyrocko import cake, trace
+from pyrocko import cake, trace, util
 from pyrocko.plot import mpl_color
 
 
@@ -59,7 +59,7 @@ def invert_relative_amplitudes(pair_corrs):
     weights = num.array(weights)
 
     mod, res = num.linalg.lstsq(
-        mat * weights[:, num.newaxis], data*weights)[0:2]
+        mat * weights[:, num.newaxis], data*weights,rcond=None)[0:2]
 
     relamps_rel = num.exp(mod)
 
@@ -69,7 +69,7 @@ def invert_relative_amplitudes(pair_corrs):
     for nslc in nslcs:
         i = nslc_to_i[nslc]
         factor = relamps_rel[i]
-        print(nslc, factor)
+        #print(nslc, factor)
         corrs[nslc] = factor
 
     return corrs
@@ -140,8 +140,8 @@ class TeleCheck(Snuffling):
         event = viewer.get_active_event()
         stations = self.get_stations()
 
-        for s in stations:
-            print(s.nsl())
+        #for s in stations:
+        #    print(s.nsl())
 
         nsl_to_station = dict(
             (s.nsl(), s) for s in stations)
@@ -354,7 +354,7 @@ class TeleCheck(Snuffling):
 
         xs = xs / amp_maxs[:, num.newaxis]
         ys = ys / amp_maxs[:, num.newaxis]
-        nphi = 73
+        nphi = 361 ##
         phis = num.linspace(-180., 180., nphi)
         d = num.zeros((n, n, nphi))
 
@@ -368,6 +368,7 @@ class TeleCheck(Snuffling):
                 d[ia, :, iphi] = num.sqrt(num.sum(
                         (xrot[num.newaxis, :] - xs)**2
                         + (yrot[num.newaxis, :] - ys)**2, axis=1))
+
 
         imins = num.argmin(d, axis=2)
         dmins = num.min(d, axis=2)
@@ -383,10 +384,11 @@ class TeleCheck(Snuffling):
 
         for i in range(n):
             mean_min_error = num.mean(dmins[i, :]/dmin_median)
-            print(mean_min_error, nsls[i])
+            #print(mean_min_error, nsls[i])
             if mean_min_error > 3.0:
                 failed.add(nsls[i])
 
+        print('Result Event %s' % str(util.tts(event.time)))
         while True:
             ia_worst = num.argmax(num.mean(num.abs(phimins), axis=1))
 
@@ -394,7 +396,8 @@ class TeleCheck(Snuffling):
                 (phis[num.newaxis, :] + phimins[ia_worst, :, num.newaxis]
                  + 180.) % 360.) - 180.
             phirot = phis[num.argmin(num.mean(num.abs(phimod), axis=0))]
-            if abs(phirot) < 10.:
+            if abs(phirot) < 1.:
+                print('%-20s %8.0f' % ('.'.join(nsl), phirot))
                 break
 
             nsl = nsls[ia_worst]
@@ -406,6 +409,7 @@ class TeleCheck(Snuffling):
                 (phimins[:, ia_worst] - phirot) + 180.) % 360. - 180.
 
             if nsl not in failed:
+                
                 print('%-20s %8.0f' % ('.'.join(nsl), phirot))
                 nsl_to_rot[nsl] += phirot
 
