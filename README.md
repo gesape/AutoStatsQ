@@ -24,7 +24,7 @@ Petersen, G. M., Cesca, S., Kriegerowski, M. (2019): Automated Quality Control f
 Latest changes
 -------------
 - Please have a look at the updated installation instructions. A fresh installation may be needed instead of updating.
-- 2025-10-08: Improved color scale handling for gain maps. Renamed all mseed data to avoid colons in file names.
+- 2025-10-08: Improved color scale handling for gain maps. Renamed all mseed data to avoid colons in file names. Added possibility to change cross-correlation threshold for orient test without re-calculating correlations.
 - Improved timing test (26.01.2024): More flexible selection of time windows; choppingof traces after bandpass filtering; improved plots; save single results for all stations and events. See also example config file and section on timing test below.
 - 2 new tutorials with step-by-step instructions in the ```example``` directory; including all input to get started. Example (I) - testing data and metadata downloaded from an fdsn server; Example (II) - testing locally stored data (including a synthetic test dataset).
 - Result presentation as a html report! After running AutoStatsQ, a html report file can be generated using ```--report```. The report is based on reveal (Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors).
@@ -351,6 +351,8 @@ Settings:
 - !autostatsq.config.OrientConfig
   # settings for orientation test
   orient_rayl: false
+  # to re-analyse with a new cross-correlation threshold set orient_rayl to 'False', adjust ccmin, and 
+  # set the plots to 'True'.
   bandpass: [3.0, 0.01, 0.05]  # [Hz]
   start_before_ev: 30.0  # start befor theo. Rayleigh wave arrival, [s]
   stop_after_ev: 480.0  # end after theo. Rayleigh wave arrival, [s]
