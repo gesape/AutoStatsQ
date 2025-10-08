@@ -1544,8 +1544,8 @@ def main():
                 ag.process(fband, taper, twd, gainfconf.debug_mode)
 
                 # Store mean results in YAML format:
-                logs.debug(' Saving mean gains: gains_median_and_mean%s.txt %s' % (c, dir_gains))
-                ag.save_median_and_mean_and_stdev('gains_median_and_mean%s.txt' % c, directory=dir_gains)
+                logs.debug(' Saving mean gains: gains_median_and_mean%s.yaml %s' % (c, dir_gains))
+                ag.save_median_and_mean_and_stdev('gains_median_and_mean%s.yaml' % c, directory=dir_gains)
                 # Store all results in comma-spread text file:
                 ag.save_single_events('gains_all_events%s.txt' % c,
                                       directory=dir_gains, plot=gainfconf.plot_allgains)
