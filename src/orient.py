@@ -636,7 +636,7 @@ def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
 
 
 def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
-                     pl_options, pl_topo, mapsize, outformat, ls=False):
+                     pl_options, pl_topo, mapsize, outformat, ccmin, ls=False):
     '''
     Plot correction angles of all stations on a map. nans are igored.
     Values for plotting are read from file which was automatically prepared in
@@ -795,4 +795,4 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
             m.add_label(lat_no_nan_u[i], lon_no_nan_u[i], stats_no_nan_u[i])    
             has_label.append(stats_no_nan_u[i])
 
-    m.save(os.path.join(dir_orient, 'map_orient.%s' % outformat))
+    m.save(os.path.join(dir_orient, 'map_orient_%s.%s' % (ccmin,outformat)))

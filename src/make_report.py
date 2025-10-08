@@ -59,12 +59,18 @@ def gen_report(config):
             elif "INCLUDE_HERE_ORIENT" in line:
                 logger.info('Including orientation test results in html report.')
                 orient_result_dir = os.path.join(result_dir, 'orient')
-                extended_lines.append(ori.include_map(orient_result_dir))
-                extended_lines.append(ori.include_table_correction_angles(orient_result_dir))
-                extended_lines.append(ori.add_single_station_results(orient_result_dir))
-                extended_lines.append(ori.add_all_stats_figures_baz(orient_result_dir))
-                extended_lines.append(ori.add_all_stats_figures_timing(orient_result_dir))
-                extended_lines.append(ori.add_all_stats_figures_ccs(orient_result_dir))
+                extended_lines.append(ori.include_map(orient_result_dir,
+                    orientconf.ccmin))
+                extended_lines.append(ori.include_table_correction_angles(orient_result_dir,
+                    orientconf.ccmin))
+                extended_lines.append(ori.add_single_station_results(orient_result_dir,
+                    orientconf.ccmin))
+                extended_lines.append(ori.add_all_stats_figures_baz(orient_result_dir,
+                    orientconf.ccmin))
+                extended_lines.append(ori.add_all_stats_figures_timing(orient_result_dir,
+                    orientconf.ccmin))
+                extended_lines.append(ori.add_all_stats_figures_ccs(orient_result_dir,
+                    orientconf.ccmin))
             
             elif "INCLUDE_HERE_GAINS" in line:
                 logger.info('Including gain test results in html report.')

@@ -1855,6 +1855,7 @@ def main():
                                         'CorrectionAngles_cc%s.yaml' % orientconf.ccmin, dir_ro,
                                         pl_opt, maps.pl_topo,
                                         maps.map_size, maps.outformat,
+                                        orientconf.ccmin,
                                         orientconf.orient_map_label)
             logs.info(' Saved map plot of orient test in directory %s.' % dir_ro)
 
