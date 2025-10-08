@@ -1,5 +1,5 @@
 import numpy as num
-import math, sys
+import math
 import logging
 import os
 import datetime
@@ -171,7 +171,6 @@ def plot_corr_baz(nsl, filename_all, filename_stats, dir_ro, events, stations, c
             cbar.ax.set_yticklabels(ticklabels, fontsize=8)
             fig.savefig(os.path.join(dir_ro, '%s_%s_baz_%s.png' % (st[0], st[1],ccmin)))
             plt.close(fig)
-        # sys.exit()         
 
 
 def write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
