@@ -5,9 +5,10 @@ from pyrocko import guts
 logger = logging.getLogger('REPORT-ORIENT')
 
 
-def include_map(orient_result_dir):
+def include_map(orient_result_dir, ccmin):
 
-    orient_map = os.path.join(orient_result_dir, 'map_orient.png')
+    orient_map = os.path.join(orient_result_dir, 'map_orient_%s.png' % ccmin)
+    print(orient_map)
 
     if not glob.glob(orient_map):
 
@@ -23,20 +24,20 @@ def include_map(orient_result_dir):
     else:
 
         include_this = ''' \t \t \t \t<section data-transition="fade">\n
-        \t \t \t \t \t <h4>Overview map of orientation results:</h4>\n
+        \t \t \t \t \t <h4>Overview map of orientation results (ccmin=%s):</h4>\n
         \t \t \t \t \t<img style="margin:0; margin-bottom:-0.6em; margin-right:0.3em; height: 12em;"
-                                src="../results/orient/map_orient.png" />\n
+                                src="../results/orient/map_orient_%s.png" />\n
         \t \t \t \t \t<p style="font-size:%s">Orientation of the N component obtained from median correction angles. Small black arrows indicate station for which less than 5 events could be used.</p>\n
         \t \t \t \t</section>
-        ''' % ('50%'.format())
+        ''' % (ccmin,ccmin,'50%'.format())
 
         return include_this
 
           
 
-def include_table_correction_angles(orient_result_dir):
+def include_table_correction_angles(orient_result_dir, ccmin):
     try:
-        rota_stats = guts.load(filename='%s/CorrectionAngles.yaml' % orient_result_dir)
+        rota_stats = guts.load(filename='%s/CorrectionAngles_cc%s.yaml' % (orient_result_dir, ccmin))
     except FileNotFoundError:
         logger.info('Error: Correction angle table not found.')
         error = ''' \t \t \t \t<section data-transition="fade">\n
@@ -129,9 +130,9 @@ def include_table_correction_angles(orient_result_dir):
 
 
 
-def add_all_stats_figures_timing(orient_result_dir):
+def add_all_stats_figures_timing(orient_result_dir, ccmin):
 
-    timing_plots = glob.glob(os.path.join(orient_result_dir, '*_overtime.png'))
+    timing_plots = glob.glob(os.path.join(orient_result_dir, '*_overtime_%s.png' % ccmin))
 
     if len(timing_plots) <1:
 
@@ -162,9 +163,9 @@ def add_all_stats_figures_timing(orient_result_dir):
 
 
 
-def add_all_stats_figures_baz(orient_result_dir):
+def add_all_stats_figures_baz(orient_result_dir, ccmin):
 
-    baz_plots = glob.glob(os.path.join(orient_result_dir, '*_baz.png'))
+    baz_plots = glob.glob(os.path.join(orient_result_dir, '*_baz_%s.png' % ccmin))
 
     if len(baz_plots) <1:
 
@@ -195,9 +196,9 @@ def add_all_stats_figures_baz(orient_result_dir):
 
 
 
-def add_all_stats_figures_ccs(orient_result_dir):
+def add_all_stats_figures_ccs(orient_result_dir, ccmin):
 
-    cc_plots = glob.glob(os.path.join(orient_result_dir, '*_distr.*'))
+    cc_plots = glob.glob(os.path.join(orient_result_dir, '*_distr_%s.*' % ccmin))
 
     if len(cc_plots) <1:
         logger.info('Error: orient cc plots not found.')
@@ -220,7 +221,7 @@ def add_all_stats_figures_ccs(orient_result_dir):
         for ot in cc_plots:
             path = ot.split('/')
             plo = path[-1]
-            pnet,stat,loc,pl = path[-1].split('_')
+            pnet,stat,loc,pl,ccmin = path[-1].split('_')
             st = '%s.%s' % (pnet, stat)
             #str2 += '''<img style="margin:0; margin-bottom:-0.6em; margin-right:0.3em; height: 20em;"
             #                    src="%s" />\n''' % (ot)
@@ -232,10 +233,10 @@ def add_all_stats_figures_ccs(orient_result_dir):
         return str1+str2+str3
 
 
-def add_single_station_results(orient_result_dir):
+def add_single_station_results(orient_result_dir, ccmin):
 
     try:
-        rota = guts.load(filename='%s/AllCorrectionAngles.yaml' % orient_result_dir).dict_stats_all
+        rota = guts.load(filename='%s/AllCorrectionAngles_cc%s.yaml' % (orient_result_dir, ccmin)).dict_stats_all
     except FileNotFoundError:
         logger.info('Error: Correction angle single station table not found.')
         error = ''' \t \t \t \t<section data-transition="fade">\n
