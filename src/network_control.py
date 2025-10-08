@@ -1587,9 +1587,10 @@ def main():
 
             if not skip_plot:
                 for c in gainfconf.components:
+                    gainfile = 'gains_median_and_mean%s.yaml' % c
                     logs.info(' Plotting gain factors on map, component %s.' % c)
                     plot_median_gain_map_from_file(ns, st_lats, st_lons, pl_opt, maps.pl_topo,
-                                                   'gains_median_and_mean%s.txt' % c, dir_gains, c,
+                                                   gainfile, dir_gains, c,
                                                    maps.map_size, maps.outformat)
 
                     logs.info(' Map plot(s) saved in directory %s.\n' % dir_gains)

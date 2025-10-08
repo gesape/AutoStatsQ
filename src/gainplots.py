@@ -1,5 +1,5 @@
 import math
-import os
+import os, sys
 import logging
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -133,17 +133,19 @@ def plot_median_gain_map_from_file(ns,
                    MAP_GRID_PEN_PRIMARY='thinnest,0/50/0',
                    MAP_ANNOT_OBLIQUE='6')
 
-    gains_fromfile = load(filename=os.path.join(directory, gains_file))
+    gainpath = os.path.join(directory, gains_file)
+    gains_fromfile = load(filename=gainpath)
+
     try:
         ns_rel = gains_fromfile.ref_stats
-        # print(ns_rel)
+        print(ns_rel)
     except Exception:
         ns_rel = None
 
     gains_no_nan = []
     lat_no_nan = []
     lon_no_nan = []
-    # stats_no_nan = []
+    stats_no_nan = []
 
     # print(gains_fromfile.trace_gains_median)
 
@@ -155,19 +157,25 @@ def plot_median_gain_map_from_file(ns,
 
                 if g > 0.0 or g < 0.0:  # g < 5 and g > 0.2:  # g < 10.0 and g > 0.1: #g > 0.0 or g < 0.0:
                     gains_no_nan.append(g)
-                    # stats_no_nan.append(ns_now[1])
+                    stats_no_nan.append(ns_now[1])
                     lat_no_nan.append(st_lats[i_ns])
                     lon_no_nan.append(st_lons[i_ns])
+
             except KeyError:
                 continue
 
     miny = min(gains_no_nan)
     maxy = max(gains_no_nan)
-    # print(gains_no_nan)
     gains_fromfile = None
     gc.collect()
-    gains_no_nan = list(num.log10(gains_no_nan))
-    # print(gains_no_nan)
+
+
+    if miny/maxy <0.1:
+        gains_no_nan = list(num.log10(gains_no_nan))
+        logcptscale = True
+    else:
+        logcptscale = False
+
     m = Map(
         lat=pl_options[0],
         lon=pl_options[1],
@@ -202,14 +210,14 @@ def plot_median_gain_map_from_file(ns,
         m.gmt.makecpt(
             C=pl_options[3],#'split',#'polar',  # '/home/gesap/Documents/CETperceptual_GMT/CET-D4.cpt',#'split',#'polar',
             T='%f/%f' % (miny, maxy),  # (miny, maxy), # (-1,1),#(-0.7, 0.7), (-20, 20)
-            Q=True,
+            Q=False,  # log values are already computed before, no need here.
             out_filename=cptfile, suppress_defaults=True)
     except:
         try:
             m.gmt.makecpt(
                 C='split',
                 T='%f/%f' % (miny, maxy),
-                Q=True,
+                Q=False, # log values are already computed before, no need here.
                 out_filename=cptfile, suppress_defaults=True)
             logging.warning('Could not find gmt cptfile, using split instead.')
         except:
@@ -228,15 +236,22 @@ def plot_median_gain_map_from_file(ns,
 
     # add a colorbar
     B_opt_psscale = 'xaf'
+    
+    if logcptscale:
+        scaletext = '+l log10(Md(A@-i,j@-/A@-ref,j@-))'
+    else:
+        scaletext = '+l Md(A@-i,j@-/A@-ref,j@-)'
+
     m.gmt.psscale(
-                B=B_opt_psscale+'+l log10(Md(A@-i,j@-/A@-ref,j@-))',
+                B=B_opt_psscale+scaletext,
                 D='x9c/6c+w12c/0.5c+jTC+h',
                 C=cptfile)
 
     # add station labels
+    if len(stats_no_nan) <= 15:
+        for i in range(len(stats_no_nan)):
+            m.add_label(lat_no_nan[i], lon_no_nan[i], stats_no_nan[i])
 
-    # for i in range(len(stats_no_nan)):
-    #    m.add_label(lat_no_nan[i], lon_no_nan[i], stats_no_nan[i])
     fn = os.path.join(directory, '%s%s_map_log.%s' % (gains_file[0:12], comp, outformat))
     m.save(fn)
     logging.info('saved file %s' % fn)
