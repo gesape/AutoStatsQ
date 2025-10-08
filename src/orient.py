@@ -720,13 +720,13 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
     try:
         m.gmt.makecpt(
                     C=pl_options[3],
-                    T='%f/%f' % (0.1, 180.),
+                    T='%f/%f' % (0.0, 180.),
                     out_filename=cptfile)#, suppress_defaults=True)
     except:
         try:
             m.gmt.makecpt(
                     C='split',
-                    T='%f/%f' % (0.1, 180.),
+                    T='%f/%f' % (0.0, 180.),
                     out_filename=cptfile)#, suppress_defaults=True)
             logs.warning('Could not find gmt cptfile, using split instead.')
         except:
