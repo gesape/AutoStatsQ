@@ -37,7 +37,7 @@ def add_gain_median_mean(comp, method, gain_result_dir):
 
 
     try:
-        gain_stats = guts.load(filename='%s/gains_median_and_mean%s.txt' 
+        gain_stats = guts.load(filename='%s/gains_median_and_mean%s.yaml' 
                             % (gain_result_dir, comp))
     except FileNotFoundError:
         logger.info('ERROR - Gain stats file not found.')
