@@ -37,7 +37,7 @@ from .calc_ttt import *
 from .make_report import gen_report
 
 
-ver = '2025.04.09'
+ver = '2025.10.08'
 
 fdsn.g_timeout = 120.
 
