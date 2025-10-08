@@ -281,7 +281,7 @@ def add_gain_allevents_plot(comp, gain_result_dir):
         <h4>All gain test results per station.</h4>\n
         <p style="font-size:%s"> %s component</p>\n
         <div class="map touch-none">
-          <img style="width=auto;" src="%s" />\n
+          <img style="margin:0; margin-bottom:0.3em; margin-right:0.3em; height: 12em;" src="%s" />\n
         </div>
         </section>
         ''' % ('50%'.format(), comp, gain_plot)
