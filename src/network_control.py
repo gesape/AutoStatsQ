@@ -738,7 +738,7 @@ def main():
                                                format='%Y-%m-%d %H:%M:%S.OPTFRAC')
                     t_end = util.str_to_time(str(ev_t + dt_e),
                                              format='%Y-%m-%d %H:%M:%S.OPTFRAC')
-                    ev_t_str = ev_t_str.replace(' ', '_')
+                    ev_t_str = ev_t_str.replace(' ', '_').replace(':','-')
                     ev_dir = ev_t_str + '/'
                     dir_make = os.path.join(data_dir, ev_dir)
                     os.makedirs(dir_make, exist_ok=True)
@@ -896,8 +896,12 @@ def main():
                     # print(data_dir+ev_t_str)
                     if metaDataconf.local_waveforms_only is False:
                         p = pile.make_pile(paths=os.path.join(data_dir, ev_t_str), 
-                                           show_progress=False)
+                                               show_progress=False)
+                        if p.is_empty():
+                            p = pile.make_pile(paths=os.path.join(data_dir, ev_t_str.replace(':','-')), 
+                                               show_progress=False)
                     
+                    ev_t_str = ev_t_str.replace(':','-')
                     dir_make = os.path.join(data_dir, 'rest', ev_t_str)
                     os.makedirs(dir_make, exist_ok=True)
                     transf_taper = 1/min(RestDownconf.freqlim)
@@ -926,7 +930,8 @@ def main():
                                 local_data_dirs = metaDataconf.local_data
                                 for i_ldd, ldd in enumerate(local_data_dirs):
                                     path_str = os.path.join(ldd, year, st.network, st.station)
-                                    p = pile.make_pile(paths=path_str, regex='.%s' % jul_day, show_progress=False)
+                                    p = pile.make_pile(paths=path_str, regex='.%s' % jul_day, 
+                                        show_progress=False)
                                     trs.extend(p.all(tmin=tmin, tmax=tmax,
                                                      trace_selector=lambda tr: tr.nslc_id[:2] == nsl[:2]))
                             # trace.snuffle(trs)
@@ -1339,7 +1344,7 @@ def main():
                     logs.debug(' Event %s' % util.time_to_str(ev.time))
                     print('Event: %5d/%s' % (i_ev,nev), end='\r')
                     gc.collect()
-                    ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
+                    ev_t_str = util.time_to_str(ev.time).replace(' ', '_').replace(':','-')
                     os.makedirs(os.path.join(data_dir, 'rrd'), exist_ok=True)
                     dir_rot = os.path.join(data_dir, 'rrd', ev_t_str)
                     dir_rest = os.path.join(data_dir, 'rest', ev_t_str)
@@ -1395,7 +1400,7 @@ def main():
 
                 for i_ev, ev in enumerate(subset_catalog):
                     
-                    ev_t_str = util.time_to_str(ev.time).replace(' ', '_')
+                    ev_t_str = util.time_to_str(ev.time).replace(' ', '_').replace(':','-')
                     #logs.info(ev_t_str)
 
                     dir_syn_ev = os.path.join(data_dir, 'synthetics', ev_t_str)
@@ -1909,7 +1914,10 @@ def main():
                 p_obs = pile.make_pile(os.path.join(datapath, ev.name),
                                        show_progress=False)
                 if p_obs.is_empty():
-                    continue
+                    p_obs = pile.make_pile(os.path.join(datapath, ev.name.replace(':','-')),
+                                       show_progress=False)
+                    if p_obs.is_empty():
+                        continue
                 p_obs.snuffle(stations=all_stations, events=[ev],
                               launch_hook=load_snuffling)
             
