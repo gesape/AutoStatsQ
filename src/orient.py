@@ -6,16 +6,12 @@ import datetime
 from pyrocko import trace, pile
 from pyrocko import util
 from pyrocko.orthodrome import distance_accurate50m_numpy, azibazi
-import matplotlib as mpl 
+import matplotlib as mpl
 mpl.use('agg')
 from matplotlib import pyplot as plt
 from pyrocko.guts import Object, Dict, String, Float, List, Int, Tuple, load
 from pyrocko.plot.automap import Map
-import matplotlib.dates as mdates
 from pyrocko.gui import marker as pm
-
-import matplotlib as make_pile
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 class dict_stats_rota(Object):
@@ -271,8 +267,6 @@ def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
             mean_a = 90.
         elif sum_v[0] == 0 and sum_v[1] < 0:
             mean_a = 270.
-
-        # print('mean_a', mean_a)       
 
         # vector standard deviation
         # std_a = num.std([a for (a, v) in zip(angles, values) if v > ccmin])
