@@ -1743,6 +1743,7 @@ def main():
                                             orientconf.ccmin,
                                             orientconf.plot_heatmap,
                                             orientconf.plot_distr,
+                                            orientconf.orient_rayl,
                                             orientconf.debug_mode)
 
                     if out:
@@ -1758,8 +1759,73 @@ def main():
                                 list_switched,
                                 n_ev, used_stats, dir_ro, orientconf.ccmin)
 
-            orient.write_all_output_csv(list_all_angles, used_stats, dir_ro)
+            orient.write_all_output_csv(list_all_angles, used_stats, dir_ro, orientconf.ccmin)
             logs.info(' Saved output of orient test in directory %s.' % dir_ro)
+
+        else:
+            if orientconf.plot_heatmap or orientconf.plot_distr:
+
+
+                # Set Logger name and verbosity
+                logs = logging.getLogger('Orientation')
+                logs.setLevel(verbo)
+
+                logs.info('Starting Rayleigh wave orientation section - only re-analysing correlations.')
+
+                dir_ro = os.path.join(data_dir, 'results', 'orient')
+                list_median_a = []
+                list_mean_a = []
+                list_stdd_a = []
+                list_switched = []
+                used_stats = []
+                list_all_angles = []
+                n_ev = []
+                nst = len(all_stations)
+
+                dir_ro = os.path.join(data_dir, 'results', 'orient')
+                datapath = os.path.join(data_dir, 'rrd')
+
+                st_numbers = [i_st for i_st in range(nst)]
+                for i_st, st in zip(st_numbers, all_stations):
+                    st_data_pile = pile.make_pile(datapath,
+                                                  regex='%s_%s_' % (st.network, st.station),
+                                                  show_progress=False)
+
+                    locs = list(set(list(st_data_pile.locations.keys())))
+
+                    for loc in locs:
+                        out = orient.prep_orient(
+                                                datapath,
+                                                st, i_st, nst, loc,
+                                                subsets_events['shallow'],
+                                                dir_ro,
+                                                arrTconf.v_rayleigh,
+                                                orientconf.bandpass,
+                                                orientconf.start_before_ev,
+                                                orientconf.stop_after_ev,
+                                                orientconf.ccmin,
+                                                orientconf.plot_heatmap,
+                                                orientconf.plot_distr,
+                                                orientconf.orient_rayl,
+                                                False)
+
+                        if out:
+                            list_median_a.append(out[0])
+                            list_mean_a.append(out[1])
+                            list_stdd_a.append(out[2])
+                            list_switched.append(out[3])
+                            list_all_angles.append(out[4])
+                            n_ev.append(out[5])
+                            used_stats.append((st.network, st.station, loc))
+
+                orient.write_output(list_median_a, list_mean_a, list_stdd_a,
+                                    list_switched,
+                                    n_ev, used_stats, dir_ro, orientconf.ccmin)
+
+                orient.write_all_output_csv(list_all_angles, used_stats, dir_ro, orientconf.ccmin)
+                logs.info(' Saved output of orient test in directory %s.' % dir_ro)
+
+
 
         if orientconf.plot_orient_map_fromfile is True:
             logs = logging.getLogger('Orientation')
@@ -1786,7 +1852,7 @@ def main():
 
             if not skip_plot:
                 orient.plot_corr_angles(ns, st_lats, st_lons,
-                                        'CorrectionAngles.yaml', dir_ro,
+                                        'CorrectionAngles_cc%s.yaml' % orientconf.ccmin, dir_ro,
                                         pl_opt, maps.pl_topo,
                                         maps.map_size, maps.outformat,
                                         orientconf.orient_map_label)
@@ -1797,14 +1863,14 @@ def main():
             logs.setLevel(verbo)
             logs.info(' Plotting output of orient test: Correction angles vs. events.')
             dir_ro = os.path.join(data_dir, 'results', 'orient')
-            orient.plot_corr_time(ns, 'AllCorrectionAngles.yaml', dir_ro)
+            orient.plot_corr_time(ns, 'AllCorrectionAngles_cc%s.yaml' % orientconf.ccmin, dir_ro, orientconf.ccmin)
             logs.info(' Saved plot in directory %s.' % dir_ro)
 
         if orientconf.plot_angles_vs_baz is True:
             dir_ro = os.path.join(data_dir, 'results', 'orient')
-            orient.plot_corr_baz(ns, 'AllCorrectionAngles.yaml', 
-                                 'CorrectionAngles.yaml', dir_ro, 
-                                 subsets_events['shallow'], all_stations)
+            orient.plot_corr_baz(ns, 'AllCorrectionAngles_cc%s.yaml'  % orientconf.ccmin, 
+                                 'CorrectionAngles_cc%s.yaml' % orientconf.ccmin, dir_ro, 
+                                 subsets_events['shallow'], all_stations, orientconf.ccmin)
 
 
         if timingconf.timing_test is True:

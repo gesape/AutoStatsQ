@@ -46,7 +46,7 @@ class Polarity_switch(Object):
     switched_by_stat = List.T(Event_sw.T())
 
 
-def plot_corr_time(nsl, filename, dir_ro):
+def plot_corr_time(nsl, filename, dir_ro, ccmin):
     """
     Plot angle of max. cr-corr vs event time for each station.
     Results below cr-corr threshold are ignored.
@@ -94,11 +94,11 @@ def plot_corr_time(nsl, filename, dir_ro):
             plt.tight_layout(rect=[0,0,0.8,1])
             # plt.show()
             
-            fig.savefig(os.path.join(dir_ro, '%s_%s_overtime.png' % (st[0], st[1])))
+            fig.savefig(os.path.join(dir_ro, '%s_%s_overtime_%s.png' % (st[0], st[1], ccmin)))
             plt.close(fig)
 
 
-def plot_corr_baz(nsl, filename_all, filename_stats, dir_ro, events, stations):
+def plot_corr_baz(nsl, filename_all, filename_stats, dir_ro, events, stations, ccmin):
     """
     Plot angle of max. cr-corr vs event baz for each station.
     """
@@ -167,7 +167,7 @@ def plot_corr_baz(nsl, filename_all, filename_stats, dir_ro, events, stations):
             #fig.colorbar(times, ax=ax)
             cbar = fig.colorbar(im, ax=ax, ticks=ticks)
             cbar.ax.set_yticklabels(ticklabels, fontsize=8)
-            fig.savefig(os.path.join(dir_ro, '%s_%s_baz.png' % (st[0], st[1])))
+            fig.savefig(os.path.join(dir_ro, '%s_%s_baz_%s.png' % (st[0], st[1],ccmin)))
             plt.close(fig)
         #sys.exit()         
 
@@ -200,10 +200,10 @@ def write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
 
         dicts_rota.regularize()
         dicts_rota.validate()
-        dicts_rota.dump(filename=os.path.join(dir_ro, 'CorrectionAngles.yaml'))
+        dicts_rota.dump(filename=os.path.join(dir_ro, 'CorrectionAngles_cc%s.yaml' % ccmin))
 
 
-def write_all_output_csv(list_all_angles, used_stats, dir_ro):
+def write_all_output_csv(list_all_angles, used_stats, dir_ro, ccmin):
     list_rrr = []
 
     for st, ev_dict in zip(used_stats, list_all_angles):
@@ -213,7 +213,7 @@ def write_all_output_csv(list_all_angles, used_stats, dir_ro):
 
     dict_save_rot_st_ev = dict_stats_all_rota(dict_stats_all=list_rrr)
 
-    dict_save_rot_st_ev.dump(filename=os.path.join(dir_ro, 'AllCorrectionAngles.yaml'))
+    dict_save_rot_st_ev.dump(filename=os.path.join(dir_ro, 'AllCorrectionAngles_cc%s.yaml' % ccmin))
 
 
 def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
@@ -373,7 +373,7 @@ def max_or_min(c):
         return tma, ma
 
 
-def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_ro):
+def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_ro, ccmin):
     """
     Plots max. cc-coef vs. rotation angle for each event in subplots.
     rather for debugging than for including into normal testing workflow!
@@ -401,6 +401,10 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
         i_x = int(i_row/ncols)
         i_y = int(i_row % ncols)
         ev_time_str = util.time_to_str(ev.time)[0:10]
+        if num.max(row) >= ccmin:
+            lcol = 'k'
+        else:
+            lcol = 'gray'
 
         if nrows != 1:
             ax[i_x, i_y].set_title(ev_time_str, fontsize=10)
@@ -408,7 +412,7 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
                 ax[i_x, i_y].set_xlabel('Correction angle [deg]', fontsize=8)
             if i_y == 0:
                 ax[i_x, i_y].set_ylabel('C-c coef.', fontsize=8)
-            ax[i_x, i_y].plot(rot_angles, row, 'k')
+            ax[i_x, i_y].plot(rot_angles, row, c=lcol)
             ax[i_x, i_y].set_xlim(x_lim)
             ax[i_x, i_y].set_ylim(y_lim)
             ax[i_x, i_y].set_xticks([-180, 0, 180])
@@ -420,7 +424,7 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
                 ax[i_y].set_xlabel('Correction angle [deg]', fontsize=8)
             if i_y == 0:
                 ax[i_y].set_ylabel('C-c coef.', fontsize=8)
-            ax[i_y].plot(rot_angles, row, 'k')
+            ax[i_y].plot(rot_angles, row, c=lcol)
             ax[i_y].set_xlim(x_lim)
             ax[i_y].set_ylim(y_lim)
             ax[i_y].set_xticks([-180, 0, 180])
@@ -430,7 +434,7 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
             ax.set_title(ev_time_str, fontsize=10)
             ax.set_xlabel('Correction angle [deg]', fontsize=8)
             ax.set_ylabel('C-c coef.', fontsize=8)
-            ax.plot(rot_angles, row, 'k')
+            ax.plot(rot_angles, row, c=lcol)
             ax.set_xlim(x_lim)
             ax.set_ylim(y_lim)
             ax.set_xticks([-180, 0, 180])
@@ -452,13 +456,13 @@ def plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog, rot_angles, st, loc, dir_r
                 ax[i_x].axis('off')
     plt.tight_layout()
     # plt.show()
-    fig.savefig(os.path.join(dir_ro, '%s_%s_%s_distr.png' % (st.network, st.station, loc)))
+    fig.savefig(os.path.join(dir_ro, '%s_%s_%s_distr_%s.png' % (st.network, st.station, loc, ccmin)))
     plt.close(fig)
 
 
 def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
                 bp, dt_start, dt_stop, ccmin=0.80,
-                plot_heatmap=False,  plot_distr=False,
+                plot_heatmap=False,  plot_distr=False, comp_ccs=True,
                 debug=False):
     """
     Perform orientation analysis using Rayleigh waves, main function.
@@ -478,104 +482,113 @@ def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
     """
     logs = logging.getLogger('prep_orient')
     #logs.setLevel('DEBUG')
-    st_data_pile = pile.make_pile(datapath, regex='%s_%s_' % (st.network, st.station),
-                                  show_progress=False)
+
     n_ev = len(catalog)
+    rot_angles = range(-180, 180, 1)
 
-    if st_data_pile.tmin is not None and st_data_pile.tmax is not None:
+    cc_i_ev_vs_rota = num.empty((n_ev, 360))
 
-        # calculate dist between all events and current station
-        r_arr_by_ev = num.empty(n_ev)
-        ev_lats = num.asarray([ev.lat for ev in catalog])
-        ev_lons = num.asarray([ev.lon for ev in catalog])
-        dists = distance_accurate50m_numpy(a_lats=ev_lats, a_lons=ev_lons,
-                                           b_lats=st.lat, b_lons=st.lon,
-                                           implementation='c')
-        r_arr_by_ev = (dists/1000.) / v_rayleigh
-        cc_i_ev_vs_rota = num.empty((n_ev, 360))
-        rot_angles = range(-180, 180, 1)
-        for i_ev, ev in enumerate(catalog):
-            arrT = ev.time + r_arr_by_ev[i_ev]
+    if comp_ccs:
+        st_data_pile = pile.make_pile(datapath, regex='%s_%s_' % (st.network, st.station),
+                                      show_progress=False)
 
-            start_twd1 = ev.time
-            end_twd1 = arrT + 1800
+        if st_data_pile.tmin is not None and st_data_pile.tmax is not None:
 
-            try:
-                trZ = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'Z')
-                trR = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'R')
-                trT = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'T')
-            except:
-                cc_i_ev_vs_rota[i_ev, :] = num.nan
-                continue
+            # calculate dist between all events and current station
+            r_arr_by_ev = num.empty(n_ev)
+            ev_lats = num.asarray([ev.lat for ev in catalog])
+            ev_lons = num.asarray([ev.lon for ev in catalog])
+            dists = distance_accurate50m_numpy(a_lats=ev_lats, a_lons=ev_lons,
+                                               b_lats=st.lat, b_lons=st.lon,
+                                               implementation='c')
+            r_arr_by_ev = (dists/1000.) / v_rayleigh
 
-            start_twd2 = ev.time + r_arr_by_ev[i_ev] - dt_start
-            end_twd2 = arrT + dt_stop
 
-            if len(trZ) == 1 and len(trR) == 1 and len(trT) == 1:
-                trZ = trZ[0]
-                trR = trR[0]
-                trT = trT[0]
-                # debugging - window selection:
-                if debug is True:
-                    trace.snuffle([trZ,trR,trT], markers=
-                        [pm.Marker(nslc_ids=[trZ.nslc_id, trR.nslc_id, trT.nslc_id],
-                                   tmin=start_twd2, tmax=end_twd2),
-                         pm.Marker(nslc_ids=[trZ.nslc_id, trR.nslc_id, trT.nslc_id],
-                                   tmin=arrT, tmax=arrT+3)])
+            for i_ev, ev in enumerate(catalog):
+                arrT = ev.time + r_arr_by_ev[i_ev]
+                start_twd1 = ev.time
+                end_twd1 = arrT + 1800
 
-            else:
-                cc_i_ev_vs_rota[i_ev, :] = num.nan
-                continue
-
-            try:
-                trZ.bandpass(bp[0], bp[1], bp[2])
-                trZ.chop(tmin=start_twd2, tmax=end_twd2)
-            except trace.NoData:
-                logs.warning('no data %s %s %s' % (trZ, trR, trT))
-                continue
-
-            for i_r, r in enumerate(rot_angles):
-                print('Station: %5d/%s, Event: %5d/%s, rotation angle [deg]: %5d' 
-                       % (i_st, nst, i_ev, n_ev, r), end='\r')
                 try:
-                    rot_2, rot_3 = trace.rotate(traces=[trR, trT], azimuth=r,
-                                            in_channels=['R', 'T'],
-                                            out_channels=['2', '3'])
-                except ValueError:
-                    logs.warning('Rotation failed, %s.%s, %s' % (st.network, st.station, r))
-                    cc_i_ev_vs_rota[i_ev, i_r] = num.nan
+                    trZ = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'Z')
+                    trR = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'R')
+                    trT = get_tr_by_cha(st_data_pile, start_twd1, end_twd1, loc, 'T')
+                except:
+                    cc_i_ev_vs_rota[i_ev, :] = num.nan
                     continue
 
-                rot_2_y = rot_2.ydata
-                rot_2_hilb = num.imag(trace.hilbert(rot_2_y, len(rot_2_y)))
-                rot_2_hilb_tr = trace.Trace(deltat=rot_2.deltat,
-                                            ydata=rot_2_hilb,
-                                            tmin=rot_2.tmin)
-                # problem: rot_2 and rot_2_hilb look exactly the same!
-                # --> no phase shift. why? should be num.imag!!!
-                # trace.snuffle([rot_2, rot_2_hilb_tr])
-                rot_2_hilb_tr.bandpass(bp[0], bp[1], bp[2])
-                rot_2_hilb_tr.chop(tmin=start_twd2, tmax=end_twd2)
+                start_twd2 = ev.time + r_arr_by_ev[i_ev] - dt_start
+                end_twd2 = arrT + dt_stop
 
-                # if st.station == 'RORO' and r == 0:
-                #     trace.snuffle([rot_2_hilb_tr, trZ])
-                # normalize traces
-                trZ.ydata /= abs(max(trZ.ydata))
-                rot_2_hilb_tr.ydata /= abs(max(rot_2_hilb_tr.ydata))
+                if len(trZ) == 1 and len(trR) == 1 and len(trT) == 1:
+                    trZ = trZ[0]
+                    trR = trR[0]
+                    trT = trT[0]
+                    # debugging - window selection:
+                    if debug is True:
+                        trace.snuffle([trZ,trR,trT], markers=
+                            [pm.Marker(nslc_ids=[trZ.nslc_id, trR.nslc_id, trT.nslc_id],
+                                       tmin=start_twd2, tmax=end_twd2),
+                             pm.Marker(nslc_ids=[trZ.nslc_id, trR.nslc_id, trT.nslc_id],
+                                       tmin=arrT, tmax=arrT+3)])
 
-                c = trace.correlate(trZ, rot_2_hilb_tr,
-                                    mode='valid',
-                                    normalization='normal')
+                else:
+                    cc_i_ev_vs_rota[i_ev, :] = num.nan
+                    continue
 
-                t, coef = c.max()
-                t2, coef2 = max_or_min(c)
-                '''
-                if st.station == 'MATE' and r == 0:
-                    print(i_ev, ev.name, ev.depth)
-                    print(r, t, coef, t2, coef2)
-                    trace.snuffle([trZ, trR, rot_2_hilb_tr])
-                '''
-                cc_i_ev_vs_rota[i_ev, i_r] = coef
+                try:
+                    trZ.bandpass(bp[0], bp[1], bp[2])
+                    trZ.chop(tmin=start_twd2, tmax=end_twd2)
+                except trace.NoData:
+                    logs.warning('no data %s %s %s' % (trZ, trR, trT))
+                    continue
+
+                for i_r, r in enumerate(rot_angles):
+                    print('Station: %5d/%s, Event: %5d/%s, rotation angle [deg]: %5d' 
+                           % (i_st, nst, i_ev, n_ev, r), end='\r')
+                    try:
+                        rot_2, rot_3 = trace.rotate(traces=[trR, trT], azimuth=r,
+                                                in_channels=['R', 'T'],
+                                                out_channels=['2', '3'])
+                    except ValueError:
+                        logs.warning('Rotation failed, %s.%s, %s' % (st.network, st.station, r))
+                        cc_i_ev_vs_rota[i_ev, i_r] = num.nan
+                        continue
+
+                    rot_2_y = rot_2.ydata
+                    rot_2_hilb = num.imag(trace.hilbert(rot_2_y, len(rot_2_y)))
+                    rot_2_hilb_tr = trace.Trace(deltat=rot_2.deltat,
+                                                ydata=rot_2_hilb,
+                                                tmin=rot_2.tmin)
+                    # problem: rot_2 and rot_2_hilb look exactly the same!
+                    # --> no phase shift. why? should be num.imag!!!
+                    # trace.snuffle([rot_2, rot_2_hilb_tr])
+                    rot_2_hilb_tr.bandpass(bp[0], bp[1], bp[2])
+                    rot_2_hilb_tr.chop(tmin=start_twd2, tmax=end_twd2)
+
+                    # if st.station == 'RORO' and r == 0:
+                    #     trace.snuffle([rot_2_hilb_tr, trZ])
+                    # normalize traces
+                    trZ.ydata /= abs(max(trZ.ydata))
+                    rot_2_hilb_tr.ydata /= abs(max(rot_2_hilb_tr.ydata))
+
+                    c = trace.correlate(trZ, rot_2_hilb_tr,
+                                        mode='valid',
+                                        normalization='normal')
+
+                    t, coef = c.max()
+                    t2, coef2 = max_or_min(c)
+                    '''
+                    if st.station == 'MATE' and r == 0:
+                        print(i_ev, ev.name, ev.depth)
+                        print(r, t, coef, t2, coef2)
+                        trace.snuffle([trZ, trR, rot_2_hilb_tr])
+                    '''
+                    cc_i_ev_vs_rota[i_ev, i_r] = coef
+
+        num.save(file=os.path.join(dir_ro,'cc_array_sta_%s.npy' % st.station), arr=cc_i_ev_vs_rota)
+
+
         '''
         if st.station == 'MATE':
             for i_ev in range(n_ev):
@@ -583,37 +596,43 @@ def prep_orient(datapath, st, i_st, nst, loc, catalog, dir_ro, v_rayleigh,
                       num.max(cc_i_ev_vs_rota[i_ev,:]))
         '''
 
-        if plot_heatmap is True:
-            logs.debug('Plotting heatmap for station %s.%s' % (st.network, st.station))
-            fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 2))
+    if comp_ccs is False:
+        #try:
+        cc_i_ev_vs_rota = num.load(os.path.join(dir_ro,'cc_array_sta_%s.npy' % st.station))
+        #except:
+        #    return
+    
+    if plot_heatmap is True:
+        logs.debug('Plotting heatmap for station %s.%s' % (st.network, st.station))
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 2))
 
-            cax = ax.imshow(cc_i_ev_vs_rota, interpolation='nearest',
-                            vmin=-1.0, vmax=1.0,
-                            aspect='auto', extent=[-180, 180, n_ev, 0],
-                            cmap='binary')
-            ax.set_ylabel('i_ev')
-            ax.set_xlabel('Correction angle (deg)')
-            ax.set_title('%s %s' % (st.network, st.station))
-            cbar = fig.colorbar(cax, ticks=[0, 0.5, 1.0],
-                                orientation='horizontal',
-                                fraction=0.05, pad=0.5)
-            cbar.ax.set_xticklabels(['0', '0.5', '1.0'])
-            plt.tight_layout()
-            # plt.show(fig)
-            fig.savefig(os.path.join(dir_ro, '%s_%s_%s_rot_cc_heatmap.png' % (st.network, st.station, loc)))
-            plt.close()
+        cax = ax.imshow(cc_i_ev_vs_rota, interpolation='nearest',
+                        vmin=-1.0, vmax=1.0,
+                        aspect='auto', extent=[-180, 180, n_ev, 0],
+                        cmap='binary')
+        ax.set_ylabel('i_ev')
+        ax.set_xlabel('Correction angle (deg)')
+        ax.set_title('%s %s' % (st.network, st.station))
+        cbar = fig.colorbar(cax, ticks=[0, 0.5, 1.0],
+                            orientation='horizontal',
+                            fraction=0.05, pad=0.5)
+        cbar.ax.set_xticklabels(['0', '0.5', '1.0'])
+        plt.tight_layout()
+        # plt.show(fig)
+        fig.savefig(os.path.join(dir_ro, '%s_%s_%s_rot_cc_heatmap_%s.png' % (st.network, st.station, loc, ccmin)))
+        plt.close()
 
-        if plot_distr is True:
-            logs.debug('Plotting distributions for station %s.%s' % (st.network, st.station))
-            plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog,
-                                    rot_angles, st, loc, dir_ro)
+    if plot_distr is True:
+        logs.debug('Plotting distributions for station %s.%s' % (st.network, st.station))
+        plot_ccdistr_each_event(cc_i_ev_vs_rota, catalog,
+                                rot_angles, st, loc, dir_ro, ccmin)
 
-        median_a, mean_a, std_a, switched, n_ev =\
-            get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin)
+    median_a, mean_a, std_a, switched, n_ev =\
+        get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin)
 
-        dict_ev_angle = get_m_angle_all(cc_i_ev_vs_rota, catalog, st, ccmin)
+    dict_ev_angle = get_m_angle_all(cc_i_ev_vs_rota, catalog, st, ccmin)
 
-        return median_a, mean_a, std_a, switched, dict_ev_angle, n_ev
+    return median_a, mean_a, std_a, switched, dict_ev_angle, n_ev
 
 
 def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
