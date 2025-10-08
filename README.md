@@ -1,17 +1,19 @@
 # AutoStatsQ
 
-### Attention! Default branch is main, not master!
+#### Attention! Default branch is main, not master!
 
 Toolbox for automated station quality control for MT inversion.
-Please contact me for more information, help or when something does not behave as expected ;-) : gesap@gfz-potsdam.de
+Please contact me for help or if you find bugs :-) : gesap@gfz.de
 
-- Catalog search for teleseismic events with uniform azimuthal coverage around array
-- Download of data & metadata for these events + computation of synthetic data
-- Relative gain factors in time domain (relative to reference station or to synthetic data)
-- Rayleigh wave polarization analysis for detection of sensor misorientations
-- Comparison of obs. and synth. PSDs; determining frequency ranges suitable for MT inversion
-- Test for large timing errors
-- Second independent and interactive test for exact and reliable amplitude corrections based on phase picking in snuffler and correlating waveforms
+Work steps covered by AutoStatsQ:
+
+- Catalog search for teleseismic events with uniform azimuthal coverage around seismic network.
+- Download of data & metadata for these events + (optional) computation of synthetic data.
+- Relative gain factors in time domain (relative to reference station or to synthetic data).
+- Rayleigh wave polarization analysis for detection of sensor misorientations.
+- Comparison of obs. and synth. PSDs; determining frequency ranges suitable for MT inversion.
+- Test for larger timing errors.
+- Second independent and interactive test for exact and reliable amplitude corrections based on phase picking in snuffler and correlating waveforms (experimental).
 
 
 Citation:
@@ -21,20 +23,19 @@ Petersen, G. M., Cesca, S., Kriegerowski, M. (2019): Automated Quality Control f
 
 Latest changes
 -------------
-- # Please have a look at the updated installation instructions. The module reveal is now linked, not copied, therefore a fresh installation may be needed instead of updating...
+- Please have a look at the updated installation instructions. A fresh installation may be needed instead of updating.
+- 2025-10-08: Improved color scale handling for gain maps. Renamed all mseed data to avoid colons in file names.
 - Improved timing test (26.01.2024): More flexible selection of time windows; choppingof traces after bandpass filtering; improved plots; save single results for all stations and events. See also example config file and section on timing test below.
-- updated AutoStatsQ to work with recent matplotlib, gmt, pyrocko versions (27.10.2023)
 - 2 new tutorials with step-by-step instructions in the ```example``` directory; including all input to get started. Example (I) - testing data and metadata downloaded from an fdsn server; Example (II) - testing locally stored data (including a synthetic test dataset).
 - Result presentation as a html report! After running AutoStatsQ, a html report file can be generated using ```--report```. The report is based on reveal (Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors).
-- Improved config file checks, feedback and error logging.
 
 
 
 Requirements
 ------------
 
-- Seismology toolbox pyrocko: https://pyrocko.org/ (Heimann et al. 2017) (and all requirements needed for pyrocko)
-- To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto`. For instance, `fomosto download kinherd global_2s` from the pyrocko environment. https://greens-mill.pyrocko.org/
+- Seismology toolbox pyrocko: https://pyrocko.org/ (Heimann et al. 2017) (and all requirements needed for pyrocko).
+- To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto`. For instance, `fomosto download kinherd global_2s_v2` from the pyrocko environment. https://greens-mill.pyrocko.org/
 - [Grond](https://pyrocko.org/grond/docs/current/)
 
 
@@ -405,7 +406,7 @@ Settings:
 Station list:
 -------------
 
-Lists of stations as input can be in pyrocko station format, as fdsn station-xml or as comma-spread-file with columns: network code, station code, latitude (float), longitude(float), station elevation [km], station depth [km]. Please use the file extensions 
+Lists of stations as input can be in pyrocko station format, as fdsn station-xml or as comma-spread-file with columns: network code, station code, latitude (float), longitude(float), station elevation [km], station depth [km]. Please use the according file extensions (csv, yaml/pf or xml). 
 
 Step-by-step instructions:
 --------------------------
