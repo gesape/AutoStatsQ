@@ -377,8 +377,8 @@ def main():
                 bazi_mp_array = num.empty((len(ev_cat)))
 
                 for i_ev, ev in enumerate(ev_cat):
-                    dist_array[i_ev, :] = [float(orthodrome.distance_accurate50m_numpy(
-                                          ev.lat, ev.lon, lat, lon))
+                    dist_array[i_ev, :] = [orthodrome.distance_accurate50m_numpy(
+                                          ev.lat, ev.lon, lat, lon)[0]
                                           for (lat, lon) in zip(st_lats, st_lons)]
 
                     bazi_array[i_ev, :] = [orthodrome.azibazi(ev.lat, ev.lon, lat, lon)[1]
@@ -438,7 +438,7 @@ def main():
                                      (bin_nr+1)*catalogconf.wedges_width))
 
                     if len(bin_ev_ind) == 1:
-                        subset_catalog.append(ev_cat[int(bin_ev_ind[0])])
+                        subset_catalog.append(ev_cat[bin_ev_ind[0][0]])
 
                     if len(bin_ev_ind) > 1:
                         # choose event
@@ -552,8 +552,8 @@ def main():
                 bazi_mp_array_subset = num.empty((len(subset_catalog)))
 
                 for i_ev, ev in enumerate(subset_catalog):
-                    dist_array_subset[i_ev, :] = [float(orthodrome.distance_accurate50m_numpy(
-                                          ev.lat, ev.lon, lat, lon))
+                    dist_array_subset[i_ev, :] = [orthodrome.distance_accurate50m_numpy(
+                                          ev.lat, ev.lon, lat, lon)
                                           for (lat, lon) in zip(st_lats, st_lons)]
 
                     bazi_array_subset[i_ev, :] = [orthodrome.azibazi(ev.lat, ev.lon, lat, lon)[1]
@@ -624,8 +624,8 @@ def main():
                 dist_array_sub = num.empty((len(subset_catalog), len(ns)))
 
                 for i_ev, ev in enumerate(subset_catalog):
-                    dist_array_sub[i_ev, :] = [float(orthodrome.distance_accurate50m_numpy(
-                                          ev.lat, ev.lon, lat, lon))
+                    dist_array_sub[i_ev, :] = [orthodrome.distance_accurate50m_numpy(
+                                          ev.lat, ev.lon, lat, lon)[0]
                                           for (lat, lon) in zip(st_lats, st_lons)]
 
                 arrT_array = num.empty((dist_array_sub.shape))
@@ -661,8 +661,8 @@ def main():
 
                 for i_ev, ev in enumerate(subset_catalog):
                     print('Event: %5d/%s' % (i_ev,nev), end='\r')
-                    dist_array_sub[i_ev, :] = [float(orthodrome.distance_accurate50m_numpy(
-                                          ev.lat, ev.lon, lat, lon))
+                    dist_array_sub[i_ev, :] = [orthodrome.distance_accurate50m_numpy(
+                                          ev.lat, ev.lon, lat, lon)[0]
                                           for (lat, lon) in zip(st_lats, st_lons)]
 
                 arrT_R_array = num.empty((dist_array_sub.shape))
