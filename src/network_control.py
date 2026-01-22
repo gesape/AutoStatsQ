@@ -1139,7 +1139,6 @@ def main():
                 io.save(tr, rot_fn)
 
             def downsample_rotate(dir_rest, dir_rot, all_stations, st_xml, deltat_down):
-
                 ev_data_pile = pile.make_pile(dir_rest, regex='rest2',
                                               show_progress=False)
                 for st in all_stations:
@@ -1261,12 +1260,19 @@ def main():
                                         if tr.channel.endswith('Z')\
                                            or tr.channel.endswith('3') and naming == '1,2,3':
                                             trZ = tr.copy()
+                                            dip1 = ch.dip
 
                                             try:
                                                 trZ.chop(trmin, trmax)
+                                                if dip1 not in [-90,90]:
+                                                    logs.error('Vertical channel is not vertical: %s. %s' % (nsl_string, str(dip1)))
+                                                if dip1 == 90:
+                                                    trZ.set_ydata(trZ.ydata*-1)
+
                                                 if deltat_down > 0.0:
                                                     trZ.downsample_to(deltat=deltat_down,allow_upsample_max=3)
                                                 trZ.set_channel('Z')
+
                                                 save_rot_down_tr(trZ, dir_rot, ev_t_str)
 
                                             except trace.NoData:
