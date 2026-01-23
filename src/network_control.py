@@ -552,12 +552,12 @@ def main():
                 bazi_mp_array_subset = num.empty((len(subset_catalog)))
 
                 for i_ev, ev in enumerate(subset_catalog):
-                    dist_array_subset[i_ev, :] = [orthodrome.distance_accurate50m_numpy(
+                    dist_array_subset[i_ev] = num.asarray([orthodrome.distance_accurate50m_numpy(
                                           ev.lat, ev.lon, lat, lon)
-                                          for (lat, lon) in zip(st_lats, st_lons)]
+                                          for (lat, lon) in zip(st_lats, st_lons)]).flatten()
 
-                    bazi_array_subset[i_ev, :] = [orthodrome.azibazi(ev.lat, ev.lon, lat, lon)[1]
-                                           for (lat, lon) in zip(st_lats, st_lons)]
+                    bazi_array_subset[i_ev] = num.asarray([orthodrome.azibazi(ev.lat, ev.lon, lat, lon)[1]
+                                           for (lat, lon) in zip(st_lats, st_lons)])
 
                     bazi_mp_array_subset[i_ev] = orthodrome.azibazi(ev.lat, ev.lon,
                                                              mid_point[0],
