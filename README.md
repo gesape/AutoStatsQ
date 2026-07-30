@@ -13,7 +13,7 @@ Work steps covered by AutoStatsQ:
 - Rayleigh wave polarization analysis for detection of sensor misorientations.
 - Comparison of obs. and synth. PSDs; determining frequency ranges suitable for MT inversion.
 - Test for larger timing errors.
-- Second independent and interactive test for exact and reliable amplitude corrections based on phase picking in snuffler and correlating waveforms (experimental).
+- Second independent, interactive test for amplitude corrections based on P-phase picking in snuffler and correlating waveforms (experimental).
 
 
 Citation:
@@ -21,22 +21,23 @@ Citation:
 
 Petersen, G. M., Cesca, S., Kriegerowski, M. (2019): Automated Quality Control for Large Seismic Networks: Implementation and Application to the AlpArray Seismic Network. - Seismological Research Letters. 90 (3): 1177–1190. DOI: http://doi.org/10.1785/0220180342
 
+
 Latest changes
 -------------
 - Please have a look at the updated installation instructions. A fresh installation may be needed instead of updating.
-- 2025-10-08: Improved color scale handling for gain maps. Renamed all mseed data to avoid colons in file names. Added possibility to change cross-correlation threshold for orient test without re-calculating correlations.
-- Improved timing test (26.01.2024): More flexible selection of time windows; choppingof traces after bandpass filtering; improved plots; save single results for all stations and events. See also example config file and section on timing test below.
-- 2 new tutorials with step-by-step instructions in the ```example``` directory; including all input to get started. Example (I) - testing data and metadata downloaded from an fdsn server; Example (II) - testing locally stored data (including a synthetic test dataset).
-- Result presentation as a html report! After running AutoStatsQ, a html report file can be generated using ```--report```. The report is based on reveal (Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors).
+- 2 new **tutorials** with step-by-step instructions in the ```example``` directory; including all input to get started. Example (I) - testing data and metadata downloaded from an fdsn server; Example (II) - testing locally stored data (including a synthetic test dataset).
+- Result presentation as a **html report**! After running AutoStatsQ, a html report file can be generated using ```--report```. The report is based on reveal (Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors).
+- 2025-10-08: Renamed all mseed data to avoid colons in file names. Added possibility to change cross-correlation threshold for orient test without re-calculating correlations.
 
 
 
 Requirements
 ------------
 
-- Seismology toolbox pyrocko: https://pyrocko.org/ (Heimann et al. 2017) (and all requirements needed for pyrocko).
+- Seismology toolbox **pyrocko**: https://pyrocko.org/ (Heimann et al. 2017) (and all requirements needed for pyrocko).
 - To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto`. For instance, `fomosto download kinherd global_2s_v2` from the pyrocko environment. https://greens-mill.pyrocko.org/
 - [Grond](https://pyrocko.org/grond/docs/current/)
+- Last tested on 30/07/2026 in virtual python environment; installation instructions below ( numpy 2.0.0, scipy 1.18.0, matplotlib 3.11.1)
 
 
 
@@ -95,10 +96,6 @@ git clone https://github.com/gesape/AutoStatsQ
 cd AutoStatsQ
 git submodule update --init --recursive  # to clone reveal for report
 ```
-Open setup.py in a text editor (e.g., vim). Modify install_requires=[] to install_requires=['numpy<2']
-```
-vim setup.py
-```  
 
 Activate venv before installation!
 ```
@@ -304,7 +301,7 @@ Settings:
   # needed for PSD-test only, can otherwise be left out
   make_syn_data: false
   engine_path: /path/to/GF_stores
-  store_id: global_2s
+  store_id: global_2s_v2
 
 - !autostatsq.config.GainfactorsConfig
   # settings for first test
@@ -413,7 +410,7 @@ Lists of stations as input can be in pyrocko station format, as fdsn station-xml
 Step-by-step instructions:
 --------------------------
 
-Please refer to the examples in the example dir for very detailed step-by-step instructions.
+Please refer to the examples in the example directory for very detailed step-by-step instructions.
 
 - make a working directory
 - prepare station list for input
