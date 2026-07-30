@@ -1776,8 +1776,11 @@ def main():
                                 list_switched,
                                 n_ev, used_stats, dir_ro, orientconf.ccmin)
 
-            orient.write_all_output_csv(list_all_angles, used_stats, dir_ro, orientconf.ccmin)
+            orient.write_all_output_yaml(list_all_angles, used_stats, dir_ro, orientconf.ccmin)
             logs.info(' Saved output of orient test in directory %s.' % dir_ro)
+
+
+
 
         else:
             if orientconf.plot_heatmap or orientconf.plot_distr:
@@ -1839,7 +1842,7 @@ def main():
                                     list_switched,
                                     n_ev, used_stats, dir_ro, orientconf.ccmin)
 
-                orient.write_all_output_csv(list_all_angles, used_stats, dir_ro, orientconf.ccmin)
+                orient.write_all_output_yaml(list_all_angles, used_stats, dir_ro, orientconf.ccmin)
                 logs.info(' Saved output of orient test in directory %s.' % dir_ro)
 
 
@@ -1890,6 +1893,13 @@ def main():
                                  'CorrectionAngles_cc%s.yaml' % orientconf.ccmin, dir_ro, 
                                  subsets_events['shallow'], all_stations, orientconf.ccmin)
 
+        if orientconf.ev_median_centering:
+            # what about plotting with these...? needs to be implemented/moved
+            logs.info(' Removing events median value from single station results to account for travel path effects.')
+            dir_ro = os.path.join(data_dir, 'results', 'orient')
+            orient.ev_median_centering(ns, 'AllCorrectionAngles_cc%s.yaml' % orientconf.ccmin,
+                                       dir_ro, orientconf.ccmin, subsets_events['shallow'])
+            logs.info(' Saved updated yaml files with median correction. Plotting of these currently not implemented, need to be added.')
 
         if timingconf.timing_test is True:
             # Set Logger name and verbosity
