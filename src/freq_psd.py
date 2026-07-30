@@ -1,3 +1,14 @@
+# https://github.com/gesape/AutoStatsQ - GPLv3
+#
+# AutoStasQ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+#
+# The AutoStatsQ Developers, 21st Century
+# ---|P------/S----------~Lg----------
+
+'''
+File containing frequency spectra test functions.
+'''
+
 import numpy as num
 import math
 import os

@@ -1,3 +1,14 @@
+# https://github.com/gesape/AutoStatsQ - GPLv3
+#
+# AutoStasQ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+#
+# The AutoStatsQ Developers, 21st Century
+# ---|P------/S----------~Lg----------
+
+'''
+File containing functionality to generate html report from draft.
+'''
+
 import logging, os
 from shutil import copytree, rmtree
 

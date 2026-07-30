@@ -1,4 +1,14 @@
-#!/use/bin/env python
+# https://github.com/gesape/AutoStatsQ - GPLv3
+#
+# AutoStasQ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+#
+# The AutoStatsQ Developers, 21st Century
+# ---|P------/S----------~Lg----------
+
+'''
+File containing gain test functions.
+Based on https://github.com/HerrMuellerluedenscheid/autogain
+'''
 
 import os
 import logging
@@ -11,8 +21,6 @@ from pyrocko.orthodrome import distance_accurate50m
 from pyrocko.guts import Object, Dict, String, Float, Int
 
 from .gainplots import plot_allgains
-
-# based on https://github.com/HerrMuellerluedenscheid/autogain
 
 km = 1000.
 

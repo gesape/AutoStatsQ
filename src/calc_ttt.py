@@ -1,3 +1,14 @@
+# https://github.com/gesape/AutoStatsQ - GPLv3
+#
+# AutoStasQ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+#
+# The AutoStatsQ Developers, 21st Century
+# ---|P------/S----------~Lg----------
+
+'''
+File containing functions to compute travel time tables for events/stations.
+'''
+
 import os.path as op
 import numpy as num
 import hashlib

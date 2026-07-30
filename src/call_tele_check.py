@@ -1,12 +1,18 @@
+# https://github.com/gesape/AutoStatsQ - GPLv3
+#
+# AutoStasQ is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+#
+# The AutoStatsQ Developers, 21st Century
+# ---|P------/S----------~Lg----------
+
+'''
+File containing functionality to run interactive tele check.
+'''
+
 import grond
 import logging
 import numpy as num
 from pyrocko.guts import Object, List, Int, Float, String, dump_all
-
-#--- !grond.StationCorrection                                                    
-#codes: [CH, FUORN, '', Z]                                                       
-#delay: 0.0                                                                      
-#factor: 0.6542812498507474
 
 
 class Correction_Statistics(Object):
