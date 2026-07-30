@@ -3,7 +3,7 @@
 #### Attention! Default branch is main, not master!
 
 Toolbox for automated station quality control for MT inversion.
-Please contact me for help or if you find bugs :-) : gesap@gfz.de
+Please contact me ([Gesa](mailto:gesap@gfz.de?subject=%5BAutoStatsQ%20Support%5D)) for help or if you find bugs :-)
 
 Work steps covered by AutoStatsQ:
 
