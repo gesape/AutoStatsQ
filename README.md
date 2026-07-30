@@ -358,6 +358,11 @@ Settings:
   # considered
   debug_mode: false
   # if true, time windows are opened in snuffler to check window settings.
+  ev_median_centering: false
+  # if true, the station correction angles are corrected by event-median derived from all 
+  # stations to account for common travel path effects from event to network.
+  # this will generate an additional output file with correction angles, but plots are 
+  # (currently) not updated with new values.
 
   plot_heatmap: false
   # plot correction angle vs. cross-correlation value as imshow heatmap
