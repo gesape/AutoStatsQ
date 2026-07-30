@@ -212,7 +212,7 @@ def write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
                         dir_ro, 'CorrectionAngles_cc%s.yaml' % ccmin))
 
 
-def write_all_output_csv(list_all_angles, used_stats, dir_ro, ccmin):
+def write_all_output_yaml(list_all_angles, used_stats, dir_ro, ccmin):
     list_rrr = []
 
     for st, ev_dict in zip(used_stats, list_all_angles):
@@ -226,36 +226,46 @@ def write_all_output_csv(list_all_angles, used_stats, dir_ro, ccmin):
                              dir_ro, 'AllCorrectionAngles_cc%s.yaml' % ccmin))
 
 
-def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
+def get_m_angle_switched(cc_i_ev_vs_rota=None, catalog=None, st=None, ccmin=None,
+    list_v_above_ccmin=None):
     """
     1) did polarity swith occur? for single events, say if
     max c-c is closer to 180 deg than to 0 deg! (only trusted if
     coef > 0.80)
     2) provide median of correction angle associated to max-cc,
     only use those with max cc-coef > 0.85 or sth like that
+
+    # use a vector mean + st dev
+
     """
-    angles = []
-    values = []
-    switched = []
 
-    for i_ev, ev in enumerate(catalog):
-        maxcc_value = num.max(cc_i_ev_vs_rota[i_ev, :])
+    if isinstance(cc_i_ev_vs_rota,num.ndarray):
+        angles = []
+        values = []
+        switched = []
 
-        if not num.isnan(maxcc_value):
-            maxcc_angle = -180 + num.argmax(cc_i_ev_vs_rota[i_ev, :])
-            angles.append(maxcc_angle)
-            values.append(maxcc_value)
+        for i_ev, ev in enumerate(catalog):
+            maxcc_value = num.max(cc_i_ev_vs_rota[i_ev, :])
 
-            if abs(0. - maxcc_angle) > 90:
-                switched.append((st.network, st.station, st.location,
-                                 ev.name,
-                                 util.time_to_str(ev.time),
-                                 maxcc_angle, maxcc_value))
+            if not num.isnan(maxcc_value):
+                maxcc_angle = -180 + num.argmax(cc_i_ev_vs_rota[i_ev, :])
+                angles.append(maxcc_angle)
+                values.append(maxcc_value)
 
-    list_v_above_ccmin = [a for (a, v) in zip(angles, values) if v > ccmin]
-    median_a = num.median(list_v_above_ccmin)
-    # use a vector mean instead!
-    # mean_a = num.mean(list_v_above_ccmin)
+                if abs(0. - maxcc_angle) > 90:
+                    switched.append((st.network, st.station, st.location,
+                                     ev.name,
+                                     util.time_to_str(ev.time),
+                                     maxcc_angle, maxcc_value))
+
+        list_v_above_ccmin = [a for (a, v) in zip(angles, values) if v > ccmin]
+        median_a = num.median(list_v_above_ccmin)
+
+    elif list_v_above_ccmin:
+        switched = []
+        median_a = num.median(list_v_above_ccmin)
+
+
     if len(list_v_above_ccmin) > 0:
 
         sum_v = num.asarray((0, 0))
@@ -326,8 +336,7 @@ def get_m_angle_switched(cc_i_ev_vs_rota, catalog, st, ccmin):
                 sum_d_xi_xm += phi_d*phi_d
                 # print(sum_d_xi_xm)
             std_a = num.sqrt(sum_d_xi_xm / n_ev)
-            # print('new std', std_a)
-            # print('old std',num.std([a for (a, v) in zip(angles, values) if v > ccmin]))
+
         else:
             std_a = num.nan
 
@@ -795,3 +804,72 @@ def plot_corr_angles(ns, st_lats, st_lons, orientfile, dir_orient,
             has_label.append(stats_no_nan_u[i])
 
     m.save(os.path.join(dir_orient, 'map_orient_%s.%s' % (ccmin, outformat)))
+
+
+def ev_median_centering(ns, fn_allCorr, dir_ro, ccmin, event_list):
+
+    '''
+    Remove the median angle of all stations for a single event from
+    the single station's results.
+    This should account for common deviations of an event at all stations
+    due to large-scale travel path effects.
+
+    Events recorded at less than 3 stations are not considered.
+    '''
+
+    angles_fromfile = load(filename=os.path.join(dir_ro, fn_allCorr))
+
+    medians = {}
+
+    for ev in event_list:
+        evn = util.tts(ev.time)
+        curr_vals = []
+
+        for item in angles_fromfile.dict_stats_all:
+            for key, value in item.ev_rota.items():
+                if key == evn:
+                    curr_vals.append(value)
+
+        if len(curr_vals) >= 3:
+            medians[evn] = num.median(curr_vals)
+
+    perStat_median = {}
+    perStat_mean = {}
+    perStat_std = {}
+    perStat_nev = {}
+
+    for st_results in angles_fromfile.dict_stats_all:
+        nsl = '%s %s %s' % (st_results.station[0], st_results.station[1],
+                            st_results.station[2])
+
+        new_st_results = {}
+        for evn, val in st_results.ev_rota.items():
+
+            try:
+                corr = medians[evn]
+            except KeyError:
+                continue
+
+            new_st_results[evn] = val-corr
+
+        median_a, mean_a, std_a, switched, n_ev = get_m_angle_switched(
+                cc_i_ev_vs_rota=None, catalog=None, st=None, ccmin=None,
+                list_v_above_ccmin=list(new_st_results.values()))
+
+        perStat_median[nsl] = median_a
+        perStat_mean[nsl] = mean_a
+        perStat_std[nsl] = std_a
+        perStat_nev[nsl] = n_ev
+
+    new_results = dict_stats_rota(CorrectAngl_perStat_median=perStat_median,
+                                  CorrectAngl_perStat_mean=perStat_mean,
+                                  CorrectAngl_perStat_stdd=perStat_std,
+                                  n_events=perStat_nev)
+
+    new_results.regularize()
+    new_results.validate()
+    new_results.dump(filename=os.path.join(
+                     dir_ro,
+                     'CorrectionAngles_cc%s_ev-median-centered.yaml' % ccmin))
+
+    # what about plots? implement...
