@@ -41,7 +41,6 @@ Contents
 
 
 ## 1. Latest changes
--------------
 - Please have a look at the updated installation instructions. A fresh installation may be needed instead of updating.
 - 2 new **tutorials** with step-by-step instructions in the ```example``` directory; including all input to get started. Example (I) - testing data and metadata downloaded from an fdsn server; Example (II) - testing locally stored data (including a synthetic test dataset).
 - Result presentation as a **html report**! After running AutoStatsQ, a html report file can be generated using ```--report```. The report is based on reveal (Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors).
@@ -49,8 +48,7 @@ Contents
 
 
 
-2. Requirements
-------------
+## 2. Requirements
 
 - Seismology toolbox **pyrocko**: https://pyrocko.org/ (Heimann et al. 2017) (and all requirements needed for pyrocko).
 - To compute synthetic data a pre-calculated GF database can be downloaded using `fomosto`. For instance, `fomosto download kinherd global_2s_v2` from the pyrocko environment. https://greens-mill.pyrocko.org/
@@ -59,17 +57,17 @@ Contents
 
 
 
-3. Download and Installation:  
--------------------------
+## 3. Download and Installation:  
 
-# (a) In a python virtual environment (venv)**
+
+### (a) In a python virtual environment (venv)**
 
 Installation in a venv will assure that all requirements are met without interfering with other installations.
 
 If you prefer using a docker container, please see instructions in the end of this README page.
 
 
-### Make a fresh venv to work in:
+**Make a fresh venv to work in:**
 
 - make a new venv:
 ```python -m venv autostatsq_test_env```
@@ -81,9 +79,9 @@ If you prefer using a docker container, please see instructions in the end of th
 ```deactivate```
 
 
-### Install Pyrocko and Grond, which are used by AutoStatsQ.
+**Install Pyrocko and Grond, which are used by AutoStatsQ.**
 
-**Pyrocko**
+*Pyrocko*
 ```
 mkdir src
 cd src
@@ -97,7 +95,7 @@ pip install .
 pip install --only-binary :all: PyQt5 PyQtWebEngine
 deactivate
 ```
-**Grond**
+*Grond*
 ```
 cd ..
 git clone https://git.pyrocko.org/pyrocko/grond.git
@@ -110,7 +108,7 @@ pip install .
 deactivate
 ```
 
-**AutoStatsQ**
+**Install AutoStatsQ**
 ```
 cd ..    # to go back to /src/
 git clone https://github.com/gesape/AutoStatsQ
@@ -143,7 +141,7 @@ If that is still not working, try instead to use ```pip install .--use-pep517```
 
 
 
-# (b) System-wide, from source
+### (b) System-wide, from source
 
 
 - ```cd``` into the folder where you want to do the installation
@@ -155,7 +153,7 @@ If that is still not working, try instead to use ```pip install .--use-pep517```
 Have a look at the section ```Building a docker``` (in the end of this file) if you prefer to use a docker container or the previous instructions to install in a virtual environment.
 
 
-# (c) Updates
+### (c) Updates
 
 ... AutoStatsQ is updated whenever new ideas are implemented or bugs found...
 
@@ -165,8 +163,8 @@ Have a look at the section ```Building a docker``` (in the end of this file) if 
 - ```(sudo) python3 setup.py install``` or ```pip install .```
 
 
-4. Basic commands
---------------
+## 4. Basic commands
+
 
 Show basic commands/ help:
 
@@ -205,8 +203,8 @@ To generate a html report after running AutoStatsQ:
 The report is saved in a directory result_report and the file index_report.html can be opend for example with firefox.
 
 
-5. Run AutoStatsQ step by step:
---------------------------
+## 5. Run AutoStatsQ step by step:
+
 
 Please refer to the examples in the example directory for very detailed step-by-step instructions.
 
@@ -217,8 +215,8 @@ Please refer to the examples in the example directory for very detailed step-by-
 
 
 
-6. Configuration file:
---------------------
+## 6. Configuration file:
+
 
 The configuration file contains all settings and paths relevant to run AutoStatsQ. In case of error messages, please use the configuration check (see section 4 - Basic Commands) with logging level DEBUG.
 
@@ -449,41 +447,41 @@ Settings:
 ```
 
 
-7. Input: Station list formats:
--------------
+## 7. Input: Station list formats:
+
 
 Lists of stations as input can be in pyrocko station format, as fdsn station-xml or as comma-spread-file with columns: network code, station code, latitude (float), longitude(float), station elevation [km], station depth [km]. Please use the according file extensions (csv, yaml/pf or xml). 
 
 
 
-8. Overview of Output:
--------
+## 8. Overview of Output:
 
-Gain test:
+
+**Gain test**
 - yaml files with median, mean and standard deviation of Ai,j/Ai,ref; i: event, j: station
 - csv files with Ai,j/Ai,ref for all events and all stations
 - optional: maps showing median log. Ai,j/Ai,ref for all stations and components
 - optional: additional visual output
 
-Orientation test:
+**Orientation test**
 - yaml file with median, mean and standard deviation of obtained correction angle
 - yaml file with polarity errors
 - yaml file containing all results for all stations and single events
 - optional: map showing the median correction angle; figures showing cc value vs correction angle for each event and station; figure showing correction angle over time for each station
 
-PSD test:
+**PSD test**
 - flat freq ranges in yaml file for each station and component
 - optional: synth. and real PSDs
 - optional: plots showing fit through PSD ratios
 
-Timing test:
+**Timing test**
 - yaml file with median, mean and standard deviation of obtained timing errors
 - csv table of results obtained from all stations and all events
 - overview plot of all results and matrices showing time shifts obtained from cross-correlation
 
 
-9. Methodology:
--------------------------------------
+## 9. Methodology:
+
 
 --> Please see Petersen et al., 2019 for a detailed description of the methods for the **gain test**, the **orientation test** and the **PSD test**: http://doi.org/10.1785/0220180342
 
@@ -532,8 +530,8 @@ In the end, the single results of the amplitude corrections and the statistics (
 
 
 
-10: AutoStatsQ in a docker container:
---------------------
+## 10: AutoStatsQ in a docker container:
+
 
 First steps: 
 - Installation and building a docker container (continue below, if the container is already built)
@@ -590,8 +588,8 @@ You should have received a copy of the GNU General Public License along with thi
 
 
 
-12. References:
------------
+## 12. References:
+
 
 Heimann, S., Kriegerowski, M., Isken, M., Cesca, S., Daout, S., Grigoli, F.,
 Juretzek, C., Megies, T., Nooshiri, N., Steinberg, A., Sudhaus, H.,
