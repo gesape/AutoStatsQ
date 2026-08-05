@@ -422,7 +422,7 @@ class TeleCheck(Snuffling):
                  + 180.) % 360.) - 180.
             phirot = phis[num.argmin(num.mean(num.abs(phimod), axis=0))]
             if abs(phirot) < 1.:
-                print('%-20s %8.0f' % ('.'.join(nsl), phirot))
+                print('PHI ROT <1: %-20s %8.0f' % ('.'.join(nsl), phirot))
                 break
 
             nsl = nsls[ia_worst]
@@ -435,7 +435,7 @@ class TeleCheck(Snuffling):
 
             if nsl not in failed:
                 
-                print('%-20s %8.0f' % ('.'.join(nsl), phirot))
+                print('PHI ROT: %-20s %8.0f' % ('.'.join(nsl), phirot))
                 nsl_to_rot[nsl] += phirot
 
         fframe = self.figure_frame()
