@@ -179,7 +179,7 @@ class OrientConfig(Object):
     plot_angles_vs_baz = Bool.T(default=False)
     orient_map_label = List.T(optional=True)
     debug_mode = Bool.T(default=False, optional=True)
-    ev_median_centering = Bool.T(optional=True, optional=True)
+    ev_median_centering = Bool.T(default=False, optional=True)
 
 class TimingConfig(Object):
     timing_test = Bool.T()
