@@ -1,19 +1,20 @@
 # AutoStatsQ
 
-#### Attention! Default branch is main, not master!
-
 Toolbox for automated station quality control for MT inversion.
 Please contact me ([Gesa](mailto:gesap@gfz.de?subject=%5BAutoStatsQ%20Support%5D)) for help or if you find bugs :-)
 
 Work steps covered by AutoStatsQ:
 
+Preprocessing & Preparations:
 - Catalog search for teleseismic events with uniform azimuthal coverage around seismic network.
 - Download of data & metadata for these events + (optional) computation of synthetic data.
-- Relative gain factors in time domain (relative to reference station or to synthetic data).
-- Rayleigh wave polarization analysis for detection of sensor misorientations.
-- Comparison of obs. and synth. PSDs; determining frequency ranges suitable for MT inversion.
-- Test for larger timing errors.
-- Second independent, interactive test for amplitude corrections based on P-phase picking in snuffler and correlating waveforms (experimental).
+
+Tests:
+- 1. Relative gain factors in time domain (relative to reference station or to synthetic data).
+- 2. Rayleigh wave polarization analysis for detection of sensor misorientations.
+- 3. Comparison of obs. and synth. PSDs; determining frequency ranges suitable for MT inversion.
+- 4. Test for larger timing errors.
+- 5. Second independent, interactive test for amplitude corrections based on P-phase picking in snuffler and correlating waveforms (experimental).
 
 
 Citation:
@@ -22,7 +23,24 @@ Citation:
 Petersen, G. M., Cesca, S., Kriegerowski, M. (2019): Automated Quality Control for Large Seismic Networks: Implementation and Application to the AlpArray Seismic Network. - Seismological Research Letters. 90 (3): 1177–1190. DOI: http://doi.org/10.1785/0220180342
 
 
-Latest changes
+Contents
+--------
+
+1. Latest changes
+2. Requirements
+3. Download and Installation
+4. Basic commands
+5. Run AutoStatsQ step by step
+6. Configuration file
+7. Input: Station list formats
+8. Overview of Output
+9. Methodology
+10. AutoStatsQ in a docker container
+11. Licence
+12. References
+
+
+1. Latest changes
 -------------
 - Please have a look at the updated installation instructions. A fresh installation may be needed instead of updating.
 - 2 new **tutorials** with step-by-step instructions in the ```example``` directory; including all input to get started. Example (I) - testing data and metadata downloaded from an fdsn server; Example (II) - testing locally stored data (including a synthetic test dataset).
@@ -31,7 +49,7 @@ Latest changes
 
 
 
-Requirements
+2. Requirements
 ------------
 
 - Seismology toolbox **pyrocko**: https://pyrocko.org/ (Heimann et al. 2017) (and all requirements needed for pyrocko).
@@ -41,14 +59,17 @@ Requirements
 
 
 
-Download and Installation:  In a python virtual environment (venv)
+3. Download and Installation:  
 -------------------------
+
+# (a) In a python virtual environment (venv)**
+
 Installation in a venv will assure that all requirements are met without interfering with other installations.
 
-If you prefer using a docker container, please see instructions in the end of this page.
+If you prefer using a docker container, please see instructions in the end of this README page.
 
 
-### (1) Make a fresh venv to work in:
+### Make a fresh venv to work in:
 
 - make a new venv:
 ```python -m venv autostatsq_test_env```
@@ -60,9 +81,9 @@ If you prefer using a docker container, please see instructions in the end of th
 ```deactivate```
 
 
-### (2) Install Pyrocko and Grond, which are used by AutoStatsQ.
+### Install Pyrocko and Grond, which are used by AutoStatsQ.
 
-(2a) Pyrocko
+**Pyrocko**
 ```
 mkdir src
 cd src
@@ -76,7 +97,7 @@ pip install .
 pip install --only-binary :all: PyQt5 PyQtWebEngine
 deactivate
 ```
-(2b) Grond
+**Grond**
 ```
 cd ..
 git clone https://git.pyrocko.org/pyrocko/grond.git
@@ -89,7 +110,7 @@ pip install .
 deactivate
 ```
 
-### (3) Install AutoStatsQ
+**AutoStatsQ**
 ```
 cd ..    # to go back to /src/
 git clone https://github.com/gesape/AutoStatsQ
@@ -118,12 +139,12 @@ pip install .
 If that is still not working, try instead to use ```pip install .--use-pep517```.
 
 
-### (4) Before running autostatsq, make sure the venv is active!
+**Before running autostatsq, make sure the venv is active!**
 
 
 
-Download and Installation (System-wide, from source)
--------------------------
+# (b) System-wide, from source
+
 
 - ```cd``` into the folder where you want to do the installation
 - ```git clone https://github.com/gesape/AutoStatsQ```
@@ -133,39 +154,46 @@ Download and Installation (System-wide, from source)
 
 Have a look at the section ```Building a docker``` (in the end of this file) if you prefer to use a docker container or the previous instructions to install in a virtual environment.
 
-Update
-------
+
+# (c) Updates
+
 ... AutoStatsQ is updated whenever new ideas are implemented or bugs found...
 
-- cd into your AutoStatsQ installation directory
-- git pull origin main
-- (sudo) python3 setup.py install
+- ```cd``` into your AutoStatsQ installation directory
+- activate your virtual environment (if installed in venv)
+- ```git pull origin main```
+- ```(sudo) python3 setup.py install``` or ```pip install .```
 
-Basic commands
+
+4. Basic commands
 --------------
 
-show basic commands/ help:
+Show basic commands/ help:
 
 	autostatsq -h
 
 
-generate an example config file:
+Generate an example config file:
 
 	autostatsq --generate_config
 
-run 
+Run without further arguments to check configuration:
 
-	autostatsq --config name_of_config_file --run
+	autostatsq --config name_of_config_file
 
+
+Run AutoStatsQ:
+```
+  autostatsq --config name_of_config_file --run
+```
 
 To get detailed error/ info logging, use the -l option:
 
-
 ```
-  autostatsq --config name_of_config_file --run -l INFO
+  autostatsq --config name_of_config_file --run -l DEBUG
 ```
 
-Helpful for debugging: Forward terminal output into a logging file by using the option ```--logoutput FILENAME```.
+Hint: Forward terminal output into a logging file by using the option ```--logoutput FILENAME```.
 
 
 To generate a html report after running AutoStatsQ:
@@ -177,10 +205,24 @@ To generate a html report after running AutoStatsQ:
 The report is saved in a directory result_report and the file index_report.html can be opend for example with firefox.
 
 
-Config file settings
+5. Run AutoStatsQ step by step:
+--------------------------
+
+Please refer to the examples in the example directory for very detailed step-by-step instructions.
+
+- make a working directory
+- prepare station list for input (see file formats below)
+- generate a template config file (`autostatsq --generate_config GENERATE_CONFIG`) and adjust the settings (see next section)
+- it might be helpful to not run the tool in one run, but go though it step-by-step, setting the current step to `true` and the others to `false`... (`autostatsq --config my_config_file --run RUN`) --> See examples.
+
+
+
+6. Configuration file:
 --------------------
 
-The default config file should look like this (without the comments):
+The configuration file contains all settings and paths relevant to run AutoStatsQ. In case of error messages, please use the configuration check (see section 4 - Basic Commands) with logging level DEBUG.
+
+The default configuration file will look like this (without the comments):
 
 ```yaml
 --- !autostatsq.config.AutoStatsQConfig
@@ -407,29 +449,21 @@ Settings:
 ```
 
 
-Station list:
+7. Input: Station list formats:
 -------------
 
 Lists of stations as input can be in pyrocko station format, as fdsn station-xml or as comma-spread-file with columns: network code, station code, latitude (float), longitude(float), station elevation [km], station depth [km]. Please use the according file extensions (csv, yaml/pf or xml). 
 
-Step-by-step instructions:
---------------------------
 
-Please refer to the examples in the example directory for very detailed step-by-step instructions.
 
-- make a working directory
-- prepare station list for input
-- generate a template config file (`autostatsq --generate_config GENERATE_CONFIG`) and adjust the settings
-- it might be helpful to not run the toolbox in one run, but go though it step-by-step, setting the current step to `true` and the others to `false`... (`autostatsq --config my_config_file --run RUN`)
-
-Output:
+8. Overview of Output:
 -------
 
 Gain test:
 - yaml files with median, mean and standard deviation of Ai,j/Ai,ref; i: event, j: station
 - csv files with Ai,j/Ai,ref for all events and all stations
 - optional: maps showing median log. Ai,j/Ai,ref for all stations and components
-- optional: ...
+- optional: additional visual output
 
 Orientation test:
 - yaml file with median, mean and standard deviation of obtained correction angle
@@ -448,13 +482,16 @@ Timing test:
 - overview plot of all results and matrices showing time shifts obtained from cross-correlation
 
 
-Small intro to the timing error test:
+9. Methodology:
 -------------------------------------
 
---> The other tests are described in detail here: http://doi.org/10.1785/0220180342
+--> Please see Petersen et al., 2019 for a detailed description of the methods for the **gain test**, the **orientation test** and the **PSD test**: http://doi.org/10.1785/0220180342
 
 
-The small implemented check for timing errors is based on the cross-correlation between the recorded traces and the synthetic vertical traces: (1) First, for each event and station the two traces (syn. + obs.) are correlated to obtain the time shift for which the correlation is highest. (2) In a second step the median time shift of each event over all stations is computed and the time shift values at the single stations are corrected for this median value. This is done to avoid errors from wrong origin times in the catalog, to take into account large deviations between orgin time and centroid time, and to consider large path effects of the teleseismic test events which effect all stations in a similar manner.
+
+**Small intro to the timing error test**
+
+The implemented check for timing errors is based on the cross-correlation between the recorded traces and the synthetic vertical traces: (1) First, for each event and station the two traces (syn. + obs.) are correlated to obtain the time shift for which the correlation is highest. (2) In a second step the median time shift of each event over all stations is computed and the time shift values at the single stations are corrected for this median value. This is done to avoid errors from wrong origin times in the catalog, to take into account large deviations between orgin time and centroid time, and to consider large path effects of the teleseismic test events which effect all stations in a similar manner.
 
 The test is performed in low frequency ranges (e.g. 0.01-0.08 Hz) and using synthetics computed from a global GFDB with a sampling of 2s. Therefore this test can only be applied to detect large timing errors in the order of several seconds. This error range is only useful to check prior to other seismological applications which use a similar frequency range as e.g. MT inversions.
 
@@ -463,10 +500,43 @@ The output is returned as a yaml file with mean, median, standard deviations and
 In the configuration file you can set the band pass filter, the time window relative to P wave arrival (tP) and estimated Rayleigh wave arrival (tR), as well as the minimum cross-correlation threshold. For information on defining these settings please see the exemplary config file above.
 
 
-Building a docker:
+**Small intro to the telecheck (WIP - experimental and interactive**
+
+The *telecheck* is a small additional interactive testing framework, which is not a core part of AutoStatsQ. It is a bit experimental and requires human interaction within Pyrocko's waveform browser *Snuffler* (Heimann et al., 2017). *Telecheck* will use the P phases of teleseismic events to check station gain factors and orientations (polarization and amplitude analysis using cross-correlations). The test assumes that event-station distances are large compared to inter-station distances so that the seismic waves arriving at all stations have a similar travel path. The test is appilcable also for short period stations and/or smaller seismic event magnitudes, in cases where no clear surface waves are observed. It can additionally serve as a secondary, independent check of AutoStatsQ's main tests.
+
+*telecheck* can be started by setting: 
+
+```yaml
+- !autostatsq.config.TeleCheckConfig
+  tele_check: true
+```
+
+For each event in the 'deep' catalog, a snuffler window will open containing the restituted, rotated, downsampled (*/rrd*) waveform traces of all stations. 
+The snuffler window has two tabs at the bottom, *Main Controls* and *Telecheck*. In *Main Controls* you can change the bandpass filter or amplitude gain. In *Telecheck* you can select which channels to use for the polarization analysis (default: R,T), which channels to use for the relative amplitude analysis (default: Z), and a minimum cross-correlation threshold to include results in the analysis (default: 0.8). Run the test for every single event following these steps:
+
+1. Select a time winow containing the P phase on all stations using an *extended marker*: Double click in the waveforms to enter the picking mode. Click once at the beginning of the time window, hold and click again at the end of the time window. This will mark in red the time window. Use <backspace> to delete a marker if you are not satisfied with your pick.
+2. Click on ``Run`` to analyse the current time window. This will open a new tab in the snuffler with two figures:
+      - (left) Polarization analysis. Black lines - best aligned for 0° rotation. Brown: Best aligned for a rotation between 1-30°. Orange: >30°; Red: Test failed. Gray: After correction.
+      - (right) Result of cross-correlation gain analysis. Numbers are median relative amplitudes of station pairs.
+  In addition, output is provided in the terminal running AutoStatsQ. *AZI POL* provides the azimuth derived from polarization analysis for each station (eigenvalue decomposition). *POL ROT* provides rotation angles for which polarization is most linear in expected P wave direction. 
+
+  If not satisfied with result, e.g. due to too long time windows, re-run current event by closing tab and re-selecting time window.
+
+3. Click on ```Save Grond Corrections``` and close snuffler to continue with next event.
+
+Perform the same analysis (step 1-3) for all events.
+
+In the end, the single results of the amplitude corrections and the statistics (median, mean, standard deviation) are saved in text files in the */results/telecheck* directory. Orientations are currently not saved, to be implemented...
+
+**Hint:** Use ```--logoutput FILENAME``` to save terminal output (*POL AZI* and *POL ROT*) to a file.
+
+
+
+10: AutoStatsQ in a docker container:
 --------------------
 
-first steps: installation and building a docker container (continue below, if the container is already built)
+First steps: 
+- Installation and building a docker container (continue below, if the container is already built)
 - after following the download and installations steps from above, build an image (autostatsq2024) from the Dockerfile in the local directory. This includes updates and installations>
 
         docker build -t autostatsq2024 .
@@ -505,7 +575,11 @@ workflow using the docker container "autostatsq" for quality tests on seismic ne
 	docker cp autostatsq:/path/to/results/docker/ /path/to/local/directory
 
 
+
+
 ## License
+
+
 GNU General Public License, Version 3, 29 June 2007
 
 AutoStatsQ is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -516,7 +590,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 
 
-References:
+12. References:
 -----------
 
 Heimann, S., Kriegerowski, M., Isken, M., Cesca, S., Daout, S., Grigoli, F.,
