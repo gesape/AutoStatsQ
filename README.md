@@ -60,7 +60,7 @@ Contents
 ## 3. Download and Installation:  
 
 
-### (a) In a python virtual environment (venv)**
+### (a) In a python virtual environment (venv)
 
 Installation in a venv will assure that all requirements are met without interfering with other installations.
 
@@ -447,7 +447,7 @@ Settings:
 ```
 
 
-## 7. Input: Station list formats:
+## 7. Input: Station list formats
 
 
 Lists of stations as input can be in pyrocko station format, as fdsn station-xml or as comma-spread-file with columns: network code, station code, latitude (float), longitude(float), station elevation [km], station depth [km]. Please use the according file extensions (csv, yaml/pf or xml). 
@@ -487,7 +487,7 @@ Lists of stations as input can be in pyrocko station format, as fdsn station-xml
 
 
 
-**Small intro to the timing error test**
+### Small intro to the timing error test
 
 The implemented check for timing errors is based on the cross-correlation between the recorded traces and the synthetic vertical traces: (1) First, for each event and station the two traces (syn. + obs.) are correlated to obtain the time shift for which the correlation is highest. (2) In a second step the median time shift of each event over all stations is computed and the time shift values at the single stations are corrected for this median value. This is done to avoid errors from wrong origin times in the catalog, to take into account large deviations between orgin time and centroid time, and to consider large path effects of the teleseismic test events which effect all stations in a similar manner.
 
@@ -498,7 +498,7 @@ The output is returned as a yaml file with mean, median, standard deviations and
 In the configuration file you can set the band pass filter, the time window relative to P wave arrival (tP) and estimated Rayleigh wave arrival (tR), as well as the minimum cross-correlation threshold. For information on defining these settings please see the exemplary config file above.
 
 
-**Small intro to the telecheck (WIP - experimental and interactive**
+### Small intro to the telecheck (WIP - experimental and interactive
 
 The *telecheck* is a small additional interactive testing framework, which is not a core part of AutoStatsQ. It is a bit experimental and requires human interaction within Pyrocko's waveform browser *Snuffler* (Heimann et al., 2017). *Telecheck* will use the P phases of teleseismic events to check station gain factors and orientations (polarization and amplitude analysis using cross-correlations). The test assumes that event-station distances are large compared to inter-station distances so that the seismic waves arriving at all stations have a similar travel path. The test is appilcable also for short period stations and/or smaller seismic event magnitudes, in cases where no clear surface waves are observed. It can additionally serve as a secondary, independent check of AutoStatsQ's main tests.
 
