@@ -40,7 +40,7 @@ Contents
 12. References
 
 
-1. Latest changes
+## 1. Latest changes
 -------------
 - Please have a look at the updated installation instructions. A fresh installation may be needed instead of updating.
 - 2 new **tutorials** with step-by-step instructions in the ```example``` directory; including all input to get started. Example (I) - testing data and metadata downloaded from an fdsn server; Example (II) - testing locally stored data (including a synthetic test dataset).
