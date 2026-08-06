@@ -1895,11 +1895,44 @@ def main():
 
         if orientconf.ev_median_centering:
             # what about plotting with these...? needs to be implemented/moved
+            logs = logging.getLogger('Orientation')
+            logs.setLevel(verbo)
             logs.info(' Removing events median value from single station results to account for travel path effects.')
             dir_ro = os.path.join(data_dir, 'results', 'orient')
             orient.ev_median_centering(ns, 'AllCorrectionAngles_cc%s.yaml' % orientconf.ccmin,
                                        dir_ro, orientconf.ccmin, subsets_events['shallow'])
             logs.info(' Saved updated yaml files with median correction. Plotting of these currently not implemented, need to be added.')
+
+            if orientconf.plot_orient_map_fromfile is True:
+                logs.info(' Plotting output of orient test: Map plot.')
+                skip_plot = False
+                if maps.pl_opt == ['automatic']:
+                    pl_opt = get_pl_opt(st_lats, st_lons)
+
+                elif len(maps.pl_opt) == 4:
+                    for o in maps.pl_opt[0:2]:
+                        if isinstance(o,str):
+                            logs.warning(' Please make sure the %s in the map plotting option in the confic files is set.' % o)
+                            skip_plot = True
+
+                    if not skip_plot:
+                        pl_opt = maps.pl_opt
+
+                else:
+                    logs.warning(' Set pl_opt to *automatic* or provide [lat, lon, radius, cscale].')
+                    skip_plot = True
+
+                if not skip_plot:
+                    orient.plot_corr_angles(ns, st_lats, st_lons,
+                                            'CorrectionAngles_cc%s_ev-median-centered.yaml' % orientconf.ccmin, dir_ro,
+                                            pl_opt, maps.pl_topo,
+                                            maps.map_size, maps.outformat,
+                                            orientconf.ccmin,
+                                            orientconf.orient_map_label,
+                                            out_fn='map_orient_corr')
+
+                logs.info(' Saved map plot of orient test in directory %s.' % dir_ro)
+
 
         if timingconf.timing_test is True:
             # Set Logger name and verbosity
