@@ -1933,6 +1933,12 @@ def main():
 
                 logs.info(' Saved map plot of orient test in directory %s.' % dir_ro)
 
+            if orientconf.plot_angles_vs_baz is True:
+                dir_ro = os.path.join(data_dir, 'results', 'orient')
+                orient.plot_corr_baz(ns, 'AllCorrectionAngles_cc%s_ev-median-centered.yaml'  % orientconf.ccmin, 
+                                     'CorrectionAngles_cc%s_ev-median-centered.yaml' % orientconf.ccmin, dir_ro, 
+                                     subsets_events['shallow'], all_stations, orientconf.ccmin)
+
 
         if timingconf.timing_test is True:
             # Set Logger name and verbosity

@@ -176,7 +176,10 @@ def plot_corr_baz(nsl, filename_all, filename_stats, dir_ro, events, stations, c
             # fig.colorbar(times, ax=ax)
             cbar = fig.colorbar(im, ax=ax, ticks=ticks)
             cbar.ax.set_yticklabels(ticklabels, fontsize=8)
-            fig.savefig(os.path.join(dir_ro, '%s_%s_baz_%s.png' % (st[0], st[1],ccmin)))
+            if not 'median-centered' in filename_all:
+                fig.savefig(os.path.join(dir_ro, '%s_%s_baz_%s.png' % (st[0], st[1],ccmin)))
+            else:
+                fig.savefig(os.path.join(dir_ro, '%s_%s_baz_%s_med-centered.png' % (st[0], st[1],ccmin)))
             plt.close(fig)
 
 
@@ -839,6 +842,8 @@ def ev_median_centering(ns, fn_allCorr, dir_ro, ccmin, event_list):
     perStat_std = {}
     perStat_nev = {}
 
+    list_rotas = []
+
     for st_results in angles_fromfile.dict_stats_all:
         nsl = '%s %s %s' % (st_results.station[0], st_results.station[1],
                             st_results.station[2])
@@ -861,6 +866,17 @@ def ev_median_centering(ns, fn_allCorr, dir_ro, ccmin, event_list):
         perStat_mean[nsl] = mean_a
         perStat_std[nsl] = std_a
         perStat_nev[nsl] = n_ev
+
+        rota = rota_ev_by_stat(station=st_results.station, ev_rota=new_st_results)
+        list_rotas.append(rota)
+
+    rota_all_corr = dict_stats_all_rota(dict_stats_all=list_rotas)
+    rota_all_corr.regularize()
+    rota_all_corr.validate()
+    rota_all_corr.dump(filename=os.path.join(
+                     dir_ro,
+                     'AllCorrectionAngles_cc%s_ev-median-centered.yaml' % ccmin))
+
 
     new_results = dict_stats_rota(CorrectAngl_perStat_median=perStat_median,
                                   CorrectAngl_perStat_mean=perStat_mean,
