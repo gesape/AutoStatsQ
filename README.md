@@ -42,6 +42,7 @@ Contents
 
 ## 1. Latest changes
 - Please have a look at the updated installation instructions. A fresh installation may be needed instead of updating.
+- Implemented optional median correction of orientation test: Median misorientation angle for a single event across all stations is substracted from station's result to correct for common event-network travel path effects. Reduces scattering and uncertainty. Assumes that inter-station distances are very small compared to station-event distances so that waveforms have similar travel path to all stations.
 - 2 new **tutorials** with step-by-step instructions in the ```example``` directory; including all input to get started. Example (I) - testing data and metadata downloaded from an fdsn server; Example (II) - testing locally stored data (including a synthetic test dataset).
 - Result presentation as a **html report**! After running AutoStatsQ, a html report file can be generated using ```--report```. The report is based on reveal (Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors).
 - 2025-10-08: Renamed all mseed data to avoid colons in file names. Added possibility to change cross-correlation threshold for orient test without re-calculating correlations.
