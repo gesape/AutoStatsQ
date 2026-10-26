@@ -1903,7 +1903,7 @@ def main():
             dir_ro = os.path.join(data_dir, 'results', 'orient')
             orient.ev_median_centering(ns, 'AllCorrectionAngles_cc%s.yaml' % orientconf.ccmin,
                                        dir_ro, orientconf.ccmin, subsets_events['shallow'])
-            logs.info(' Saved updated yaml files with median correction. Plotting of these currently not implemented, need to be added.')
+            logs.info(' Saved updated yaml files with median correction. Starting plotting.')
 
             if orientconf.plot_orient_map_fromfile is True:
                 logs.info(' Plotting output of orient test: Map plot.')
