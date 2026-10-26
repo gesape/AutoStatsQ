@@ -102,8 +102,11 @@ def plot_corr_time(nsl, filename, dir_ro, ccmin):
             plt.tick_params(labelsize=12)
             plt.tight_layout(rect=[0,0,0.8,1])
             # plt.show()
-            
-            fig.savefig(os.path.join(dir_ro, '%s_%s_overtime_%s.png' % (st[0], st[1], ccmin)))
+
+            if not 'median-centered' in filename:
+                fig.savefig(os.path.join(dir_ro, '%s_%s_overtime_%s.png' % (st[0], st[1], ccmin)))
+            else:
+                fig.savefig(os.path.join(dir_ro, '%s_%s_overtime_%s_med-centered.png' % (st[0], st[1], ccmin)))
             plt.close(fig)
 
 
@@ -241,6 +244,8 @@ def get_m_angle_switched(cc_i_ev_vs_rota=None, catalog=None, st=None, ccmin=None
     # use a vector mean + st dev
 
     """
+
+    switched = []
 
     if isinstance(cc_i_ev_vs_rota,num.ndarray):
         angles = []

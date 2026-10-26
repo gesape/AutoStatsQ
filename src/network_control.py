@@ -18,6 +18,8 @@ import gc
 import math
 import argparse
 import re
+import matplotlib
+matplotlib.use('QT5Agg')
 
 # import matplotlib.pyplot as plt
 from pyrocko import util, model, orthodrome, pile, trace, io
@@ -1939,6 +1941,14 @@ def main():
                                      'CorrectionAngles_cc%s_ev-median-centered.yaml' % orientconf.ccmin, dir_ro, 
                                      subsets_events['shallow'], all_stations, orientconf.ccmin)
 
+            if orientconf.plot_angles_vs_events is True:
+                logs = logging.getLogger('Orientation')
+                logs.setLevel(verbo)
+                logs.info(' Plotting output of orient test: Correction angles vs. events.')
+                dir_ro = os.path.join(data_dir, 'results', 'orient')
+                orient.plot_corr_time(ns, 'AllCorrectionAngles_cc%s_ev-median-centered.yaml' % orientconf.ccmin, 
+                                      dir_ro, orientconf.ccmin)
+                logs.info(' Saved plot in directory %s.' % dir_ro)
 
         if timingconf.timing_test is True:
             # Set Logger name and verbosity
