@@ -289,7 +289,7 @@ def plot_corr_rose(
             output = os.path.join(dir_ro, filename)
 
             fig.savefig(output, dpi=dpi, bbox_inches='tight')
-            logs.info('Saved rose diagram: %s', output)
+            logs.debug('Saved rose diagram: %s', output)
 
         finally:
             plt.close(fig)
