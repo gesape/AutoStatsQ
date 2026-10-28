@@ -908,11 +908,12 @@ def main():
                     # response = stationxml.load_xml(filename=stations_fn)
                     # print(data_dir+ev_t_str)
                     if metaDataconf.local_waveforms_only is False:
-                        p = pile.make_pile(paths=os.path.join(data_dir, ev_t_str), 
-                                               show_progress=False)
+                        p = pile.make_pile(paths=os.path.join(data_dir, ev_t_str.replace(':','-')), 
+                                                                       show_progress=False)
                         if p.is_empty():
-                            p = pile.make_pile(paths=os.path.join(data_dir, ev_t_str.replace(':','-')), 
-                                               show_progress=False)
+                            p = pile.make_pile(paths=os.path.join(data_dir, ev_t_str), 
+                                                                           show_progress=False)
+                            
                     
                     ev_t_str = ev_t_str.replace(':','-')
                     dir_make = os.path.join(data_dir, 'rest', ev_t_str)
