@@ -1896,6 +1896,19 @@ def main():
                                  'CorrectionAngles_cc%s.yaml' % orientconf.ccmin, dir_ro, 
                                  subsets_events['shallow'], all_stations, orientconf.ccmin)
 
+        if orientconf.plot_angles_rose:
+            logs = logging.getLogger('Orientation')
+            logs.setLevel(verbo)
+            logs.info('Plotting correction-angle rose diagrams.')
+            dir_ro = os.path.join(data_dir, 'results', 'orient')
+            orient.plot_corr_rose(
+                ns,
+                'AllCorrectionAngles_cc%s.yaml' % orientconf.ccmin,
+                'CorrectionAngles_cc%s.yaml' % orientconf.ccmin,
+                dir_ro, orientconf.ccmin,
+                bins_deg=orientconf.rose_bins_deg,
+                dpi=orientconf.rose_dpi)
+
         if orientconf.ev_median_centering:
             # what about plotting with these...? needs to be implemented/moved
             logs = logging.getLogger('Orientation')
@@ -1950,6 +1963,20 @@ def main():
                 orient.plot_corr_time(ns, 'AllCorrectionAngles_cc%s_ev-median-centered.yaml' % orientconf.ccmin, 
                                       dir_ro, orientconf.ccmin)
                 logs.info(' Saved plot in directory %s.' % dir_ro)
+
+            if orientconf.plot_angles_rose:
+                logs.info(
+                    'Plotting event-median-centered correction-angle '
+                    'rose diagrams.')
+                orient.plot_corr_rose(
+                    ns,
+                    'AllCorrectionAngles_cc%s_ev-median-centered.yaml'
+                    % orientconf.ccmin,
+                    'CorrectionAngles_cc%s_ev-median-centered.yaml'
+                    % orientconf.ccmin,
+                    dir_ro, orientconf.ccmin,
+                    bins_deg=orientconf.rose_bins_deg,
+                    dpi=orientconf.rose_dpi)
 
         if timingconf.timing_test is True:
             # Set Logger name and verbosity

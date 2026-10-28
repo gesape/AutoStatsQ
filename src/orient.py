@@ -186,6 +186,115 @@ def plot_corr_baz(nsl, filename_all, filename_stats, dir_ro, events, stations, c
             plt.close(fig)
 
 
+def plot_corr_rose(
+        nsl, filename_all, filename_stats, dir_ro, ccmin,
+        bins_deg=1.0, dpi=100):
+    """Plot correction angles directly, using summary YAML statistics."""
+    if not num.isfinite(bins_deg) or bins_deg <= 0:
+        raise ValueError('Rose bin width must be positive and finite.')
+    n_bins = int(round(360.0 / bins_deg))
+    if n_bins < 1 or not num.isclose(n_bins * bins_deg, 360.0):
+        raise ValueError('Rose bin width must divide 360 degrees.')
+    if dpi <= 0:
+        raise ValueError('Rose figure DPI must be positive.')
+
+    logs = logging.getLogger('Orientation')
+    angles_fromfile = load(filename=os.path.join(dir_ro, filename_all))
+    stats_fromfile = load(filename=os.path.join(dir_ro, filename_stats))
+    
+    selected_stations = {
+        tuple(station[:2]) for station in nsl
+    } if nsl is not None else None
+    
+    centered = 'ev-median-centered' in filename_all
+    variant = 'event-median-centered' if centered else 'uncentered'
+    suffix = '_med-centered' if centered else ''
+    
+    edges = num.linspace(0.0, 360.0, n_bins + 1)
+
+    for item in angles_fromfile.dict_stats_all:
+        station = tuple(item.station)
+        if (selected_stations is not None
+                and station[:2] not in selected_stations):
+            continue
+        
+        angles = num.asarray([
+            float(angle) for angle in item.ev_rota.values()
+            if angle is not None and num.isfinite(float(angle))
+        ])
+
+        if not angles.size:
+            logs.warning('No finite correction angles for %s.', station)
+            continue
+
+        key = '%s %s %s' % station
+        try:
+            mean = float(stats_fromfile.CorrectAngl_perStat_mean[key])
+            median = float(stats_fromfile.CorrectAngl_perStat_median[key])
+            stdev = float(stats_fromfile.CorrectAngl_perStat_stdd[key])
+        except (KeyError, TypeError, ValueError) as exc:
+            logs.warning(
+                'Skipping rose diagram for %s: invalid summary statistics: %s',
+                station, exc)
+            continue
+
+        # Wrapping changes the polar representation, not the correction sign.
+        counts, _ = num.histogram(angles % 360.0, bins=edges)
+        centres = num.deg2rad((edges[:-1] + edges[1:]) / 2.0)
+        widths = num.deg2rad(num.diff(edges))
+        
+        fig, ax = plt.subplots(
+            figsize=(7, 6), subplot_kw={'projection': 'polar'})
+        try:
+            ax.bar(centres, counts, width=widths,
+                   alpha=0.7, edgecolor='black')
+            ax.set_theta_zero_location('N')
+            ax.set_theta_direction(-1)
+            radius = ax.get_rmax()
+            
+            if num.isfinite(mean):
+                ax.plot(
+                    num.deg2rad([mean, mean]), [0, radius],
+                    color='C1', linewidth=2, label='Mean (summary YAML)')
+                
+                if num.isfinite(stdev) and stdev >= 0:
+                    half_width = min(stdev, 180.0)
+                    theta = num.deg2rad(num.linspace(
+                        mean - half_width, mean + half_width, 200))
+                    
+                    ax.fill_between(
+                        theta, 0, radius, color='C1', alpha=0.2,
+                        label='Mean ± std (summary YAML)')
+                    
+            if num.isfinite(median):
+                ax.plot(num.deg2rad([median, median]), [0, radius],
+                        'k--', label='Median (summary YAML)')
+            
+            ax.set_title(
+                '%s: correction angle\n%s, CC > %s\n'
+                'mean = %+.1f°, median = %+.1f°, std = %.1f°'
+                % ('.'.join(station), variant, ccmin, mean, median, stdev),
+                pad=28)
+            
+            handles, labels = ax.get_legend_handles_labels()
+            if handles:
+                ax.legend(handles, labels, loc='lower center',
+                          bbox_to_anchor=(0.5, -0.25))
+                
+            location = station[2] or 'empty'
+
+            filename = '%s_%s_%s_rose_cc%s%s.png' % (
+                station[0], station[1], location, ccmin, suffix)
+            
+            output = os.path.join(dir_ro, filename)
+
+            fig.savefig(output, dpi=dpi, bbox_inches='tight')
+            logs.info('Saved rose diagram: %s', output)
+
+        finally:
+            plt.close(fig)
+
+
 def write_output(list_median_a, list_mean_a, list_stdd_a, list_switched,
                  n_ev, used_stats, dir_ro, ccmin):
 
