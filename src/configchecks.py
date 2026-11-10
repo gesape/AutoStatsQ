@@ -14,6 +14,7 @@ from .config import GeneralSettings, CatalogConfig, ArrTConfig,\
 MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
 GainfactorsConfig, PSDConfig, OrientConfig, TimingConfig, TeleCheckConfig,\
 maps, AutoStatsQConfig
+from .config_settings_defaults import generate_default_config
 
 
 logs = logging.getLogger('CONFIG')
@@ -334,9 +335,48 @@ def check_maps_settings(maps):
 
 def check_config(configfile):
 
-    gensettings, catalogconf, arrTconf, metaDataconf, RestDownconf,\
-        synthsconf, gainfconf, psdsconf, orientconf, timingconf, tc, maps =\
-        AutoStatsQConfig.load(filename=configfile).Settings
+    # gensettings, catalogconf, arrTconf, metaDataconf, RestDownconf,\
+    #     synthsconf, gainfconf, psdsconf, orientconf, timingconf, tc, maps =\
+    #     AutoStatsQConfig.load(filename=configfile).Settings
+    # gensettings, catalogconf, arrTconf, metaDataconf, RestDownconf,\
+    #     synthsconf, gainfconf, psdsconf, orientconf, p_energy_conf,\
+    #     timingconf, tc, maps =\
+    #     AutoStatsQConfig.load(filename=configfile).Settings
+    settings = {}
+    for section in AutoStatsQConfig.load(filename=configfile).Settings:
+        name = type(section).__name__
+        if name in settings:
+            raise ValueError('Duplicate configuration section: %s' % name)
+        settings[name] = section
+
+    required = [
+        'GeneralSettings', 'CatalogConfig', 'ArrTConfig',
+        'MetaDataDownloadConfig', 'RestDownRotConfig',
+        'SynthDataConfig', 'maps']
+    for name in required:
+        if name not in settings:
+            raise ValueError('Missing required configuration section: %s' % name)
+
+    provided_sections = list(settings)
+    for section in generate_default_config().Settings:
+        name = type(section).__name__
+        if name not in settings:
+            section.regularize()
+            settings[name] = section
+
+    gensettings = settings['GeneralSettings']
+    catalogconf = settings['CatalogConfig']
+    arrTconf = settings['ArrTConfig']
+    metaDataconf = settings['MetaDataDownloadConfig']
+    RestDownconf = settings['RestDownRotConfig']
+    synthsconf = settings['SynthDataConfig']
+    gainfconf = settings['GainfactorsConfig']
+    psdsconf = settings['PSDConfig']
+    orientconf = settings['OrientConfig']
+    p_energy_conf = settings['OrientPEnergyConfig']
+    timingconf = settings['TimingConfig']
+    tc = settings['TeleCheckConfig']
+    maps = settings['maps']
 
     error_gen = check_general_settings(gensettings)
     error_cat = check_catalog_settings(gensettings,catalogconf)
@@ -344,11 +384,27 @@ def check_config(configfile):
     error_md = check_metadata_settings(metaDataconf)
     error_rest = check_restitution_settings(RestDownconf)
     error_syn = check_synthetics_settings(synthsconf)
-    error_gain = check_gain_settings(gainfconf, RestDownconf)
-    error_psd = check_psd_settings(psdsconf)
-    error_ori = check_orient_settings(orientconf)
-    error_tim = check_timing_settings(timingconf)
-    error_tele = check_telecheck_settings(tc)
+    # error_gain = check_gain_settings(gainfconf, RestDownconf)
+    # error_psd = check_psd_settings(psdsconf)
+    # error_ori = check_orient_settings(orientconf)
+    # error_tim = check_timing_settings(timingconf)
+    # error_tele = check_telecheck_settings(tc)
+    # Do not validate template settings for tests omitted by the user.
+    error_gain = False
+    if 'GainfactorsConfig' in provided_sections:
+        error_gain = check_gain_settings(gainfconf, RestDownconf)
+    error_psd = False
+    if 'PSDConfig' in provided_sections:
+        error_psd = check_psd_settings(psdsconf)
+    error_ori = False
+    if 'OrientConfig' in provided_sections:
+        error_ori = check_orient_settings(orientconf)
+    error_tim = False
+    if 'TimingConfig' in provided_sections:
+        error_tim = check_timing_settings(timingconf)
+    error_tele = False
+    if 'TeleCheckConfig' in provided_sections:
+        error_tele = check_telecheck_settings(tc)
     error_map = check_maps_settings(maps)
 
     if error_gen or error_cat or error_arr or error_md or error_rest or error_syn\
