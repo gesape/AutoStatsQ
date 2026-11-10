@@ -1,5 +1,4 @@
 # https://github.com/gesape/AutoStatsQ - GPLv3
-### start editing
 '''
 P-wave orientation using the maximum windowed radial/transverse energy ratio.
 
@@ -10,12 +9,10 @@ Configuration is a section within Settings, following OrientConfig::
       time_wdw: [-5.0, 30.0]
       bandpass: [3.0, 0.03, 0.2]
       energy_ratio_min: 3.0
-      # use_snr: false
-      # snr_min: 3.0
       snr_min: false  # A float, e.g. 3.0, enables SNR.
       snr_noise_wdw: [-60.0, -10.0]
       resolve_polarity: false
-      # expected_rz_sign: 1  # Fixed by the ZRT convention used for rrd data.
+      rz_cc_min: false  # A float enables an inclusive minimum on |CC(R,Z)|.
       plot_angles_vs_events: false
       plot_angles_vs_baz: false
       plot_angles_rose: false
@@ -25,22 +22,22 @@ default to disabled. Enable orient_p_energy explicitly to calculate results.
 
 Set orient_p_energy to false and change energy_ratio_min to regenerate
 filtered output and plots from saved measurements, without reading waveforms.
-Both deep and shallow event subsets are used. The correction sign follows
-orient.prep_orient (pyrocko.trace.rotate on R/T). Energy cannot distinguish
-angles separated by 180 degrees: energy-only corrections are in [-90, 90).
+Both deep and shallow event subsets are used. 
+Energy cannot distinguish angles separated by 180 degrees: energy-only 
+corrections are in [-90, 90).
+
 Optional polarity selection uses demeaned zero-lag R-Z correlation and reports
-corrections in [-180, 180). There is no R-Z correlation magnitude threshold.
-RRD preparation sets Z positive upward and R away from the source; the
-polarity step therefore selects positive R-Z correlation for the upgoing P wave.
+corrections in [-180, 180).
+With resolve_polarity enabled, optional rz_cc_min filters saved measurements
+by abs(CC(R,Z)) >= rz_cc_min. Changing this threshold requires no waveforms.
+Resolved-result filenames include rzcc followed by the threshold or -off.
+
 Optional SNR is vertical RMS in time_wdw divided by RMS in snr_noise_wdw.
 All measured events are saved before applying the energy and SNR thresholds.
 Changing either threshold needs no waveform processing. Enabling a feature
 that was disabled during measurement, or changing polarity/noise-window
-settings, requires recalculation. Saved ev_rz_corr refers to the selected angle.
-The P-energy rose wrapper labels the energy-ratio threshold as 'ER'.
-P-energy output filenames use 'er' for the energy-ratio threshold.
+settings, requires recalculation. 
 '''
-### end editing
 
 import logging
 import os
@@ -51,7 +48,6 @@ from pyrocko.guts import Any, Bool, Dict, Float, String, Tuple, load
 from . import orient
 
 
-### start editing
 RAW_FILENAME = 'AllCorrectionAngles_erall.yaml'
 ROT_ANGLES = range(-90, 90)
 FILTER_TPAD = 300.0  # Seconds before and after the analysis window.
@@ -70,6 +66,7 @@ class P_energy_all(orient.dict_stats_all_rota):
     snr_min = Any.T(default=False)
     snr_noise_wdw = Tuple.T(2, Float.T(), default=(-60.0, -10.0))
     resolve_polarity = Bool.T(default=False)
+    rz_cc_min = Any.T(default=False)
 
 
 def check_settings(conf):
@@ -91,6 +88,9 @@ def check_settings(conf):
         if (not all(num.isfinite([noise_start, noise_stop]))
                 or not noise_start < noise_stop <= 0):
             raise ValueError('SNR noise window must have start < end <= P arrival.')
+    if conf.resolve_polarity is True and isinstance(conf.rz_cc_min, float):
+        if not num.isfinite(conf.rz_cc_min) or not 0.0 <= conf.rz_cc_min <= 1.0:
+            raise ValueError('R-Z correlation minimum must be finite and between 0.0 and 1.0.')
 
 
 def get_vertical_windows(st_data_pile, st, loc, arrT, conf):
@@ -266,17 +266,31 @@ def prep_orient(st_data_pile, st, i_st, loc, catalog, arrT_array, conf):
 
 
 
+def get_result_tag(conf):
+    '''Filename suffix for ER, SNR and optional polarity-correlation filtering.'''
+    snr = conf.snr_min if isinstance(conf.snr_min, float) else '-off'
+    tag = 'er%s_snr%s' % (conf.energy_ratio_min, snr)
+    if conf.resolve_polarity is True:
+        cc = conf.rz_cc_min if isinstance(conf.rz_cc_min, float) else '-off'
+        tag += '_rzcc%s' % cc
+    return tag
+
+
 def write_all_output_yaml(list_all_angles, list_all_ratios, used_stats,
                           dir_ro, threshold, conf, arrival_tables,
                           list_all_snr, list_all_rz_corr, selection_conf=None):
     '''Reuse the existing writer, extending each station with energy ratios.'''
     orient.write_all_output_yaml(
         list_all_angles, used_stats, dir_ro, threshold)
-    filename = os.path.join(dir_ro, 'AllCorrectionAngles_er%s.yaml' % threshold)
+    selection = conf if selection_conf is None else selection_conf
+    if threshold == 'all':
+        filename = os.path.join(dir_ro, RAW_FILENAME)
+    else:
+        filename = os.path.join(
+            dir_ro, 'AllCorrectionAngles_%s.yaml' % get_result_tag(selection))
     os.replace(os.path.join(dir_ro, 'AllCorrectionAngles_cc%s.yaml' % threshold),
                filename)
     saved = load(filename=filename)
-    selection = conf if selection_conf is None else selection_conf
 
     results = P_energy_all(
         dict_stats_all=[P_energy_by_stat(
@@ -288,7 +302,8 @@ def write_all_output_yaml(list_all_angles, list_all_ratios, used_stats,
         arrival_tables=arrival_tables,
         snr_min=selection.snr_min,
         snr_noise_wdw=conf.snr_noise_wdw,
-        resolve_polarity=conf.resolve_polarity)
+        resolve_polarity=conf.resolve_polarity,
+        rz_cc_min=selection.rz_cc_min if conf.resolve_polarity is True else False)
     results.regularize()
     results.validate()
     results.dump(filename=filename)
@@ -311,8 +326,8 @@ def get_m_angle(angles, period=180.0):
     return float(median_a), float(mean_a), float(std_a), len(angles)
 
 
-def write_output(dir_ro, conf):
-    '''Reapply a threshold to saved measurements and write before plotting.'''
+def reanalyse_saved_results(dir_ro, conf):
+    '''Apply current ER/SNR/R-Z thresholds to saved measurements and save results.'''
     saved = load(filename=os.path.join(dir_ro, RAW_FILENAME))
     if isinstance(conf.snr_min, float):
         if not isinstance(saved.snr_min, float):
@@ -324,18 +339,32 @@ def write_output(dir_ro, conf):
 
     if conf.resolve_polarity != saved.resolve_polarity:
         raise ValueError('Polarity settings have changed; rerun the P-energy calculation.')
+    if conf.resolve_polarity is True and isinstance(conf.rz_cc_min, float):
+        if not num.isfinite(conf.rz_cc_min) or not 0.0 <= conf.rz_cc_min <= 1.0:
+            raise ValueError('R-Z correlation minimum must be finite and between 0.0 and 1.0.')
+    
     period = 360.0 if saved.resolve_polarity else 180.0
     list_snr, list_rz_corr = [], []
     used_stats, list_angles, list_ratios = [], [], []
     list_median_a, list_mean_a, list_stdd_a, n_ev = [], [], [], []
+    
     for item in saved.dict_stats_all:
         ratios = {ev: ratio for ev, ratio in item.ev_energy_ratio.items()
-                  if ratio > conf.energy_ratio_min}
+                  if ratio >= conf.energy_ratio_min}
+    
         if isinstance(conf.snr_min, float):
             if any(ev not in item.ev_snr for ev in ratios):
                 raise ValueError('Missing saved SNR values; rerun the P-energy calculation.')
             ratios = {ev: ratio for ev, ratio in ratios.items()
                       if item.ev_snr[ev] >= conf.snr_min}
+    
+        if conf.resolve_polarity is True and isinstance(conf.rz_cc_min, float):
+            if any(ev not in item.ev_rz_corr for ev in ratios):
+                raise ValueError('Missing saved R-Z correlations; rerun with resolve_polarity enabled.')
+            ratios = {ev: ratio for ev, ratio in ratios.items()
+                      if num.isfinite(item.ev_rz_corr[ev])
+                      and abs(item.ev_rz_corr[ev]) >= conf.rz_cc_min}
+    
         angles = {ev: angle for ev, angle in item.ev_rota.items() if ev in ratios}
         median_a, mean_a, std_a, nev = get_m_angle(list(angles.values()), period)
         list_snr.append({ev: value for ev, value in item.ev_snr.items() if ev in angles})
@@ -355,22 +384,33 @@ def write_output(dir_ro, conf):
     if used_stats:
         os.replace(
             os.path.join(dir_ro, 'CorrectionAngles_cc%s.yaml' % conf.energy_ratio_min),
-            os.path.join(dir_ro, 'CorrectionAngles_er%s.yaml' % conf.energy_ratio_min))
+            os.path.join(dir_ro, 'CorrectionAngles_%s.yaml' % get_result_tag(conf)))
     return used_stats
 
 
-### start editing
 def plot_corr_rose(nsl, filename_all, filename_stats, dir_ro, threshold,
-                   bins_deg=1.0, dpi=100):
+                   bins_deg=1.0, dpi=100, snr_min=False,
+                   resolve_polarity=False, rz_cc_min=False):
     '''Reuse the shared rose plotter with an energy-ratio caption.'''
     original_subplots = orient.plt.subplots
+    selection_text = 'ER ≥ %s' % threshold
+    if isinstance(snr_min, float):
+        selection_text += ', SNR ≥ %s' % snr_min
+    else:
+        selection_text += ', SNR off'
+    if resolve_polarity is True:
+        if isinstance(rz_cc_min, float):
+            selection_text += ', |CC(R,Z)| ≥ %s' % rz_cc_min
+        else:
+            selection_text += ', R-Z CC filter off'
 
     def subplots_er(*args, **kwargs):
         fig, ax = original_subplots(*args, **kwargs)
         original_savefig = fig.savefig
 
         def savefig_er(*save_args, **save_kwargs):
-            ax.set_title(ax.get_title().replace('CC >', 'ER >'), pad=28)
+            ax.set_title(ax.get_title().replace(
+                'CC > %s' % threshold, selection_text), pad=28)
             return original_savefig(*save_args, **save_kwargs)
 
         fig.savefig = savefig_er
@@ -383,28 +423,34 @@ def plot_corr_rose(nsl, filename_all, filename_stats, dir_ro, threshold,
             bins_deg=bins_deg, dpi=dpi)
     finally:
         orient.plt.subplots = original_subplots
-### end editing
 
 
 def plot_output(dir_ro, conf, events, stations, maps, nsl):
     '''Only saved YAML files are used for angles and summary statistics.'''
     logs = logging.getLogger('Orientation_P_energy')
     threshold = conf.energy_ratio_min
-    fn_all = 'AllCorrectionAngles_er%s.yaml' % threshold
-    fn_stats = 'CorrectionAngles_er%s.yaml' % threshold
+    # fn_stats = 'CorrectionAngles_er%s.yaml' % threshold
+    result_tag = get_result_tag(conf)
+    fn_all = 'AllCorrectionAngles_%s.yaml' % result_tag
+    fn_stats = 'CorrectionAngles_%s.yaml' % result_tag
     jobs = []
+    
     if conf.plot_angles_vs_events:
-        jobs.append((orient.plot_corr_time, (nsl, fn_all, dir_ro, threshold), {}))
+        # jobs.append((orient.plot_corr_time, (nsl, fn_all, dir_ro, threshold), {}))
+        jobs.append((orient.plot_corr_time, (nsl, fn_all, dir_ro, result_tag), {}))
+    
     if conf.plot_angles_vs_baz and events:
         jobs.append((orient.plot_corr_baz,
-                     (nsl, fn_all, fn_stats, dir_ro, events, stations, threshold), {}))
+                     (nsl, fn_all, fn_stats, dir_ro, events, stations, result_tag), {}))
+    
     if conf.plot_angles_rose:
-        ### start editing
-        # jobs.append((orient.plot_corr_rose,
         jobs.append((plot_corr_rose,
                      (nsl, fn_all, fn_stats, dir_ro, threshold),
-                     dict(bins_deg=conf.rose_bins_deg, dpi=conf.rose_dpi)))
-        ### end editing
+                     dict(bins_deg=conf.rose_bins_deg, dpi=conf.rose_dpi,
+                          snr_min=conf.snr_min,
+                          resolve_polarity=conf.resolve_polarity,
+                          rz_cc_min=conf.rz_cc_min)))
+    
     if conf.plot_orient_map_fromfile:
         pl_opt = maps.pl_opt
         if pl_opt == ['automatic'] and stations:
@@ -416,20 +462,19 @@ def plot_output(dir_ro, conf, events, stations, maps, nsl):
             radius = 1.2 * max(orthodrome.distance_accurate50m(
                 orthodrome.Loc(lat_m, lon_m), corner) for corner in corners)
             pl_opt = [lat_m, lon_m, max(radius, 1000.0), 'split']
+    
         jobs.append((orient.plot_corr_angles,
                      ([(s.network, s.station) for s in stations],
                       [s.lat for s in stations], [s.lon for s in stations],
                       fn_stats, dir_ro, pl_opt, maps.pl_topo,
-                      maps.map_size, maps.outformat, threshold, conf.orient_map_label), {}))
+                      maps.map_size, maps.outformat, result_tag, conf.orient_map_label), {}))
+    
     for function, args, kwargs in jobs:
         try:
             function(*args, **kwargs)
-            ### start editing
-            # if function == orient.plot_corr_rose:
             if function == plot_corr_rose:
-            ### end editing
                 old_suffix = '_rose_cc%s.png' % threshold
-                new_suffix = '_rose_er%s.png' % threshold
+                new_suffix = '_rose_%s.png' % result_tag
                 for filename in os.listdir(dir_ro):
                     if filename.endswith(old_suffix):
                         new_filename = filename[:-len(old_suffix)] + new_suffix
@@ -496,6 +541,6 @@ def run_orient(data_dir, stations, subsets_events, arrT_by_subset, conf):
                               dir_ro, 'all', conf, arrival_tables,
                               list_all_snr, list_all_rz_corr)
         
-        write_output(dir_ro, conf)
+        reanalyse_saved_results(dir_ro, conf)
         
         logs.info('Saved P-energy results in %s.', dir_ro)
