@@ -219,11 +219,11 @@ class OrientPEnergyConfig(Object):
         help='Vertical noise window relative to saved P arrival [s]')
     resolve_polarity = Bool.T(default=False,
         help='Use zero-lag R-Z correlation to select the 180 degree branch')
-    ### start editing
     rz_cc_min = Any.T(default=False,
         help='Optional minimum absolute R-Z correlation [0.0, 1.0]; '
              'a float enables it only when resolve_polarity is True')
-    ### end editing
+    ev_median_centering = Bool.T(default=False,
+        help='Subtract each event median across at least three station results')
     plot_angles_vs_events = Bool.T(default=False)
     plot_angles_vs_baz = Bool.T(default=False)
     plot_angles_rose = Bool.T(default=False)
