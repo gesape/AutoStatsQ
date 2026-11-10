@@ -19,6 +19,7 @@ import autostatsq.generate_report.add_to_psds as psds
 import autostatsq.generate_report.add_to_timing as time
 
 from autostatsq.config import AutoStatsQConfig
+from autostatsq.config_settings_defaults import generate_default_config
 
 
 logs = logging.getLogger('REPORT')
@@ -33,9 +34,47 @@ def gen_report(config):
 
     configfile = config
 
-    gensettings, catalogconf, arrTconf, metaDataconf, RestDownconf, \
-            synthsconf, gainconf, psdsconf, orientconf, timingconf, tc, maps =\
-            AutoStatsQConfig.load(filename=configfile).Settings
+    # gensettings, catalogconf, arrTconf, metaDataconf, RestDownconf, \
+    #         synthsconf, gainconf, psdsconf, orientconf, timingconf, tc, maps =\
+    #         AutoStatsQConfig.load(filename=configfile).Settings
+    # gensettings, catalogconf, arrTconf, metaDataconf, RestDownconf, \
+    #         synthsconf, gainconf, psdsconf, orientconf, p_energy_conf,\
+    #         timingconf, tc, maps =\
+    #         AutoStatsQConfig.load(filename=configfile).Settings
+    settings = {}
+    for section in AutoStatsQConfig.load(filename=configfile).Settings:
+        name = type(section).__name__
+        if name in settings:
+            raise ValueError('Duplicate configuration section: %s' % name)
+        settings[name] = section
+
+    required = [
+        'GeneralSettings', 'CatalogConfig', 'ArrTConfig',
+        'MetaDataDownloadConfig', 'RestDownRotConfig',
+        'SynthDataConfig', 'maps']
+    for name in required:
+        if name not in settings:
+            raise ValueError('Missing required configuration section: %s' % name)
+
+    for section in generate_default_config().Settings:
+        name = type(section).__name__
+        if name not in settings:
+            section.regularize()
+            settings[name] = section
+
+    gensettings = settings['GeneralSettings']
+    catalogconf = settings['CatalogConfig']
+    arrTconf = settings['ArrTConfig']
+    metaDataconf = settings['MetaDataDownloadConfig']
+    RestDownconf = settings['RestDownRotConfig']
+    synthsconf = settings['SynthDataConfig']
+    gainconf = settings['GainfactorsConfig']
+    psdsconf = settings['PSDConfig']
+    orientconf = settings['OrientConfig']
+    p_energy_conf = settings['OrientPEnergyConfig']
+    timingconf = settings['TimingConfig']
+    tc = settings['TeleCheckConfig']
+    maps = settings['maps']
 
     try:
         os.makedirs(os.path.join(gensettings.work_dir,
