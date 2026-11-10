@@ -60,6 +60,9 @@ def plot_corr_time(nsl, filename, dir_ro, ccmin):
 
     """
     angles_fromfile = load(filename=os.path.join(dir_ro, filename))
+    filename_stats = filename.replace(
+        'AllCorrectionAngles_', 'CorrectionAngles_', 1)
+    stats_fromfile = load(filename=os.path.join(dir_ro, filename_stats))
     # y_lim = (-180., 180.)
 
     for item in angles_fromfile.dict_stats_all:
@@ -76,32 +79,33 @@ def plot_corr_time(nsl, filename, dir_ro, ccmin):
             absmax = max(angle_list, key=abs)
             if abs(absmax) < 60:
                 absmax=60
-            _median = num.median(angle_list)
-            _mean = num.mean(angle_list)
+            try:
+                _median = stats_fromfile.CorrectAngl_perStat_median['%s %s %s' % (st[0],st[1], st[2])]
+                _mean = stats_fromfile.CorrectAngl_perStat_mean['%s %s %s' % (st[0], st[1], st[2])]
+                _stdev = stats_fromfile.CorrectAngl_perStat_stdd['%s %s %s' % (st[0], st[1], st[2])]
+            except KeyError:
+                continue
             min_ev = num.min(ev_list)
             max_ev = num.max(ev_list)
             xvals = num.linspace(min_ev-1000, max_ev+1000, 100)
             xvals_d = [datetime.datetime.strptime(util.time_to_str(x),
                        '%Y-%m-%d %H:%M:%S.%f') for x in xvals]
 
-            fig, ax = plt.subplots(nrows=1, figsize=(10, 3))
-
-            ax.plot(ev_list_d, angle_list, 'bo')
-
-            ax.plot(xvals_d, [_median for i in range(len(xvals))], 'g--', label='median')
-            ax.plot(xvals_d, [_mean for i in range(len(xvals))], 'r--', label='mean')
-            
-            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-            ax.set_ylim((-abs(absmax)-1,abs(absmax)+1))
-            ax.set_title('%s.%s' % (st[0],st[1]))
+            fig, ax = plt.subplots(figsize=(10, 3))
+            ax.plot(xvals_d, [_mean for i in range(len(xvals_d))], c='black', ls='--', label='mean')
+            ax.plot(xvals_d, [_median for i in range(len(xvals_d))], c='red', ls=':', label='median')
+            ax.legend(loc='center right', bbox_to_anchor=(1, 0.5))
+            ax.fill_between(xvals_d, [_mean-_stdev for i in range(len(xvals_d))],
+                            [_mean+_stdev for i in range(len(xvals_d))], facecolor='gray', alpha=0.2)
+            ax.scatter(ev_list_d, angle_list, c='black', s=8)
+            ax.set_ylim((-abs(absmax)-20, abs(absmax)+20))
+            ax.set_xlim((xvals_d[0], xvals_d[-1]))
+            ax.set_title('%s.%s' % (st[0], st[1]))
             ax.set_xlabel('Event date')
-            ax.set_ylabel('Correction angle [°]')
-            # xticks = ax.get_xticks()
-            # print(xticks)
-            # ax.set_xticklabels([util.time_to_str(x)[0:16] for x in xticks], rotation=70)
-            plt.tick_params(labelsize=12)
-            plt.tight_layout(rect=[0,0,0.8,1])
-            # plt.show()
+            ax.set_ylabel('Sensor correction angle [°]')
+
+            plt.tick_params(labelsize=10)
+            plt.tight_layout()
 
             if not 'median-centered' in filename:
                 fig.savefig(os.path.join(dir_ro, '%s_%s_overtime_%s.png' % (st[0], st[1], ccmin)))

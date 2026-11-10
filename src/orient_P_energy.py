@@ -436,7 +436,6 @@ def plot_output(dir_ro, conf, events, stations, maps, nsl):
     jobs = []
     
     if conf.plot_angles_vs_events:
-        # jobs.append((orient.plot_corr_time, (nsl, fn_all, dir_ro, threshold), {}))
         jobs.append((orient.plot_corr_time, (nsl, fn_all, dir_ro, result_tag), {}))
     
     if conf.plot_angles_vs_baz and events:
