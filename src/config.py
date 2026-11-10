@@ -9,7 +9,7 @@
 File containing configuration setup.
 '''
 
-from pyrocko.guts import Object, Float, Int, String, Bool, List, Tuple, Dict
+from pyrocko.guts import Object, Float, Int, String, Bool, List, Tuple, Dict, Any
 from pyrocko.gf import TPDef
 
 
@@ -202,6 +202,30 @@ class maps(Object):
     pl_opt = List.T()
     pl_topo = Bool.T(default=False)
     outformat = String.T(default='png')
+
+
+class OrientPEnergyConfig(Object):
+    # P-wave orientation; angles have a 180 degree ambiguity.
+    orient_p_energy = Bool.T(default=False)
+    time_wdw = Tuple.T(2, Float.T(), default=(-5.0, 30.0),
+        help='Start and end relative to theoretical P arrival [s]')
+    bandpass = Tuple.T(3, Float.T(), default=(3.0, 0.03, 0.2),
+        help='[filter order, minimum frequency, maximum frequency] in Hz')
+    energy_ratio_min = Float.T(default=3.0,
+        help='Keep events with maximized window energy R/T above this value')
+    snr_min = Any.T(default=False,
+        help='False disables SNR; a float (e.g. 3.0) enables the RMS SNR threshold')
+    snr_noise_wdw = Tuple.T(2, Float.T(), default=(-60.0, -10.0),
+        help='Vertical noise window relative to saved P arrival [s]')
+    resolve_polarity = Bool.T(default=False,
+        help='Use zero-lag R-Z correlation to select the 180 degree branch')
+    plot_angles_vs_events = Bool.T(default=False)
+    plot_angles_vs_baz = Bool.T(default=False)
+    plot_angles_rose = Bool.T(default=False)
+    plot_orient_map_fromfile = Bool.T(default=False)
+    rose_bins_deg = Float.T(default=1.0)
+    rose_dpi = Int.T(default=100)
+    orient_map_label = List.T(optional=True)
 
 
 class AutoStatsQConfig(Object):
