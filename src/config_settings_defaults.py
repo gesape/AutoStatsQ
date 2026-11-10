@@ -14,7 +14,7 @@ import os
 from .config import GeneralSettings, CatalogConfig, ArrTConfig,\
 MetaDataDownloadConfig, RestDownRotConfig, SynthDataConfig,\
 GainfactorsConfig, PSDConfig, OrientConfig, AutoStatsQConfig,\
-TimingConfig, maps, TeleCheckConfig
+TimingConfig, maps, TeleCheckConfig, OrientPEnergyConfig
 
 
 def generate_default_config():
@@ -120,6 +120,8 @@ def generate_default_config():
                               plot_angles_vs_events=False,
                               debug_mode=False)
 
+    p_energy_conf = OrientPEnergyConfig()
+
     timingconf = TimingConfig(timing_test=False,
                               bandpass=(3, 0.01, 0.08),
                               time_wdw=['tP-120', 'tP+600'],
@@ -138,7 +140,8 @@ def generate_default_config():
     config = AutoStatsQConfig(
       Settings=[gensettings, catalogconf, arrTconf, metaDataconf,
                 RestDownconf,
-                synthsconf, gainfconf, psdsconf, orientconf, timingconf, 
+                synthsconf, gainfconf, psdsconf, orientconf, p_energy_conf,
+                timingconf,
                 _tele_check, _maps])
 
     return config
