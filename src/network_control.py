@@ -38,6 +38,7 @@ from .gainplots import plot_median_gain_map_from_file
 from .tele_check import TeleCheck
 from . import freq_psd as fp
 from . import orient
+from . import orient_P_energy as orient_p_energy
 from . import timing as tt
 from . import call_tele_check as tele
 from.configchecks import check_config
@@ -123,9 +124,6 @@ def response_file_name(directory, site):
 
 def main(): 
   
-    # Any event with "bad" data to be excluded?
-    exclude_event = ['2017-11-04 09:00:19.000']
-
     # Command line input handling
     desc = 'AutoStatsQ - Automated station quality control for MT inversion'
     parser = argparse.ArgumentParser(description=desc)
@@ -189,10 +187,45 @@ def main():
         logging.info('Welcome to AutoStatsQ - a station quality control checking tool. Version %s\n' % ver)
 
         # read existing config file:
+        # gensettings, catalogconf, arrTconf, metaDataconf, RestDownconf,\
+        # synthsconf, gainfconf, psdsconf, orientconf, p_energy_conf,\
+        # timingconf, tc, maps =\
+        # AutoStatsQConfig.load(filename=args.config).Settings
+        settings = {}
+        for section in AutoStatsQConfig.load(filename=args.config).Settings:
+            name = type(section).__name__
+            if name in settings:
+                raise ValueError('Duplicate configuration section: %s' % name)
+            settings[name] = section
 
-        gensettings, catalogconf, arrTconf, metaDataconf, RestDownconf,\
-        synthsconf, gainfconf, psdsconf, orientconf, timingconf, tc, maps =\
-        AutoStatsQConfig.load(filename=args.config).Settings
+        required = [
+            'GeneralSettings', 'CatalogConfig', 'ArrTConfig',
+            'MetaDataDownloadConfig', 'RestDownRotConfig',
+            'SynthDataConfig', 'maps']
+        for name in required:
+            if name not in settings:
+                raise ValueError('Missing required configuration section: %s' % name)
+
+        # Omitted tests use the existing disabled defaults.
+        for section in generate_default_config().Settings:
+            name = type(section).__name__
+            if name not in settings:
+                section.regularize()
+                settings[name] = section
+
+        gensettings = settings['GeneralSettings']
+        catalogconf = settings['CatalogConfig']
+        arrTconf = settings['ArrTConfig']
+        metaDataconf = settings['MetaDataDownloadConfig']
+        RestDownconf = settings['RestDownRotConfig']
+        synthsconf = settings['SynthDataConfig']
+        gainfconf = settings['GainfactorsConfig']
+        psdsconf = settings['PSDConfig']
+        orientconf = settings['OrientConfig']
+        p_energy_conf = settings['OrientPEnergyConfig']
+        timingconf = settings['TimingConfig']
+        tc = settings['TeleCheckConfig']
+        maps = settings['maps']
 
         data_dir = gensettings.work_dir
         # os.path.join takes properly into account the case of trailing slash
@@ -616,13 +649,6 @@ def main():
                 logs.info(' Plotting catalog azimuthal for subset: %s.' % d)
                 gmtplot_catalog_azimuthal(subset_catalog, mid_point, 
                                                catalogconf.dist, fn, catalogconf.wedges_width)
-
-            if exclude_event != []:
-                new_subset_catalog = []
-                for ev in subset_catalog:
-                    if util.time_to_str(ev.time) not in exclude_event:
-                        new_subset_catalog.append(ev)
-                subset_catalog = new_subset_catalog
 
 
             ''' 2.1 Calculate arrival times for all event/station pairs '''
@@ -1977,6 +2003,43 @@ def main():
                     dir_ro, orientconf.ccmin,
                     bins_deg=orientconf.rose_bins_deg,
                     dpi=orientconf.rose_dpi)
+
+
+        if p_energy_conf.orient_p_energy is True:
+            logs = logging.getLogger('Orientation_P_energy')
+            logs.setLevel(verbo)
+            logs.info('Starting P-wave energy orientation section.')
+            
+            p_energy_events = {}
+            arrT_by_subset = {}
+
+            for subset in ['deep', 'shallow']:
+                p_energy_events[subset] = [
+                    ev for ev in subsets_events.get(subset, [])]
+                atfile = os.path.join(
+                            data_dir, 'ttt', 'ArrivalTimes_%s.npy' % subset)
+                try:
+                    arrT_by_subset[subset] = num.load(atfile)
+                except OSError:
+                    logs.error('Please calculate P arrival times first: %s', atfile)
+                    raise                
+
+            orient_p_energy.run_orient(
+                data_dir, all_stations, p_energy_events, arrT_by_subset,
+                p_energy_conf)
+
+        if (p_energy_conf.plot_angles_vs_events is True
+                or p_energy_conf.plot_angles_vs_baz is True
+                or p_energy_conf.plot_angles_rose is True
+                or p_energy_conf.plot_orient_map_fromfile is True):
+            dir_ro = os.path.join(data_dir, 'results', 'orient_P-energy')
+            if p_energy_conf.orient_p_energy is False:
+                orient_p_energy.write_output(dir_ro, p_energy_conf)
+            p_plot_events = []
+            for subset in ['deep', 'shallow']:
+                p_plot_events.extend(p_energy_events[subset])
+            orient_p_energy.plot_output(
+                dir_ro, p_energy_conf, p_plot_events, all_stations, maps, ns)
 
         if timingconf.timing_test is True:
             # Set Logger name and verbosity
