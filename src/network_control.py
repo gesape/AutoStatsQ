@@ -2031,7 +2031,8 @@ def main():
         if (p_energy_conf.plot_angles_vs_events is True
                 or p_energy_conf.plot_angles_vs_baz is True
                 or p_energy_conf.plot_angles_rose is True
-                or p_energy_conf.plot_orient_map_fromfile is True):
+                or p_energy_conf.plot_orient_map_fromfile is True
+                or p_energy_conf.ev_median_centering is True):
             
             dir_ro = os.path.join(data_dir, 'results', 'orient_P-energy')
             
@@ -2045,6 +2046,19 @@ def main():
             
             orient_p_energy.plot_output(
                 dir_ro, p_energy_conf, p_plot_events, all_stations, maps, ns)
+
+            if p_energy_conf.ev_median_centering is True:
+                logs = logging.getLogger('Orientation_P_energy')
+                logs.setLevel(verbo)
+                logs.info('Removing event median values from P-energy results.')
+                p_center_events = []
+                for subset in ['deep', 'shallow']:
+                    p_center_events.extend(subsets_events.get(subset, []))
+                orient_p_energy.ev_median_centering(
+                    ns, dir_ro, p_energy_conf, p_center_events)
+                orient_p_energy.plot_output(
+                    dir_ro, p_energy_conf, p_plot_events, all_stations, maps, ns,
+                    median_centered=True)
 
         if timingconf.timing_test is True:
             # Set Logger name and verbosity

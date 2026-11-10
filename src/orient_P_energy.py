@@ -388,6 +388,39 @@ def reanalyse_saved_results(dir_ro, conf):
     return used_stats
 
 
+def ev_median_centering(ns, dir_ro, conf, event_list):
+    '''Reuse Rayleigh event centering and retain P-energy measurement diagnostics.'''
+    tag = get_result_tag(conf)
+    filename_all = 'AllCorrectionAngles_%s.yaml' % tag
+    saved = load(filename=os.path.join(dir_ro, filename_all))
+
+    orient.ev_median_centering(ns, filename_all, dir_ro, tag, event_list)
+
+    suffix = '_ev-median-centered.yaml'
+    centered_all = os.path.join(dir_ro, 'AllCorrectionAngles_%s%s' % (tag, suffix))
+    centered_stats = os.path.join(dir_ro, 'CorrectionAngles_%s%s' % (tag, suffix))
+    os.replace(os.path.join(dir_ro, 'AllCorrectionAngles_cc%s%s' % (tag, suffix)),
+               centered_all)
+    os.replace(os.path.join(dir_ro, 'CorrectionAngles_cc%s%s' % (tag, suffix)),
+               centered_stats)
+
+    centered = load(filename=centered_all)
+    angles_by_station = {item.station: item.ev_rota
+                         for item in centered.dict_stats_all}
+    for item in saved.dict_stats_all:
+        item.ev_rota = angles_by_station[item.station]
+        item.ev_energy_ratio = {
+            ev: value for ev, value in item.ev_energy_ratio.items()
+            if ev in item.ev_rota}
+        item.ev_snr = {ev: value for ev, value in item.ev_snr.items()
+                       if ev in item.ev_rota}
+        item.ev_rz_corr = {ev: value for ev, value in item.ev_rz_corr.items()
+                           if ev in item.ev_rota}
+    saved.regularize()
+    saved.validate()
+    saved.dump(filename=centered_all)
+
+
 def plot_corr_rose(nsl, filename_all, filename_stats, dir_ro, threshold,
                    bins_deg=1.0, dpi=100, snr_min=False,
                    resolve_polarity=False, rz_cc_min=False):
@@ -425,14 +458,14 @@ def plot_corr_rose(nsl, filename_all, filename_stats, dir_ro, threshold,
         orient.plt.subplots = original_subplots
 
 
-def plot_output(dir_ro, conf, events, stations, maps, nsl):
+def plot_output(dir_ro, conf, events, stations, maps, nsl, median_centered=False):
     '''Only saved YAML files are used for angles and summary statistics.'''
     logs = logging.getLogger('Orientation_P_energy')
     threshold = conf.energy_ratio_min
-    # fn_stats = 'CorrectionAngles_er%s.yaml' % threshold
     result_tag = get_result_tag(conf)
-    fn_all = 'AllCorrectionAngles_%s.yaml' % result_tag
-    fn_stats = 'CorrectionAngles_%s.yaml' % result_tag
+    suffix = '_ev-median-centered' if median_centered else ''
+    fn_all = 'AllCorrectionAngles_%s%s.yaml' % (result_tag, suffix)
+    fn_stats = 'CorrectionAngles_%s%s.yaml' % (result_tag, suffix)
     jobs = []
     
     if conf.plot_angles_vs_events:
@@ -466,14 +499,16 @@ def plot_output(dir_ro, conf, events, stations, maps, nsl):
                      ([(s.network, s.station) for s in stations],
                       [s.lat for s in stations], [s.lon for s in stations],
                       fn_stats, dir_ro, pl_opt, maps.pl_topo,
-                      maps.map_size, maps.outformat, result_tag, conf.orient_map_label), {}))
+                      maps.map_size, maps.outformat, result_tag, conf.orient_map_label),
+                     dict(out_fn='map_orient_corr') if median_centered else {}))
     
     for function, args, kwargs in jobs:
         try:
             function(*args, **kwargs)
             if function == plot_corr_rose:
-                old_suffix = '_rose_cc%s.png' % threshold
-                new_suffix = '_rose_%s.png' % result_tag
+                plot_suffix = '_med-centered' if median_centered else ''
+                old_suffix = '_rose_cc%s%s.png' % (threshold, plot_suffix)
+                new_suffix = '_rose_%s%s.png' % (result_tag, plot_suffix)
                 for filename in os.listdir(dir_ro):
                     if filename.endswith(old_suffix):
                         new_filename = filename[:-len(old_suffix)] + new_suffix
