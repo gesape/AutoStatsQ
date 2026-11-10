@@ -2032,12 +2032,17 @@ def main():
                 or p_energy_conf.plot_angles_vs_baz is True
                 or p_energy_conf.plot_angles_rose is True
                 or p_energy_conf.plot_orient_map_fromfile is True):
+            
             dir_ro = os.path.join(data_dir, 'results', 'orient_P-energy')
+            
             if p_energy_conf.orient_p_energy is False:
-                orient_p_energy.write_output(dir_ro, p_energy_conf)
+                orient_p_energy.reanalyse_saved_results(dir_ro, p_energy_conf)
+            
             p_plot_events = []
-            for subset in ['deep', 'shallow']:
-                p_plot_events.extend(p_energy_events[subset])
+            if p_energy_conf.plot_angles_vs_baz is True:
+                for subset in ['deep', 'shallow']:
+                    p_plot_events.extend(subsets_events.get(subset, []))
+            
             orient_p_energy.plot_output(
                 dir_ro, p_energy_conf, p_plot_events, all_stations, maps, ns)
 
