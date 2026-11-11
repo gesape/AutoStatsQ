@@ -1059,8 +1059,12 @@ def main():
 
                                 for tr in trs:
                                     cnt_resp = 0
-                                    if RestDownconf.deltat_down > 0.0 and RestDownconf.deltat_down > tr.deltat and tr.deltat < 0.1:
+                                    if RestDownconf.deltat_down >= 0.1 and tr.deltat < 0.1:
                                             tr.downsample_to(0.1,allow_upsample_max=3)
+                                            # RestDownconf.deltat_down > 0.0   # Downsampling is enabled.
+                                            # RestDownconf.deltat_down >= 0.1  # Requested final rate is 10 Hz or lower.
+                                            # tr.deltat < 0.1                 # Input rate is higher than 10 Hz.
+                                            # intermediate downsampling only needed if final downsampled sampling rate is below 10 Hz.
                                     for resp_now in responses:
                                         try:
                                             polezero_resp = resp_now.get_pyrocko_response(
