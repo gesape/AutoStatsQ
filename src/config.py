@@ -195,7 +195,10 @@ class TimingConfig(Object):
 
 
 class TeleCheckConfig(Object):
-    tele_check = Bool.T()
+    tele_check = Bool.T(default=False)
+    relative_orient_alignment = Bool.T(
+        default=False,
+        help='Enable/disable the secondary orientation test, measuring relative alignment among network stations only.')
 
 class maps(Object):
     map_size = List.T(default=[30,30])
