@@ -1,7 +1,7 @@
 # AutoStatsQ
 
 Toolbox for automated station quality control for MT inversion.
-Please contact me ([Gesa](mailto:gesap@gfz.de?subject=%5BAutoStatsQ%20Support%5D)) for help or if you find bugs :-)
+Please contact me ([Gesa](mailto:gesapetersen.seismology@gmail.com?subject=%5BAutoStatsQ%20Support%5D)) for help or if you find bugs :-)
 
 Work steps covered by AutoStatsQ:
 
@@ -46,6 +46,7 @@ Contents
 - 2 new **tutorials** with step-by-step instructions in the ```example``` directory; including all input to get started. Example (I) - testing data and metadata downloaded from an fdsn server; Example (II) - testing locally stored data (including a synthetic test dataset).
 - Result presentation as a **html report**! After running AutoStatsQ, a html report file can be generated using ```--report```. The report is based on reveal (Copyright (C) 2020 Hakim El Hattab, http://hakim.se, and reveal.js contributors).
 - 2025-10-08: Renamed all mseed data to avoid colons in file names. Added possibility to change cross-correlation threshold for orient test without re-calculating correlations.
+- 2026-11-18: Update of functionality and instructions of the telecheck + new additional P-energy based orientation check.
 
 
 
@@ -499,35 +500,117 @@ The output is returned as a yaml file with mean, median, standard deviations and
 In the configuration file you can set the band pass filter, the time window relative to P wave arrival (tP) and estimated Rayleigh wave arrival (tR), as well as the minimum cross-correlation threshold. For information on defining these settings please see the exemplary config file above.
 
 
-### Small intro to the telecheck (WIP - experimental and interactive
 
-The *telecheck* is a small additional interactive testing framework, which is not a core part of AutoStatsQ. It is a bit experimental and requires human interaction within Pyrocko's waveform browser *Snuffler* (Heimann et al., 2017). *Telecheck* will use the P phases of teleseismic events to check station gain factors and orientations (polarization and amplitude analysis using cross-correlations). The test assumes that event-station distances are large compared to inter-station distances so that the seismic waves arriving at all stations have a similar travel path. The test is appilcable also for short period stations and/or smaller seismic event magnitudes, in cases where no clear surface waves are observed. It can additionally serve as a secondary, independent check of AutoStatsQ's main tests.
 
-*telecheck* can be started by setting: 
+### TeleCheck — experimental interactive gain and orientation checks
+
+The *telecheck* is a small additional interactive testing framework, which is not a core part of AutoStatsQ. It is a bit experimental and requires human interaction within Pyrocko's waveform browser *Snuffler* (Heimann et al., 2017). *Telecheck* will use the P phases of teleseismic events to check station gain factors and orientations (polarization and amplitude analysis using cross-correlations). It
+assumes that event–station distances are large compared with inter-station
+distances, so incoming waveforms are sufficiently similar across the network. The test is appilcable also for short period stations and/or smaller seismic event magnitudes. To enable usage with higher frequencies, the preprocessing (downsampling and restitution frequency band) need to be adjusted first.
+*telecheck* provides an additional check when suitable P arrivals are available, including
+events without clearly observable surface waves.
+
+Enable TeleCheck with:
 
 ```yaml
 - !autostatsq.config.TeleCheckConfig
   tele_check: true
+  relative_orient_alignment: false
 ```
 
-For each event in the 'deep' catalog, a snuffler window will open containing the restituted, rotated, downsampled (*/rrd*) waveform traces of all stations. 
-The snuffler window has two tabs at the bottom, *Main Controls* and *Telecheck*. In *Main Controls* you can change the bandpass filter or amplitude gain. In *Telecheck* you can select which channels to use for the polarization analysis (default: R,T), which channels to use for the relative amplitude analysis (default: Z), and a minimum cross-correlation threshold to include results in the analysis (default: 0.8). Run the test for every single event following these steps:
+For each event in the `deep` catalog with available prepared waveforms under
+`rrd/`, AutoStatsQ opens a Snuffler window.
 
-1. Select a time winow containing the P phase on all stations using an *extended marker*: Double click in the waveforms to enter the picking mode. Click once at the beginning of the time window, hold and click again at the end of the time window. This will mark in red the time window. Use <backspace> to delete a marker if you are not satisfied with your pick.
-2. Click on ``Run`` to analyse the current time window. This will open a new tab in the snuffler with two figures:
-      - (left) Polarization analysis. Black lines - best aligned for 0° rotation. Brown: Best aligned for a rotation between 1-30°. Orange: >30°; Red: Test failed. Gray: After correction.
-      - (right) Result of cross-correlation gain analysis. Numbers are median relative amplitudes of station pairs.
-  In addition, output is provided in the terminal running AutoStatsQ. *AZI POL* provides the azimuth derived from polarization analysis for each station (eigenvalue decomposition). *POL ROT* provides rotation angles for which polarization is most linear in expected P wave direction. 
+In **Main Controls**, choose the filters if needed to enhance the first arriving P phase. In **Tele-Check**, select the phase,
+polarization channels and gain-analysis channels. Defaults are **P**, **R,T** and
+**Z**, respectively. Adjust the cross-correlation value if needed (default: 0.8). 
 
-  If not satisfied with result, e.g. due to too long time windows, re-run current event by closing tab and re-selecting time window.
+#### Interactive workflow
 
-3. Click on ```Save Grond Corrections``` and close snuffler to continue with next event.
+1. Select exactly one time-window marker associated with a single trace, covering
+   the P arrival at that station. Double click in the waveforms to enter the picking mode. Click once at the beginning of the time window, and click again at the end of the time window. This will mark in red the time window. Use <backspace> to delete a marker if you are not satisfied with your pick. TeleCheck shifts the analysis window for other
+   stations using predicted travel-time differences.
+2. Click **Run**. Inspect the polarization and gain panels (see explainations below). If necessary, adjust the marker or filters and run again; analysis does not update automatically.
+3. Click **Save Grond Corrections** to save the accepted results and snapshots.
+4. Close Snuffler to continue to the next event.
 
-Perform the same analysis (step 1-3) for all events.
+Closing the window without saving does not commit the pending result. Re-saving
+an event replaces its saved entries; it does not count as another event.
 
-In the end, the single results of the amplitude corrections and the statistics (median, mean, standard deviation) are saved in text files in the */results/telecheck* directory. Orientations are currently not saved, to be implemented...
+#### Methods and visual interpretation
 
-**Hint:** Use ```--logoutput FILENAME``` to save terminal output (*POL AZI* and *POL ROT*) to a file.
+**P polarization:** The left window in the snuffler shows the polarization of the P phase. If a sensor is correctly oriented, the P phase should be elongated in vertical direction. The principal eigenvector of the horizontal covariance
+matrix gives the polarization axis (black dotted line). For R,T input, 0° corresponds to radial
+polarization. Angles have a 180° ambiguity and are represented in `[-90°, 90°)`
+before rounding. Linearity is calculated as:
+
+```text
+linearity = 1 − smallest_eigenvalue / largest_eigenvalue
+```
+
+Values near 1 indicate a well-defined axis. Low linearity makes the angle less informative. Assess the result across several events before interpreting a deviation as station misorientation.
+
+**Relative gains:** Selected components, normally Z, are cross-correlated between
+stations. Pairs must meet the minimum absolute cross-correlation threshold,
+default 0.8. Reciprocal pair-amplitude estimates must also agree within 20%.
+Accepted pair amplitude ratios are inverted by least squares in log-amplitude
+space for station factors, then normalized so their median is 1.
+
+The saved factor describes relative amplitude. The displayed amplitude
+correction is its reciprocal. The cross-correlation threshold filters gain
+pairs; it does not filter P polarization or relative-orientation estimates.
+
+
+**Optional relative orientation alignment:** With
+`relative_orient_alignment: true`, an additional relative test for orientation is performed based on optimizing the waveform similarity of R and T components through rotation. This test will not provide helpful results if too many of the stations are randomly oriented like in a borehole network. 
+
+Horizontal waveforms are normalized by their
+maximum horizontal vector amplitude and compared between stations over trial
+rotations in 1° steps. Iterative alignment produces a relative rotation for each
+station. This minimizes waveform differences rather than using
+cross-correlation. The saved `relative_waveform_misfit` is a network-relative
+score; results above 3, undefined scores and unsuccessful convergence are
+unusable. This score is not an angular uncertainty.
+
+Relative alignment identifies disagreement within the network. It cannot
+establish an orientation error shared by the entire network. Disabling it skips
+its calculations, result output and plots; previously saved files remain.
+
+
+
+#### Interactive result panels
+
+
+**Left: polarization.** Each station's original horizontal particle motion is
+normalized separately and drawn in black. A dotted black line shows the measured
+principal axis. With R,T selected, T is horizontal and R is vertical.
+
+When relative alignment is enabled, a dashed line additionally shows the axis
+after applying the estimated relative rotation:
+
+- **Gray:** absolute relative rotation below 20°.
+- **Orange:** absolute relative rotation of 20° or more.
+
+
+**Right: relative gains.** Selected gain-analysis traces are shifted using
+predicted phase-arrival times and divided by their inferred station factors.
+Labels show reciprocal correction factors. The display does not apply the
+measured pairwise cross-correlation lags.
+
+#### Saved results
+
+Results (yaml files and figures) are written under `results/tele_check/`:
+
+After the interactive event sequence, station rose diagrams and
+orientation-over-time plots are generated from saved orientation results.
+
+P polarization summaries respect the 180° ambiguity; relative-alignment
+summaries use a 360° period. Angular scatter is the RMS wrapped deviation about
+the angular mean. P polarization plots also show linearity-weighted mean/median
+lines and a weighted mean ± weighted standard-deviation band.
+
+Use `--loglevel DEBUG` for diagnostics and optionally `--logoutput FILENAME` to
+write the log to a file.
 
 
 
