@@ -51,7 +51,7 @@ from .calc_ttt import *
 from .make_report import gen_report
 
 
-ver = '2025.10.08'
+ver = '2026.11.18'
 
 fdsn.g_timeout = 120.
 
@@ -125,7 +125,7 @@ def response_file_name(directory, site):
 def main(): 
   
     # Command line input handling
-    desc = 'AutoStatsQ - Automated station quality control for MT inversion'
+    desc = 'AutoStatsQ - Automated station quality control for MT inversion (version: %s)' % ver
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--config')
     parser.add_argument('--run', action='store_true')
@@ -2165,7 +2165,18 @@ def main():
             def load_snuffling(win):
                 s = TeleCheck()
                 s.setup()
+                s.relative_orient_alignment = tc.relative_orient_alignment
+                s.output_directory = dir_tc
                 win.pile_viewer.viewer.add_snuffling(s, reloaded=True)
+                viewer = win.pile_viewer.viewer
+                for action, _ in viewer.menuitems_visible_length:
+                    if action.text() == 'Extra Long':
+                        action.setChecked(True)
+                        viewer.visible_length_change()
+                        break
+                viewer.menuitem_showboxes.setChecked(False)
+                s.update_channel_display()
+                viewer.update()
 
             for ev in subset_catalog:
                 ev.name = util.time_to_str(ev.time).replace(' ','_')
@@ -2180,7 +2191,12 @@ def main():
                               launch_hook=load_snuffling)
             
             filename_list = glob.glob(os.path.join(dir_tc, '*.cor'))
-            tele.get_correction_statistcs(all_stations, filename_list)
+            # tele.get_correction_statistcs(all_stations, filename_list)
+            if filename_list:
+                tele.get_correction_statistcs(
+                    all_stations, filename_list, output_directory=dir_tc)
+            tele.plot_orientation_results(
+                dir_tc, relative_orient_alignment=tc.relative_orient_alignment)
 
     logging.info('AutoStatsQ run finished.')
 
