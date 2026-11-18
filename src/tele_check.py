@@ -9,6 +9,7 @@
 File containing tele check functions.
 '''
 
+import os, io, logging
 import numpy as num
 
 from pyrocko.gui_util import PhaseMarker
@@ -17,9 +18,13 @@ from pyrocko.gui import marker as pmarker
 from pyrocko import cake, trace, util
 from pyrocko.plot import mpl_color
 
+from . import call_tele_check as tele
+
 
 d2r = num.pi / 180.
 r2d = 1.0 / d2r
+relative_alignment_color_threshold_deg = 20.0
+polarization_axis_length = 0.9
 
 
 class NoArrival(Exception):
@@ -121,31 +126,154 @@ class TeleCheck(Snuffling):
         self.fframes = {}
         self.set_live_update(False)
         self._nslc_to_relamp = None
+        self.relative_orient_alignment = False
+        self.output_directory = os.path.join('results', 'tele_check')
+        self._pending_orientation = None
+        self._polar_display_filter = None
+        self._previous_quick_filter = None
+        self._polar_display_channels = None
+
+    def update_channel_display(self, restore=False):
+        """Filter displayed channels without changing the waveform pile."""
+        viewer = self.get_viewer()
+
+        if self.channels_polar in ('R, T', 'N, E') and not restore:
+
+            if (self._polar_display_filter is not None
+                    and viewer.quick_filter is self._polar_display_filter
+                    and self._polar_display_channels == self.channels_polar):
+
+                return
+
+            # Switching channel selections must not chain incompatible filters.
+            previous = (self._previous_quick_filter
+                        if self._polar_display_filter is not None
+                        and viewer.quick_filter is self._polar_display_filter
+                        else viewer.quick_filter)
+            self._previous_quick_filter = previous
+
+            channels = self.channels_polar
+            self._polar_display_filter = lambda tr: (
+                (tr.channel.endswith(('Z', 'R', 'T')) if channels == 'R, T'
+                 else not tr.channel.endswith(('R', 'T')))
+                and (previous is None or previous(tr)))
+            self._polar_display_channels = channels
+            viewer.set_quick_filter(self._polar_display_filter)
+        else:
+
+            if (self._polar_display_filter is not None
+                    and viewer.quick_filter is self._polar_display_filter):
+                viewer.set_quick_filter(self._previous_quick_filter)
+
+            self._polar_display_filter = None
+            self._previous_quick_filter = None
+            self._polar_display_channels = None
+
+        if not viewer.closing:
+            viewer.update()
+
+    def choose_on_snuffling_panel(self, ident, state):
+        # """Update the channel display immediately, without running analysis."""
+        """Refresh traces when polarization channels change."""
+        super().choose_on_snuffling_panel(ident, state)
+
+        if ident == 'channels_polar':
+            self.update_channel_display()
+
+    def pre_destroy(self):
+        # """Restore the prior display filter when TeleCheck is removed."""
+        """Restore the display filter and release resources."""
+
+        if self._viewer is not None:
+            self.update_channel_display(restore=True)
+
+        super().pre_destroy()
+
+    def _capture_polarization_view(self, pending, axes):
+        """Keep a PNG snapshot of the accepted polarization panel."""
+        pending['polarization_view'] = self._capture_panel_view(axes)
+
+    def _capture_panel_view(self, axes):
+        """Capture a result panel as PNG bytes."""
+        figure = axes.figure
+        figure.canvas.draw()
+        bounds = axes.get_tightbbox(figure.canvas.get_renderer())
+        bounds = bounds.transformed(figure.dpi_scale_trans.inverted()).expanded(1.05, 1.10)
+
+        with io.BytesIO() as buffer:
+            figure.savefig(buffer, format='png', dpi=tele.plot_dpi, bbox_inches=bounds)
+
+            return buffer.getvalue()
+
 
     def save_grond_corrections(self):
+        """Save accepted orientation results and gain corrections."""
+        # Save only a complete Run associated with the currently active event.
+        viewer = self.get_viewer()
+        event = viewer.get_active_event()
+        pending = self._pending_orientation
+
+        if (event is None or pending is None
+                or pending['event_time'] != util.time_to_str(event.time)):
+            self.error('Run TeleCheck for the active event before saving.')
+
+            return
+
+        os.makedirs(self.output_directory, exist_ok=True)
+
+        view_path = os.path.join(
+            self.output_directory, '%s_polarization_view.png' % event.name)
+
+        with open(view_path, 'wb') as stream:
+            stream.write(pending['polarization_view'])
+
+        logging.info('Saved TeleCheck polarization view: %s', view_path)
+
+        tele.save_gain_results(
+            self.output_directory, pending['event_time'], pending['gain_stations'],
+            pending['gain_factors'], pending['gain_components'])
+        gain_view_path = os.path.join(
+            self.output_directory, '%s_gain_view.png' % event.name)
+
+        with open(gain_view_path, 'wb') as stream:
+            stream.write(pending['gain_view'])
+
+        logging.info('Saved TeleCheck gain view: %s', gain_view_path)
+
+        tele.save_orientation_results(
+            self.output_directory, tele.polarization_filename,
+            pending['event_time'], pending['polarization'], 180.)
+
+        if self.relative_orient_alignment:
+            tele.save_orientation_results(
+                self.output_directory, tele.relative_filename,
+                pending['event_time'], pending['relative'], 360.)
+
         if self._nslc_to_relamp:
             self.cleanup()
             viewer = self.get_viewer()
             event = viewer.get_active_event()
-            fn = 'results/tele_check/%s.cor' % event.name
+            fn = os.path.join(self.output_directory, '%s.cor' % event.name)
 
             import grond
 
             corrs = []
+
             for nslc in sorted(self._nslc_to_relamp.keys()):
                 for c in 'ZRT':
                     corr = grond.StationCorrection(
                         codes=nslc[:3] + (c,),
                         delay=0.0,
                         factor=float(self._nslc_to_relamp[nslc]))
-
                     corrs.append(corr)
 
             grond.dump_station_corrections(corrs, fn)
 
 
     def call(self):
-
+        # Invalidate a previous run before any operation that could fail.
+        self._pending_orientation = None
+        self._nslc_to_relamp = None
         self.cleanup()
         viewer = self.get_viewer()
         event = viewer.get_active_event()
@@ -329,7 +457,8 @@ class TeleCheck(Snuffling):
                         (tr_a.nslc_id, tr_b.nslc_id,
                          ccsignedmax, relamp, delay, delay_syn))
 
-        nslc_to_relamp = invert_relative_amplitudes(pair_corrs)
+        # Orientation remains available when no gain pairs pass the quality checks.
+        nslc_to_relamp = invert_relative_amplitudes(pair_corrs) if pair_corrs else {}
         self._nslc_to_relamp = nslc_to_relamp
 
         nsl_to_xy = {}
@@ -353,98 +482,131 @@ class TeleCheck(Snuffling):
         nsls = sorted(list(nsl_to_xy.keys()))
         n = len(nsls)
 
-        xs_l = [nsl_to_xy[nsl][0] for nsl in nsls]
-        ys_l = [nsl_to_xy[nsl][1] for nsl in nsls]
-        nsamp = min(min(x.size for x in xs_l), min(y.size for y in ys_l))
+        # Original combined polarization and relative-alignment implementation:
+        # xs_l = [nsl_to_xy[nsl][0] for nsl in nsls]
+        # ys_l = [nsl_to_xy[nsl][1] for nsl in nsls]
+        # nsamp = min(min(x.size for x in xs_l), min(y.size for y in ys_l))
+        # xs = num.vstack([x[:nsamp] for x in xs_l])
+        # ys = num.vstack([y[:nsamp] for y in ys_l])
+        # amps = num.sqrt(xs**2 + ys**2)
+        # amp_maxs = num.max(amps, axis=1)
+        # xs = xs / amp_maxs[:, num.newaxis]
+        # ys = ys / amp_maxs[:, num.newaxis]
+        # nphi = 361 ##
+        # phis = num.linspace(-180., 180., nphi)
+        # d = num.zeros((n, n, nphi))
+        # print('Result Event %s' % str(util.tts(event.time)))
+        # for ia in range(n):
+        #     for iphi, phi in enumerate(phis):
+        #         x = xs[ia, :]
+        #         y = ys[ia, :]
+        #         xrot = num.cos(phi*d2r) * x + num.sin(phi*d2r) * y
+        #         yrot = - num.sin(phi*d2r) * x + num.cos(phi*d2r) * y
+        #         d[ia, :, iphi] = num.sqrt(num.sum(
+        #                 (xrot[num.newaxis, :] - xs)**2
+        #                 + (yrot[num.newaxis, :] - ys)**2, axis=1))
+        #     data = num.zeros((2,len(x)))
+        #     data[0] = x
+        #     data[1] = y
+        #     cov = num.cov(data)
+        #     evals, evecs = num.linalg.eigh(cov)
+        #     pc = evecs[:, -1]
+        #     azimuth = r2d*num.arctan2(pc[1], pc[0])
+        #     azimuth = (-azimuth) % 180. - 90.
+        #     print('POL AZI (assumes R,T): %-20s %8.0f' % ('.'.join(nsls[ia]), azimuth))
+        # imins = num.argmin(d, axis=2)
+        # dmins = num.min(d, axis=2)
+        # dmin_median = num.median(dmins)
+        # phimins = phis[imins]
+        # nsl_to_rot = {}
+        # for nsl in nsls:
+        #     nsl_to_rot[nsl] = 0.
+        # failed = set()
+        # for i in range(n):
+        #     mean_min_error = num.mean(dmins[i, :]/dmin_median)
+        #     #print(mean_min_error, nsls[i])
+        #     if mean_min_error > 3.0:
+        #         failed.add(nsls[i])
+        # while True:
+        #     ia_worst = num.argmax(num.mean(num.abs(phimins), axis=1))
+        #     phimod = (
+        #         (phis[num.newaxis, :] + phimins[ia_worst, :, num.newaxis]
+        #          + 180.) % 360.) - 180.
+        #     phirot = phis[num.argmin(num.mean(num.abs(phimod), axis=0))]
+        #     if abs(phirot) < 1.:
+        #         print('PHI ROT <1: %-20s %8.0f' % ('.'.join(nsl), phirot))
+        #         break
+        #     nsl = nsls[ia_worst]
+        #     mean_min_error = num.mean(dmins[ia_worst, :]/dmin_median)
+        #     phimins[ia_worst, :] = (
+        #         (phimins[ia_worst, :] + phirot) + 180.) % 360. - 180.
+        #     phimins[:, ia_worst] = (
+        #         (phimins[:, ia_worst] - phirot) + 180.) % 360. - 180.
+        #     if nsl not in failed:
+        #         print('PHI ROT: %-20s %8.0f' % ('.'.join(nsl), phirot))
+        #         nsl_to_rot[nsl] += phirot
 
-        xs = num.vstack([x[:nsamp] for x in xs_l])
-        ys = num.vstack([y[:nsamp] for y in ys_l])
+        polarization = {
+            nsl: dict(angle_deg=None, linearity=None, usable=False,
+                      status='missing_channels') for nsl in nsl_to_station}
+        relative = {}
 
-        amps = num.sqrt(xs**2 + ys**2)
-        amp_maxs = num.max(amps, axis=1)
+        if nsls:
+            nsamp = min(min(x.size, y.size) for x, y in nsl_to_xy.values())
+            xs = num.vstack([nsl_to_xy[nsl][0][:nsamp] for nsl in nsls])
+            ys = num.vstack([nsl_to_xy[nsl][1][:nsamp] for nsl in nsls])
 
-        xs = xs / amp_maxs[:, num.newaxis]
-        ys = ys / amp_maxs[:, num.newaxis]
-        nphi = 361 ##
-        phis = num.linspace(-180., 180., nphi)
-        d = num.zeros((n, n, nphi))
+            for ia, nsl in enumerate(nsls):
+                polarization[nsl] = tele.polarization_measurement(xs[ia], ys[ia])
 
-        print('Result Event %s' % str(util.tts(event.time)))
-        for ia in range(n):
-            for iphi, phi in enumerate(phis):
-                x = xs[ia, :]
-                y = ys[ia, :]
-                xrot = num.cos(phi*d2r) * x + num.sin(phi*d2r) * y
-                yrot = - num.sin(phi*d2r) * x + num.cos(phi*d2r) * y
+            # No relative-alignment work or allocation when disabled.
+            if self.relative_orient_alignment and nsamp > 0:
+                relative = tele.relative_orientation(nsls, xs, ys)
 
-                d[ia, :, iphi] = num.sqrt(num.sum(
-                        (xrot[num.newaxis, :] - xs)**2
-                        + (yrot[num.newaxis, :] - ys)**2, axis=1))
+        if self.relative_orient_alignment:
+            for nsl in nsl_to_station:
+                relative.setdefault(nsl, dict(
+                    angle_deg=None, relative_waveform_misfit=None,
+                    usable=False, status='missing_channels'))
 
-            data = num.zeros((2,len(x)))
-            data[0] = x
-            data[1] = y
-            cov = num.cov(data)
-            evals, evecs = num.linalg.eigh(cov)
+        for nsl, result in polarization.items():
+            result.update(phase=self.phasename, channels=self.channels_polar)
+            # Only P on R,T supports interpretation as a radial P-axis deviation.
+            if self.phasename != 'P' or self.channels_polar != 'R, T':
+                result.update(usable=False, status='requires_P_on_RT')
 
-            pc = evecs[:, -1]
+        # for measurements in (polarization, relative):
+        #     for nsl, result in measurements.items():
+        #         result.update(
+        #             window_start=util.time_to_str(nsl_to_tspan[nsl][0]),
+        #             window_end=util.time_to_str(nsl_to_tspan[nsl][1]),
+        #             highpass_hz=viewer.highpass, lowpass_hz=viewer.lowpass)
+        for method, measurements in (
+                ('P polarization', polarization), ('Relative network alignment', relative)):
+            for nsl, result in measurements.items():
+                logging.debug(
+                    'TeleCheck %s: station=%s event=%s phase=%s channels=%s '
+                    'window_start=%s window_end=%s status=%s usable=%s '
+                    'highpass_hz=%s lowpass_hz=%s',
+                    method, '.'.join(nsl), util.time_to_str(event.time),
+                    self.phasename, self.channels_polar,
+                    util.time_to_str(nsl_to_tspan[nsl][0]),
+                    util.time_to_str(nsl_to_tspan[nsl][1]),
+                    result['status'], result['usable'], viewer.highpass, viewer.lowpass)
 
-            azimuth = r2d*num.arctan2(pc[1], pc[0])
-            azimuth = (-azimuth) % 180. - 90.
-            print('POL AZI (assumes R,T): %-20s %8.0f' % ('.'.join(nsls[ia]), azimuth))
-
-
-
-        imins = num.argmin(d, axis=2)
-        dmins = num.min(d, axis=2)
-        dmin_median = num.median(dmins)
-
-        phimins = phis[imins]
-
-        nsl_to_rot = {}
-        for nsl in nsls:
-            nsl_to_rot[nsl] = 0.
-
-        failed = set()
-
-        for i in range(n):
-            mean_min_error = num.mean(dmins[i, :]/dmin_median)
-            #print(mean_min_error, nsls[i])
-            if mean_min_error > 3.0:
-                failed.add(nsls[i])
-
-       
-        while True:
-            ia_worst = num.argmax(num.mean(num.abs(phimins), axis=1))
-
-            phimod = (
-                (phis[num.newaxis, :] + phimins[ia_worst, :, num.newaxis]
-                 + 180.) % 360.) - 180.
-            phirot = phis[num.argmin(num.mean(num.abs(phimod), axis=0))]
-            if abs(phirot) < 1.:
-                print('PHI ROT <1: %-20s %8.0f' % ('.'.join(nsl), phirot))
-                break
-
-            nsl = nsls[ia_worst]
-            mean_min_error = num.mean(dmins[ia_worst, :]/dmin_median)
-
-            phimins[ia_worst, :] = (
-                (phimins[ia_worst, :] + phirot) + 180.) % 360. - 180.
-            phimins[:, ia_worst] = (
-                (phimins[:, ia_worst] - phirot) + 180.) % 360. - 180.
-
-            if nsl not in failed:
-                
-                print('PHI ROT: %-20s %8.0f' % ('.'.join(nsl), phirot))
-                nsl_to_rot[nsl] += phirot
+        pending = dict(event_time=util.time_to_str(event.time),
+                       polarization=polarization, relative=relative)
+        gain_components = (
+            sorted({tr.channel[-1] for traces in nsl_to_traces.values() for tr in traces})
+            if self.channels_relamp == 'All'
+            else [component.strip() for component in self.channels_relamp.split(',')])
+        pending.update(gain_stations=list(nsl_to_station),
+                       gain_factors=dict(nslc_to_relamp), gain_components=gain_components)
 
         fframe = self.figure_frame()
         fig = fframe.gcf()
-
         fig.clf()
 
-        if n == 0:
-            self.error('No matching traces found.')
 
         ncols = 1
         while ncols**2 < n:
@@ -456,15 +618,16 @@ class TeleCheck(Snuffling):
         axes.axison = False
         axes.set_xlim(-0.05 - ncols, ncols + 0.05)
         axes.set_ylim(-0.05 - nrows, nrows + 0.05)
-        axes.set_title('Event: %s, Phase: %s' % (event.name, self.phasename))
+
+        axes.set_title('P polarization: %s (black line)%s' % (
+            event.name, '\nRelative network alignment enabled (gray/orange line)'
+            if self.relative_orient_alignment else ''))
 
         for insl, nsl in enumerate(nsls):
             irow = insl // ncols
             icol = insl % ncols
-
             trs = nsl_to_traces[nsl]
             try:
-
                 x, y = nsl_to_xy[nsl]
                 cc = [c.strip() for c in self.channels_polar.split(',')]
 
@@ -474,59 +637,53 @@ class TeleCheck(Snuffling):
 
                 xpos = icol*2-ncols+1
                 ypos = -irow*2+nrows-1
-
                 x = tr_x.get_ydata()
                 y = tr_y.get_ydata()
 
                 a = num.sqrt(x**2 + y**2)
-
                 amax = num.max(a)
 
-                phi = nsl_to_rot[nsl]
+                if not num.isfinite(amax) or amax <= 0.:
+                    continue
 
-                color = 'black'
-                if num.abs(phi) > 0:
-                    color = mpl_color('chocolate2')
+                axes.plot(x / amax + xpos, y / amax + ypos,
+                          color='black', alpha=0.7)
+                result = polarization[nsl]
+                angle = result['angle_deg']
 
-                if num.abs(phi) > 30:
-                    color = mpl_color('orange2')
+                annotation = '.'.join(part for part in nsl if part)
 
-                if nsl in failed:
-                    color = mpl_color('scarletred2')
+                if angle is not None and num.isfinite(angle):
+                    # The angle is measured from the first component (R or N).
+                    direction_x = num.sin(angle * d2r)
+                    direction_y = num.cos(angle * d2r)
+                    ends = num.asarray([-polarization_axis_length, polarization_axis_length])
+                    axes.plot(xpos + ends * direction_x, ypos + ends * direction_y,
+                              color='black', linestyle=':', linewidth=1.5, zorder=4)
 
-                axes.plot(
-                    x / amax + xpos,
-                    y / amax + ypos,
-                    color=color, alpha=0.7)
-
-                if nsl not in failed:
-                    xrot = num.cos(phi*d2r) * x - num.sin(phi*d2r) * y
-                    yrot = num.sin(phi*d2r) * x + num.cos(phi*d2r) * y
-
-                    axes.plot(
-                        xrot / amax + xpos,
-                        yrot / amax + ypos,
-                        color='black', alpha=0.5)
-
-                    # axes.plot(
-                    #     [xpos, num.sin(phi*d2r) + xpos],
-                    #     [ypos, num.cos(phi*d2r) + ypos],
-                    #     color=color, alpha=0.5)
+                    if self.relative_orient_alignment and relative[nsl]['usable']:
+                        phi = relative[nsl]['angle_deg']
+                        aligned_x = num.cos(phi*d2r) * direction_x - num.sin(phi*d2r) * direction_y
+                        aligned_y = num.sin(phi*d2r) * direction_x + num.cos(phi*d2r) * direction_y
+                        alignment_color = (
+                            'gray' if abs(phi) < relative_alignment_color_threshold_deg
+                            else mpl_color('orange2'))
+                        axes.plot(xpos + ends * aligned_x, ypos + ends * aligned_y,
+                                  color=alignment_color, linestyle='--', linewidth=1.5, zorder=5)
 
                 axes.annotate(
-                    '.'.join(_ for _ in nsl if _),
-                    xy=(icol*2-ncols+1, -irow*2+nrows-2),
-                    xycoords='data',
-                    xytext=(0, 0),
-                    textcoords='offset points',
-                    verticalalignment='center',
-                    horizontalalignment='center',
-                    rotation=0.)
+                    annotation, xy=(xpos, ypos - 1.), xycoords='data',
+                    xytext=(0, 0), textcoords='offset points',
+                    verticalalignment='center', horizontalalignment='center',
+                    fontsize=8, rotation=0.,
+                    bbox=dict(facecolor='white', edgecolor='none', alpha=0.75))
 
             except NotFound:
                 pass
 
+        polarization_axes = axes
         axes = fig.add_subplot(1, 2, 2)
+        axes.set_title('Relative gain: %s (%s)' % (event.name, self.channels_relamp))
         nslcs = sorted(nslc_to_relamp.keys())
         pdata = []
         for inslc, nslc in enumerate(nslcs):
@@ -553,6 +710,16 @@ class TeleCheck(Snuffling):
                 color = mpl_color('scarletred2')
 
             pdata.append((tr, relamp, color, inslc, nslc))
+
+        if not pdata:
+            axes.text(.5, .5, 'No usable gain pairs', ha='center',
+                      transform=axes.transAxes)
+            fframe.draw()
+            self._capture_polarization_view(pending, polarization_axes)
+            pending['gain_view'] = self._capture_panel_view(axes)
+            self._pending_orientation = pending
+
+            return
 
         ranges = trace.minmax([aa[0] for aa in pdata], lambda tr: None)
         ymin, ymax = ranges[None]
@@ -591,8 +758,10 @@ class TeleCheck(Snuffling):
             axes.spines[which].set_visible(False)
 
         axes.set_xlabel('Time [s]')
-
         fframe.draw()
+        self._capture_polarization_view(pending, polarization_axes)
+        pending['gain_view'] = self._capture_panel_view(axes)
+        self._pending_orientation = pending
 
 
 def __snufflings__():
